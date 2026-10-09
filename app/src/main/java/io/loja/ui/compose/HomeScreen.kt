@@ -108,7 +108,7 @@ fun HomeScreen(onPerfil: () -> Unit) {
                     }
                     SECOES.forEachIndexed { index, secao ->
                         NavigationDrawerItem(
-                            icon = { Icon(painterResource(secao.icone), contentDescription = null, tint = Color.White) },
+                            icon = { Icon(painterResource(secao.icone), contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp)) },
                             label = { Text(secao.titulo, fontWeight = FontWeight.Bold, fontSize = 14.sp) },
                             selected = index == selecionada,
                             onClick = {
