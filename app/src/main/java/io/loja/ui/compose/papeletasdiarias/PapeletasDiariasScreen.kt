@@ -74,10 +74,18 @@ private val TIPOS = listOf("Normal", "Promocional", "Promocional (Modelo)", "Nor
 private val STATUSES = listOf("Todos os status", "Impressas", "Não impressas")
 
 @Composable
-fun PapeletasDiariasScreen(vm: PapeletasDiariasViewModel, modifier: Modifier = Modifier) {
+fun PapeletasDiariasScreen(
+    vm: PapeletasDiariasViewModel,
+    modifier: Modifier = Modifier,
+    onTitulo: (String) -> Unit = {},
+) {
     val context = LocalContext.current
     val activity = context as? Activity
     var dialogDept by remember { mutableStateOf(false) }
+
+    LaunchedEffect(vm.isTomorrow) {
+        onTitulo(if (vm.isTomorrow) "Papeletas de amanhã" else "Papeletas de hoje")
+    }
 
     LaunchedEffect(Unit) {
         vm.eventos.collect { ev ->
@@ -157,15 +165,28 @@ fun PapeletasDiariasScreen(vm: PapeletasDiariasViewModel, modifier: Modifier = M
                     }
                     Spacer(Modifier.height(8.dp))
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(8.dp))
-                            .clickable { dialogDept = true }
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(vm.textoDepartamentos(), color = CINZA_TEXTO, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                        Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = MinhaLojaRed)
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(8.dp))
+                                .clickable { dialogDept = true }
+                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(vm.textoDepartamentos(), color = CINZA_TEXTO, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = MinhaLojaRed)
+                        }
+                        Button(
+                            onClick = { vm.carregarPapeletas() },
+                            enabled = !vm.carregando,
+                            modifier = Modifier.height(52.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
+                        ) { Text(if (vm.carregando) "BUSCANDO..." else "BUSCAR", fontWeight = FontWeight.Bold, fontSize = 13.sp) }
                     }
                 }
             }
@@ -186,18 +207,14 @@ fun PapeletasDiariasScreen(vm: PapeletasDiariasViewModel, modifier: Modifier = M
                         Text("RELATÓRIO", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { vm.carregarPapeletas() }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(8.dp)) {
-                        Text(if (vm.carregando) "BUSCANDO..." else "BUSCAR", fontWeight = FontWeight.Bold)
-                    }
-                    Button(
-                        onClick = { vm.imprimir() },
-                        enabled = !vm.imprimindo,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
-                    ) { Text(if (vm.imprimindo) "IMPRIMINDO..." else "🖨️ Imprimir Papeletas", fontWeight = FontWeight.Bold) }
-                }
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { vm.imprimir() },
+                    enabled = !vm.imprimindo,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
+                ) { Text(if (vm.imprimindo) "IMPRIMINDO..." else "🖨️ Imprimir Papeletas", fontWeight = FontWeight.Bold) }
             }
         }
 
@@ -265,25 +282,32 @@ private fun DialogDepartamentos(vm: PapeletasDiariasViewModel, onFechar: (Boolea
     val depts = vm.departamentosComItens()
     AlertDialog(
         onDismissRequest = { onFechar(false) },
+        modifier = Modifier.fillMaxWidth(0.92f),
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
         containerColor = Color.White,
         titleContentColor = Color(0xFF1E293B),
         textContentColor = Color(0xFF333333),
         title = { Text("Todos os departamentos") },
         text = {
-            if (depts.isEmpty()) {
-                Text("Nenhum departamento com impressão")
-            } else {
-                LazyColumn(modifier = Modifier.height(360.dp)) {
-                    items(depts, key = { it.id }) { d ->
-                        val (pendente, impressas) = vm.contagemDepartamento(d.id)
-                        Row(
-                            modifier = Modifier.fillMaxWidth().clickable { vm.toggleDepartamento(d.id) }.padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Checkbox(checked = vm.departamentosSelecionados.contains(d.id), onCheckedChange = { vm.toggleDepartamento(d.id) })
-                            Text("${d.id.padStart(2, '0')} - ${d.label}", modifier = Modifier.weight(1f), fontSize = 14.sp)
-                            if (pendente > 0) Text("$pendente", color = Color(0xFFD7193F), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            if (impressas > 0) { Spacer(Modifier.width(8.dp)); Text("$impressas", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+            Column {
+                androidx.compose.material3.TextButton(onClick = { vm.selecionarTodosDepartamentos() }) {
+                    Text("Selecionar todos", color = MinhaLojaRed, fontWeight = FontWeight.Bold)
+                }
+                if (depts.isEmpty()) {
+                    Text("Nenhum departamento com impressão")
+                } else {
+                    LazyColumn(modifier = Modifier.height(360.dp)) {
+                        items(depts, key = { it.id }) { d ->
+                            val (pendente, impressas) = vm.contagemDepartamento(d.id)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().clickable { vm.toggleDepartamento(d.id) }.padding(vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Checkbox(checked = vm.departamentosSelecionados.contains(d.id), onCheckedChange = { vm.toggleDepartamento(d.id) })
+                                Text("${d.id.padStart(2, '0')} - ${d.label}", modifier = Modifier.weight(1f), fontSize = 14.sp)
+                                if (pendente > 0) Text("$pendente", color = Color(0xFFD7193F), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                if (impressas > 0) { Spacer(Modifier.width(8.dp)); Text("$impressas", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+                            }
                         }
                     }
                 }

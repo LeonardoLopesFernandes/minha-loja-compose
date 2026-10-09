@@ -104,6 +104,16 @@ class EtiquetasDiariasViewModel(app: Application) : AndroidViewModel(app) {
     val selectedPrinter: String
         get() = printers.getOrNull(printerIdx)?.printerId ?: "ZEBRA_1"
 
+    // Labels como no Kotlin: Zebra 1 / Zebra 2 (senão usa o label da API).
+    val printerLabels: List<String>
+        get() = printers.map { p ->
+            when {
+                p.printerId.contains("1", ignoreCase = true) -> "Zebra 1"
+                p.printerId.contains("2", ignoreCase = true) -> "Zebra 2"
+                else -> p.label
+            }
+        }
+
     fun chave(item: PriceTagItem) = "${item.ean}|${item.sap}"
 
     fun isSelecionado(item: PriceTagItem) = selecionados[chave(item)] == true
