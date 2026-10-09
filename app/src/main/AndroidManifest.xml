@@ -20,6 +20,7 @@
         <activity
             android:name=".ui.compose.ComposeMainActivity"
             android:exported="true"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
