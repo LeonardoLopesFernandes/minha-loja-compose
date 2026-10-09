@@ -47,9 +47,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.loja.ui.EtiquetasActivity
 import io.loja.ui.MainActivity
 import io.loja.ui.PapeletasDiariasActivity
+import io.loja.ui.compose.etiquetaavulsa.EtiquetaAvulsaScreen
+import io.loja.ui.compose.etiquetaavulsa.EtiquetaAvulsaViewModel
 import kotlinx.coroutines.launch
 
 /** Seções do menu, na mesma ordem do Flutter (MainScreen). */
@@ -117,12 +120,16 @@ fun HomeScreen(onPerfil: () -> Unit) {
                     )
                 },
             ) { innerPadding ->
-                ConteudoSecao(
-                    index = selecionada,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                )
+                val conteudoModifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                when (selecionada) {
+                    0 -> {
+                        val etiquetaVm: EtiquetaAvulsaViewModel = viewModel()
+                        EtiquetaAvulsaScreen(vm = etiquetaVm)
+                    }
+                    else -> ConteudoSecao(index = selecionada, modifier = conteudoModifier)
+                }
             }
         }
     }
