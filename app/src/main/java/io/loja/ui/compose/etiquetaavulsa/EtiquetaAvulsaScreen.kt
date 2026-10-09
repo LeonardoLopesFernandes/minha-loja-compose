@@ -46,12 +46,11 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DismissValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SwipeToDismiss
-import androidx.compose.material3.SwipeToDismissValue
-import androidx.compose.material3.rememberSwipeToDismissState
+import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -437,9 +436,9 @@ private fun EtiquetaCard(
     onImprimir: () -> Unit,
     onRemover: () -> Unit,
 ) {
-    val dismissState = rememberSwipeToDismissState(
+    val dismissState = rememberDismissState(
         confirmStateChange = { v ->
-            if (v == SwipeToDismissValue.DismissedToEnd) { onRemover(); true } else false
+            if (v == DismissValue.DismissedToEnd) { onRemover(); true } else false
         },
     )
     val formatador = remember { NumberFormat.getCurrencyInstance(Locale("pt", "BR")) }
