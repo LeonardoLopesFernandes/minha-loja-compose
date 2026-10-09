@@ -55,6 +55,7 @@ import io.loja.network.PriceSign
 import io.loja.ui.ModeloEditavelActivity
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.DepartamentoSelector
+import io.loja.ui.compose.components.SpinnerDropdown
 import io.loja.ui.compose.components.GreenBadgeContainer
 import io.loja.ui.compose.components.QtyBoxDiaria
 import io.loja.ui.compose.components.StatusBadge
@@ -156,13 +157,13 @@ fun PapeletasDiariasScreen(
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Dropdown("MOVIMENTO", MOVIMENTOS, vm.movementIdx, { it }, { vm.alterarMovement(it) }, Modifier.weight(1f))
-                        Dropdown("TIPO", TIPOS, vm.tipoIdx, { it }, { vm.alterarTipo(it) }, Modifier.weight(1f))
+                        SpinnerDropdown("MOVIMENTO", io.loja.R.drawable.ic_receipt_small, MOVIMENTOS, vm.movementIdx, { it }, { vm.alterarMovement(it) }, Modifier.weight(1f))
+                        SpinnerDropdown("TIPO", io.loja.R.drawable.ic_qr_code_small, TIPOS, vm.tipoIdx, { it }, { vm.alterarTipo(it) }, Modifier.weight(1f))
                     }
                     Spacer(Modifier.height(6.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Dropdown("TAMANHO", vm.sizes, vm.tamanhoIdx, { it }, { vm.alterarTamanho(it) }, Modifier.weight(1f))
-                        Dropdown("STATUS", STATUSES, vm.statusIdx, { it }, { vm.alterarStatus(it) }, Modifier.weight(1f))
+                        SpinnerDropdown("TAMANHO", io.loja.R.drawable.ic_aspect_ratio_small, vm.sizes, vm.tamanhoIdx, { it }, { vm.alterarTamanho(it) }, Modifier.weight(1f))
+                        SpinnerDropdown("STATUS", io.loja.R.drawable.ic_tune_small, STATUSES, vm.statusIdx, { it }, { vm.alterarStatus(it) }, Modifier.weight(1f))
                     }
                     Spacer(Modifier.height(8.dp))
                     DepartamentoSelector(

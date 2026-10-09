@@ -78,6 +78,7 @@ import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.GreenBadgeContainer
 import io.loja.ui.compose.components.QtyBoxAvulsa
 import io.loja.ui.compose.components.SearchField
+import io.loja.ui.compose.components.SpinnerDropdown
 import io.loja.ui.compose.components.WhiteTypeBadge
 import io.loja.utils.Constants
 import io.loja.utils.SessionExpiredHandler
@@ -188,17 +189,17 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Dropdown("TIPO", TIPOS, vm.tipoIdx, { it }, { vm.alterarTipo(it) }, Modifier.weight(1f))
-                    Dropdown("MODELO", MODELOS, vm.modeloIdx, { it }, { vm.alterarModelo(it) }, Modifier.weight(1f))
+                    SpinnerDropdown("TIPO", io.loja.R.drawable.ic_receipt_small, TIPOS, vm.tipoIdx, { it }, { vm.alterarTipo(it) }, Modifier.weight(1f))
+                    SpinnerDropdown("MODELO", io.loja.R.drawable.ic_tune_small, MODELOS, vm.modeloIdx, { it }, { vm.alterarModelo(it) }, Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Dropdown(
-                        "BUSCA", BUSCAS,
+                    SpinnerDropdown(
+                        "BUSCA", io.loja.R.drawable.ic_qr_code_small, BUSCAS,
                         BUSCAS.indexOf(vm.buscaTipo).coerceAtLeast(0),
                         { it }, { vm.alterarBuscaTipo(BUSCAS[it]) }, Modifier.weight(1f),
                     )
-                    Dropdown("TAMANHO", TAMANHOS, vm.tamanhoIdx, { it }, { vm.alterarTamanho(it) }, Modifier.weight(1f))
+                    SpinnerDropdown("TAMANHO", io.loja.R.drawable.ic_aspect_ratio_small, TAMANHOS, vm.tamanhoIdx, { it }, { vm.alterarTamanho(it) }, Modifier.weight(1f))
                 }
             }
         }

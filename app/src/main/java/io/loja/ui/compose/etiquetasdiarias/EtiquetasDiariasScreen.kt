@@ -58,6 +58,7 @@ import io.loja.network.models.PriceTagItem
 import io.loja.ui.GondolaEditavelActivity
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.DepartamentoSelector
+import io.loja.ui.compose.components.SpinnerDropdown
 import io.loja.ui.compose.components.GreenBadgeContainer
 import io.loja.ui.compose.components.QtyBoxDiaria
 import io.loja.ui.compose.components.StatusBadge
@@ -163,9 +164,9 @@ fun EtiquetasDiariasScreen(
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Dropdown("IMPRESSORA", vm.printerLabels, vm.printerIdx, { it }, { vm.alterarPrinter(it) }, Modifier.weight(1f))
-                        Dropdown("STATUS", listOf("Todos os status", "Impressas", "Não impressas"), vm.statusIdx, { it }, { vm.alterarStatus(it) }, Modifier.weight(1f))
-                        Dropdown("MODO", listOf("Normal", "Edição"), vm.modoIdx, { it }, { vm.alterarModo(it) }, Modifier.weight(1f))
+                        SpinnerDropdown("IMPRESSORA", io.loja.R.drawable.ic_printer_small, vm.printerLabels, vm.printerIdx, { it }, { vm.alterarPrinter(it) }, Modifier.weight(1f))
+                        SpinnerDropdown("STATUS", io.loja.R.drawable.ic_tune_small, listOf("Todos os status", "Impressas", "Não impressas"), vm.statusIdx, { it }, { vm.alterarStatus(it) }, Modifier.weight(1f))
+                        SpinnerDropdown("MODO", io.loja.R.drawable.ic_qr_code_small, listOf("Normal", "Edição"), vm.modoIdx, { it }, { vm.alterarModo(it) }, Modifier.weight(1f))
                     }
                     Spacer(Modifier.height(8.dp))
                     DepartamentoSelector(
@@ -357,6 +358,8 @@ private fun PriceTagItemCard(
             tipo = "de por"; tipoCor = Color(0xFFFF9800)
             if (precoPromo != null && precoPromo > 0 && precoPromo < precoNormal) {
                 promoText = "De ${f.format(precoNormal)} | Por ${f.format(precoPromo)}"
+                separador = false
+                precoTexto = ""
             }
         }
         ((pd?.installments?.installmentQuantity ?: 0) > 0) -> {

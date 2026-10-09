@@ -79,6 +79,7 @@ import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.GreenBadgeContainer
 import io.loja.ui.compose.components.QtyBoxAvulsa
 import io.loja.ui.compose.components.SearchField
+import io.loja.ui.compose.components.SpinnerDropdown
 import io.loja.ui.compose.components.WhiteTypeBadge
 import io.loja.utils.Constants
 import io.loja.utils.RelatorioPdf
@@ -169,24 +170,27 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Dropdown(
+                SpinnerDropdown(
                     label = "IMPRESSORA",
+                    icone = io.loja.R.drawable.ic_printer_small,
                     options = vm.printers,
                     selectedIndex = vm.printerSelecionado,
                     labelOf = { it.nome },
                     onSelect = { vm.setPrinter(it) },
                     modifier = Modifier.weight(1f),
                 )
-                Dropdown(
+                SpinnerDropdown(
                     label = "TIPO",
+                    icone = io.loja.R.drawable.ic_qr_code_small,
                     options = listOf("EAN", "SAP", "Descrição"),
                     selectedIndex = listOf("EAN", "SAP", "Descrição").indexOf(vm.buscaTipo).coerceAtLeast(0),
                     labelOf = { it },
                     onSelect = { vm.alterarBuscaTipo(listOf("EAN", "SAP", "Descrição")[it]) },
                     modifier = Modifier.weight(1f),
                 )
-                Dropdown(
+                SpinnerDropdown(
                     label = "MODO",
+                    icone = io.loja.R.drawable.ic_tune_small,
                     options = listOf("Normal", "Edição"),
                     selectedIndex = if (vm.modoEdicao) 1 else 0,
                     labelOf = { it },

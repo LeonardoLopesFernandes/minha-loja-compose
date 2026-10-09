@@ -137,8 +137,18 @@ class PapeletasDiariasViewModel(app: Application) : AndroidViewModel(app) {
     fun limparDepartamentos() { departamentosSelecionados.clear() }
     fun selecionarTodosDepartamentos() { departamentosComItens().forEach { if (!departamentosSelecionados.contains(it.id)) departamentosSelecionados.add(it.id) } }
 
-    fun departamentosComItens(): List<PriceTagFilterDepartment> =
-        departments.filter { val (p, i) = contagemDepartamento(it.id); p > 0 || i > 0 }
+    fun departamentosComItens(): List<PriceTagFilterDepartment> {
+        val base = if (departments.isNotEmpty()) departments else unfilteredItems
+            .map { it.department }
+            .distinct()
+            .sortedBy { it.substringBefore(" -").trim().toIntOrNull() ?: 999 }
+            .map {
+                val idx = it.indexOf(" - ")
+                if (idx >= 0) PriceTagFilterDepartment(it.substring(0, idx).trim(), it.substring(idx + 3).trim())
+                else PriceTagFilterDepartment(it.trim(), it.trim())
+            }
+        return base.filter { val (p, i) = contagemDepartamento(it.id); p > 0 || i > 0 }
+    }
 
     fun contagemDepartamento(deptId: String): Pair<Int, Int> {
         val n = deptId.toIntOrNull() ?: return 0 to 0
