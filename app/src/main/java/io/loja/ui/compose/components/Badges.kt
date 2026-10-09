@@ -5,15 +5,26 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,13 +55,15 @@ fun WhiteTypeBadge(texto: String, cor: Color, modifier: Modifier = Modifier) {
     }
 }
 
-/** Status badge (Impressa / Não impressa): fundo colorido, texto branco 9sp, altura 18dp. */
+/** Status badge (Impressa / Não impressa): fundo colorido, texto branco 9sp. */
 @Composable
 fun StatusBadge(texto: String, cor: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
+            .height(18.dp)
             .background(cor, RoundedCornerShape(30.dp))
-            .padding(horizontal = 8.dp, vertical = 1.dp),
+            .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(texto, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
     }
@@ -77,34 +90,33 @@ private fun QtyBox(
     borda: Color?,
     modifier: Modifier = Modifier,
 ) {
-    var texto by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(valor.toString()) }
-    androidx.compose.runtime.LaunchedEffect(valor) {
+    var texto by remember { mutableStateOf(valor.toString()) }
+    LaunchedEffect(valor) {
         if (texto != valor.toString()) texto = valor.toString()
     }
     Box(
         modifier = modifier
             .width(tamanho)
+            .height(tamanho)
             .then(if (borda != null) Modifier.border(1.dp, borda, RoundedCornerShape(6.dp)) else Modifier)
             .background(fundo, RoundedCornerShape(6.dp)),
         contentAlignment = Alignment.Center,
     ) {
-        androidx.compose.foundation.text.BasicTextField(
+        BasicTextField(
             value = texto,
-            onValueChange = { t ->
+            onValueChange = { t: String ->
                 val limpo = t.filter { it.isDigit() }.take(3)
                 texto = limpo
                 onChange(limpo.toIntOrNull() ?: 1)
             },
             singleLine = true,
-            textStyle = androidx.compose.ui.text.TextStyle(
+            textStyle = TextStyle(
                 color = Color(0xFF212121),
                 fontSize = if (tamanho > 27.dp) 10.sp else 12.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                textAlign = TextAlign.Center,
             ),
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
-            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.width(tamanho),
         )
     }
