@@ -55,6 +55,8 @@ import io.loja.ui.MainActivity
 import io.loja.ui.PapeletasDiariasActivity
 import io.loja.ui.compose.etiquetaavulsa.EtiquetaAvulsaScreen
 import io.loja.ui.compose.etiquetaavulsa.EtiquetaAvulsaViewModel
+import io.loja.ui.compose.etiquetasdiarias.EtiquetasDiariasScreen
+import io.loja.ui.compose.etiquetasdiarias.EtiquetasDiariasViewModel
 import io.loja.ui.compose.papeletaavulsa.PapeletaAvulsaScreen
 import io.loja.ui.compose.papeletaavulsa.PapeletaAvulsaViewModel
 import kotlinx.coroutines.launch
@@ -146,6 +148,10 @@ fun HomeScreen(onPerfil: () -> Unit) {
                     1 -> {
                         val papeletaVm: PapeletaAvulsaViewModel = viewModel()
                         PapeletaAvulsaScreen(vm = papeletaVm, modifier = conteudoPadding)
+                    }
+                    2 -> {
+                        val etiquetasDiariasVm: EtiquetasDiariasViewModel = viewModel()
+                        EtiquetasDiariasScreen(vm = etiquetasDiariasVm, modifier = conteudoPadding)
                     }
                     else -> ConteudoSecao(index = selecionada, modifier = conteudoPadding)
                 }
