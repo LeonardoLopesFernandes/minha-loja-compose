@@ -415,11 +415,10 @@ private fun PapeletaCard(
     onImprimir: () -> Unit,
     onRemover: () -> Unit,
 ) {
-    val dismissState = rememberDismissState(
-        confirmStateChange = { v ->
-            if (v == DismissValue.DismissedToEnd) { onRemover(); true } else false
-        },
-    )
+    val dismissState = rememberDismissState()
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == DismissValue.DismissedToEnd) onRemover()
+    }
     val f = remember { NumberFormat.getCurrencyInstance(Locale("pt", "BR")) }
     val num = remember { NumberFormat.getNumberInstance(Locale("pt", "BR")).apply { minimumFractionDigits = 2; maximumFractionDigits = 2 } }
     val pd = item.printingData
