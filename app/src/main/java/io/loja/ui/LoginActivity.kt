@@ -44,7 +44,7 @@ class LoginActivity : AppCompatActivity() {
         if (sessionManager.isLoggedIn()) {
             val token = sessionManager.getToken()
             if (!token.isNullOrEmpty()) {
-                val intent = Intent(this, MainActivity::class.java)
+                val intent = Intent(this, io.loja.ui.compose.ComposeMainActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()
