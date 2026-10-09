@@ -23,6 +23,10 @@ private val LightColors = lightColorScheme(
     surface = Color.White,
     onBackground = Color(0xFF1E293B),
     onSurface = Color(0xFF1E293B),
+    // Sem tingimento das superfícies elevadas (senão cards/dialogs ficam
+    // rosados por causa do surfaceTint = primary).
+    surfaceTint = Color.White,
+    surfaceVariant = Color(0xFFEDEFF2),
 )
 
 private val DarkColors = darkColorScheme(
