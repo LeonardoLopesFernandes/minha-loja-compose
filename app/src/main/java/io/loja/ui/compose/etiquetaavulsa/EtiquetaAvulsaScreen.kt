@@ -45,8 +45,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissValue
+import androidx.compose.material3.rememberSwipeToDismissState
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -423,6 +428,7 @@ private fun FabScanner(modifier: Modifier = Modifier, onAbrir: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EtiquetaCard(
     item: PriceTag,
@@ -431,6 +437,11 @@ private fun EtiquetaCard(
     onImprimir: () -> Unit,
     onRemover: () -> Unit,
 ) {
+    val dismissState = rememberSwipeToDismissState(
+        confirmStateChange = { v ->
+            if (v == SwipeToDismissValue.DismissedToEnd) { onRemover(); true } else false
+        },
+    )
     val formatador = remember { NumberFormat.getCurrencyInstance(Locale("pt", "BR")) }
     val num = remember { NumberFormat.getNumberInstance(Locale("pt", "BR")).apply { minimumFractionDigits = 2; maximumFractionDigits = 2 } }
     val pd = item.printingData
@@ -465,13 +476,28 @@ private fun EtiquetaCard(
 
     val deptNum = item.department.substringBefore(" -").trim()
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-    ) {
-        Column(modifier = Modifier.padding(6.dp)) {
+    SwipeToDismiss(
+        state = dismissState,
+        directions = setOf(DismissDirection.StartToEnd),
+        background = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFD32F2F), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Icon(Icons.Filled.Delete, contentDescription = "Excluir", tint = Color.White)
+            }
+        },
+        dismissContent = {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            ) {
+                Column(modifier = Modifier.padding(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 QtyBoxAvulsa(valor = qtd, onChange = onQtdChange)
                 Text(
@@ -513,5 +539,7 @@ private fun EtiquetaCard(
                 }
             }
         }
-    }
+            }
+        },
+    )
 }
