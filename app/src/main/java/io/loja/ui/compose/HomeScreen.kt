@@ -59,6 +59,8 @@ import io.loja.ui.compose.etiquetasdiarias.EtiquetasDiariasScreen
 import io.loja.ui.compose.etiquetasdiarias.EtiquetasDiariasViewModel
 import io.loja.ui.compose.papeletaavulsa.PapeletaAvulsaScreen
 import io.loja.ui.compose.papeletaavulsa.PapeletaAvulsaViewModel
+import io.loja.ui.compose.papeletasdiarias.PapeletasDiariasScreen
+import io.loja.ui.compose.papeletasdiarias.PapeletasDiariasViewModel
 import kotlinx.coroutines.launch
 
 /** Seções do menu, na mesma ordem do Flutter (MainScreen). */
@@ -152,6 +154,10 @@ fun HomeScreen(onPerfil: () -> Unit) {
                     2 -> {
                         val etiquetasDiariasVm: EtiquetasDiariasViewModel = viewModel()
                         EtiquetasDiariasScreen(vm = etiquetasDiariasVm, modifier = conteudoPadding)
+                    }
+                    3 -> {
+                        val papeletasDiariasVm: PapeletasDiariasViewModel = viewModel()
+                        PapeletasDiariasScreen(vm = papeletasDiariasVm, modifier = conteudoPadding)
                     }
                     else -> ConteudoSecao(index = selecionada, modifier = conteudoPadding)
                 }
