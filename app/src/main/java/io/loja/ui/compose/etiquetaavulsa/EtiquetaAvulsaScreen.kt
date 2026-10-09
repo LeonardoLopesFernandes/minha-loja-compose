@@ -174,7 +174,7 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel) {
                     options = listOf("EAN", "SAP", "Descrição"),
                     selectedIndex = listOf("EAN", "SAP", "Descrição").indexOf(vm.buscaTipo).coerceAtLeast(0),
                     labelOf = { it },
-                    onSelect = { vm.setBuscaTipo(listOf("EAN", "SAP", "Descrição")[it]) },
+                    onSelect = { vm.alterarBuscaTipo(listOf("EAN", "SAP", "Descrição")[it]) },
                     modifier = Modifier.weight(1f),
                 )
                 Dropdown(
@@ -182,7 +182,7 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel) {
                     options = listOf("Normal", "Edição"),
                     selectedIndex = if (vm.modoEdicao) 1 else 0,
                     labelOf = { it },
-                    onSelect = { vm.setModoEdicao(it == 1) },
+                    onSelect = { vm.alterarModoEdicao(it == 1) },
                     modifier = Modifier.weight(1f),
                 )
             }

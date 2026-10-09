@@ -85,8 +85,8 @@ class EtiquetaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
         _eventos.tryEmit(e)
     }
 
-    fun setBuscaTipo(t: String) { buscaTipo = t }
-    fun setModoEdicao(v: Boolean) { modoEdicao = v }
+    fun alterarBuscaTipo(t: String) { buscaTipo = t }
+    fun alterarModoEdicao(v: Boolean) { modoEdicao = v }
     fun setPrinter(i: Int) { printerSelecionado = i }
 
     fun printerId(): String =
