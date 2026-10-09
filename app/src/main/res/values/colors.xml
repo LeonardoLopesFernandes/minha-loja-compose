@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cores Principais -->
+    <color name="primary">#D7193F</color>
+    <color name="primary_dark">#B0172F</color>
+    <color name="accent">#4CAF50</color>
+
+    <!-- Cores Neutras -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="gray_100">#F5F5F5</color>
+    <color name="gray_900">#212121</color>
+
+    <!-- Cores dos Botões -->
+
+    <color name="card_border_color">#CCCCCC</color>
+</resources>

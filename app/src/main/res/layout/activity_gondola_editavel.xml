@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#EDEFF2">
+
+    <!-- Header recolhível + template fixo (assume o topo ao rolar) -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/header_gradient_rounded"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
+
+            <TextView
+                android:id="@+id/btnVoltar"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/circle_white_transparent"
+                android:gravity="center"
+                android:text="&lt;"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Edição de gôndola"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvPosicao"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1/1"
+                android:textColor="#D7193F"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:background="@drawable/bg_counter_pill"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp" />
+        </LinearLayout>
+
+        <!-- PREVIEW GONDOLA (fica preso no topo quando o header recolhe) -->
+        <io.loja.ui.GondolaPreviewView
+            android:id="@+id/previewGondola"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:background="#FFFFFF" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Conteúdo rolável (campos + bottom bar + checkbox) -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- CAMPOS EDITAVEIS -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="DESCRIÇÃO"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#DA1C2E"
+                android:letterSpacing="0.1" />
+
+            <EditText
+                android:id="@+id/etDescricao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_white_rounded"
+                android:padding="12dp"
+                android:textSize="15sp"
+                android:textColor="#1A1A1A"
+                android:singleLine="true"
+                android:hint="Descrição do produto" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="EAN"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#DA1C2E"
+                android:letterSpacing="0.1" />
+
+            <EditText
+                android:id="@+id/etEan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_white_rounded"
+                android:padding="12dp"
+                android:textSize="15sp"
+                android:textColor="#1A1A1A"
+                android:singleLine="true"
+                android:inputType="number"
+                android:hint="EAN do produto" />
+
+            <!-- NORMAL -->
+            <LinearLayout
+                android:id="@+id/layoutNormal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="PREÇO (R$)"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etPreco"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="numberDecimal"
+                    android:hint="0,00" />
+            </LinearLayout>
+
+            <!-- DE/POR -->
+            <LinearLayout
+                android:id="@+id/layoutDepor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="PREÇO DE (R$)"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etPrecoDe"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="numberDecimal"
+                    android:hint="0,00" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="PREÇO POR (R$)"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etPrecoPor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="numberDecimal"
+                    android:hint="0,00" />
+            </LinearLayout>
+
+            <!-- LEVE E GANHE -->
+            <LinearLayout
+                android:id="@+id/layoutLeveGanhe"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="PREÇO UNITÁRIO - AMARELO (R$)"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etPrecoUnitario"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="numberDecimal"
+                    android:hint="0,00" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="QUANTIDADE (LEVE)"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etQtd"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="number"
+                    android:hint="2" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="PREÇO PROMOCIONAL - TOTAL (R$)"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etPrecoPromo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="numberDecimal"
+                    android:hint="0,00" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="QUANTO FICA (R$)"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etQuantoFica"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="numberDecimal"
+                    android:hint="0,00" />
+            </LinearLayout>
+
+            <!-- PARCELADO -->
+            <LinearLayout
+                android:id="@+id/layoutParcelado"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvPrecoParceladoLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="PREÇO (R$)"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etPrecoParcelado"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="numberDecimal"
+                    android:hint="0,00" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Nº DE PARCELAS"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etParcelas"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="number"
+                    android:hint="10" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="VALOR DA PARCELA (R$)"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etValorParcela"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="numberDecimal"
+                    android:hint="0,00" />
+            </LinearLayout>
+
+            <!-- CHECKBOX INCLUIR -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="#FFFFFF"
+                android:layout_marginTop="8dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <CheckBox
+                    android:id="@+id/cbIncluir"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="#DA1C2E"
+                    android:text="Incluir esta etiqueta na impressão"
+                    android:textSize="13sp"
+                    android:textColor="#1D1B20" />
+            </LinearLayout>
+
+            <!-- BOTTOM BAR -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:padding="10dp"
+                android:background="#FFFFFF"
+                android:elevation="8dp">
+
+                <Button
+                    android:id="@+id/btnAnterior"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/btn_outline_gray"
+                    android:text="ANTERIOR"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#757575"
+                    app:backgroundTint="@null" />
+
+                <Button
+                    android:id="@+id/btnProximo"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/btn_outline_gray"
+                    android:text="PRÓXIMO"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#757575"
+                    app:backgroundTint="@null" />
+
+                <Button
+                    android:id="@+id/btnEnviar"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1.2"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/btn_red_rounded10"
+                    android:text="ENVIAR"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

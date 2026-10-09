@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#D32F2F"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- (Opcional) Texto de fundo gigante "a" mantido, mas ajustado para não cortar -->
+    <TextView
+        android:id="@+id/txtFundoGigante"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="a"
+        android:textColor="#99111111"
+        android:textSize="310sp"
+        android:alpha="0.15"
+        android:includeFontPadding="false"
+        android:scaleX="6.0"
+        android:scaleY="6.0"
+        android:translationX="200dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.55" />
+
+    <!-- 1. Área do Logo e Título -->
+    <LinearLayout
+        android:id="@+id/headerLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/containerLogin"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintVertical_bias="0.45">
+
+        <ImageView
+            android:id="@+id/logoGrande"
+            android:layout_width="84dp"
+            android:layout_height="84dp"
+            android:src="@drawable/minha_loja_logo"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:id="@+id/tvTitulo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="minha loja"
+            android:textColor="#FFFFFF"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="4dp"
+            android:alpha="0.0" />
+
+        <TextView
+            android:id="@+id/tvDescricao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Para ter acesso ao portal, vamos manter os fluxos de autenticação segura."
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:layout_marginTop="6dp"
+            android:alpha="0.0" />
+    </LinearLayout>
+
+    <!-- 2. Card de Login Branco -->
+    <LinearLayout
+        android:id="@+id/containerLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
+        android:alpha="0.0"
+        app:layout_constraintTop_toBottomOf="@id/headerLogin"
+        app:layout_constraintBottom_toTopOf="@id/btnSalvarCredenciais"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Card Branco -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:background="@drawable/bg_card_login"
+            android:elevation="8dp">
+
+            <!-- E-mail -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="E-mail"
+                android:textColor="#49454F"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etEmail"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:hint="Email Microsoft"
+                android:textSize="14sp"
+                android:textColor="#1A1A1A"
+                android:textColorHint="#9CA3AF"
+                android:inputType="textEmailAddress"
+                android:background="@drawable/bg_input_login_card"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:importantForAutofill="no" />
+
+            <!-- Senha -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Senha"
+                android:textColor="#49454F"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+
+            <EditText
+                android:id="@+id/etSenha"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:hint="Senha"
+                android:textSize="14sp"
+                android:textColor="#1A1A1A"
+                android:textColorHint="#9CA3AF"
+                android:inputType="textPassword"
+                android:background="@drawable/bg_input_login_card"
+                android:paddingStart="16dp"
+                android:paddingEnd="48dp"
+                android:importantForAutofill="no" />
+
+            <!-- Botão ENTRAR -->
+            <Button
+                android:id="@+id/btnEntrar"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="20dp"
+                android:text="ENTRAR"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#D32F2F"
+                app:cornerRadius="14dp"
+                android:textAllCaps="false" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 3. Checkbox de Salvar Credenciais -->
+    <LinearLayout
+        android:id="@+id/btnSalvarCredenciais"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="8dp"
+        android:alpha="0.0"
+        app:layout_constraintTop_toBottomOf="@id/containerLogin"
+        app:layout_constraintBottom_toTopOf="@id/tvVersaoLogin"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/imgCheckboxLogin"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_checkbox_unchecked"
+            android:layout_marginEnd="8dp"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Salvar credenciais e ativar login automático"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvVersaoLogin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="versão 1.1.70"
+        android:textColor="#FFFFFF"
+        android:textSize="11sp"
+        android:alpha="0.85"
+        android:layout_marginBottom="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
