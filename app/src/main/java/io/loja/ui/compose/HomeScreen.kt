@@ -43,16 +43,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.loja.R
 import io.loja.ui.EtiquetasActivity
 import io.loja.ui.MainActivity
 import io.loja.ui.PapeletasDiariasActivity
 import io.loja.ui.compose.etiquetaavulsa.EtiquetaAvulsaScreen
 import io.loja.ui.compose.etiquetaavulsa.EtiquetaAvulsaViewModel
+import io.loja.ui.compose.papeletaavulsa.PapeletaAvulsaScreen
+import io.loja.ui.compose.papeletaavulsa.PapeletaAvulsaViewModel
 import kotlinx.coroutines.launch
 
 /** Seções do menu, na mesma ordem do Flutter (MainScreen). */
@@ -75,22 +79,33 @@ fun HomeScreen(onPerfil: () -> Unit) {
             drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet(
-                    modifier = Modifier.width(280.dp),
+                    modifier = Modifier.width(240.dp),
                     drawerContainerColor = MinhaLojaRed,
                     drawerContentColor = Color.White,
                 ) {
-                    Spacer(Modifier.height(24.dp))
-                    Text(
-                        "minha loja",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                    )
-                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.logo_menu),
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "minha loja",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                        )
+                    }
                     SECOES.forEachIndexed { index, titulo ->
                         NavigationDrawerItem(
-                            label = { Text(titulo, fontWeight = FontWeight.Bold, fontSize = 15.sp) },
+                            label = { Text(titulo, fontWeight = FontWeight.Bold, fontSize = 14.sp) },
                             selected = index == selecionada,
                             onClick = {
                                 selecionada = index
@@ -120,15 +135,19 @@ fun HomeScreen(onPerfil: () -> Unit) {
                     )
                 },
             ) { innerPadding ->
-                val conteudoModifier = Modifier
+                val conteudoPadding = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
                 when (selecionada) {
                     0 -> {
                         val etiquetaVm: EtiquetaAvulsaViewModel = viewModel()
-                        EtiquetaAvulsaScreen(vm = etiquetaVm)
+                        EtiquetaAvulsaScreen(vm = etiquetaVm, modifier = conteudoPadding)
                     }
-                    else -> ConteudoSecao(index = selecionada, modifier = conteudoModifier)
+                    1 -> {
+                        val papeletaVm: PapeletaAvulsaViewModel = viewModel()
+                        PapeletaAvulsaScreen(vm = papeletaVm, modifier = conteudoPadding)
+                    }
+                    else -> ConteudoSecao(index = selecionada, modifier = conteudoPadding)
                 }
             }
         }

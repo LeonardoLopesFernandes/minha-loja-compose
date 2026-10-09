@@ -83,7 +83,7 @@ private val CINZA_TEXTO = Color(0xFF1E293B)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel) {
+fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val activity = context as? Activity
     val recursos = context.resources
@@ -143,7 +143,7 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel) {
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFF4F6F8))
             .padding(12.dp),
