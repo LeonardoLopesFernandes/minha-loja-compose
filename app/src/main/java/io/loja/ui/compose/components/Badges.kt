@@ -1,0 +1,111 @@
+package io.loja.ui.compose.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+val VERDE_CONTAINER = Color(0xFF4CAF50)
+
+/** Container verde (badge_green_container): fundo #4CAF50, raio 12. */
+@Composable
+fun GreenBadgeContainer(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
+    Row(
+        modifier = modifier
+            .background(VERDE_CONTAINER, RoundedCornerShape(12.dp))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
+}
+
+/** Badge branco (badge_white_container): fundo branco, raio 30, texto colorido 10sp. */
+@Composable
+fun WhiteTypeBadge(texto: String, cor: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .background(Color.White, RoundedCornerShape(30.dp))
+            .padding(horizontal = 8.dp, vertical = 2.dp),
+    ) {
+        Text(texto, color = cor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+/** Status badge (Impressa / Não impressa): fundo colorido, texto branco 9sp, altura 18dp. */
+@Composable
+fun StatusBadge(texto: String, cor: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .background(cor, RoundedCornerShape(30.dp))
+            .padding(horizontal = 8.dp, vertical = 1.dp),
+    ) {
+        Text(texto, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+/** Campo de quantidade (avulsas): 28dp, branco com borda vermelha, raio 6. */
+@Composable
+fun QtyBoxAvulsa(valor: Int, onChange: (Int) -> Unit, modifier: Modifier = Modifier) {
+    QtyBox(valor, onChange, 28.dp, Color.White, Color(0xFFD32F2F), modifier)
+}
+
+/** Campo de quantidade (diárias): 26dp, fundo #EDEFF2, raio 6. */
+@Composable
+fun QtyBoxDiaria(valor: Int, onChange: (Int) -> Unit, modifier: Modifier = Modifier) {
+    QtyBox(valor, onChange, 26.dp, Color(0xFFEDEFF2), null, modifier)
+}
+
+@Composable
+private fun QtyBox(
+    valor: Int,
+    onChange: (Int) -> Unit,
+    tamanho: Dp,
+    fundo: Color,
+    borda: Color?,
+    modifier: Modifier = Modifier,
+) {
+    var texto by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(valor.toString()) }
+    androidx.compose.runtime.LaunchedEffect(valor) {
+        if (texto != valor.toString()) texto = valor.toString()
+    }
+    Box(
+        modifier = modifier
+            .width(tamanho)
+            .then(if (borda != null) Modifier.border(1.dp, borda, RoundedCornerShape(6.dp)) else Modifier)
+            .background(fundo, RoundedCornerShape(6.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        androidx.compose.foundation.text.BasicTextField(
+            value = texto,
+            onValueChange = { t ->
+                val limpo = t.filter { it.isDigit() }.take(3)
+                texto = limpo
+                onChange(limpo.toIntOrNull() ?: 1)
+            },
+            singleLine = true,
+            textStyle = androidx.compose.ui.text.TextStyle(
+                color = Color(0xFF212121),
+                fontSize = if (tamanho > 27.dp) 10.sp else 12.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            ),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+            ),
+            modifier = Modifier.width(tamanho),
+        )
+    }
+}

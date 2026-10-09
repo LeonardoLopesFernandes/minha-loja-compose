@@ -70,6 +70,9 @@ import io.loja.network.PriceSign
 import io.loja.ui.BarcodeScannerActivity
 import io.loja.ui.ModeloEditavelActivity
 import io.loja.ui.compose.MinhaLojaRed
+import io.loja.ui.compose.components.GreenBadgeContainer
+import io.loja.ui.compose.components.QtyBoxAvulsa
+import io.loja.ui.compose.components.WhiteTypeBadge
 import io.loja.utils.Constants
 import io.loja.utils.SessionExpiredHandler
 import java.text.NumberFormat
@@ -424,118 +427,86 @@ private fun PapeletaCard(
     onRemover: () -> Unit,
 ) {
     val f = remember { NumberFormat.getCurrencyInstance(Locale("pt", "BR")) }
-    val num = remember {
-        NumberFormat.getNumberInstance(Locale("pt", "BR")).apply {
-            minimumFractionDigits = 2
-            maximumFractionDigits = 2
-        }
-    }
+    val num = remember { NumberFormat.getNumberInstance(Locale("pt", "BR")).apply { minimumFractionDigits = 2; maximumFractionDigits = 2 } }
     val pd = item.printingData
     val precoNormal = pd?.price ?: 0.0
     val precoPromo = pd?.promotionPrice
     val takeQty = pd?.takeAndWinQuantity
     val takePrice = pd?.takeAndWinPrice
 
-    var leveGanhe: String? = null
-    var precoTexto: String
-    var badge: String
-    var badgeColor: Color
+    var leve: String? = null
+    var valor = f.format(precoNormal)
+    var tipo = "normal"
+    var tipoCor = Color(0xFF9E9E9E)
 
     if (takeQty != null && takeQty > 0 && takePrice != null && takePrice > 0) {
         val totalLeve = Constants.totalLeveGanhePorTemplate(pd?.template, precoPromo, takePrice, takeQty)
-        leveGanhe = "Leve $takeQty por ${f.format(totalLeve)}"
-        precoTexto = f.format(precoNormal)
-        badge = "leve e ganhe"
-        badgeColor = Color(0xFF2E7D32)
+        leve = "Leve $takeQty por ${f.format(totalLeve)}"
+        valor = f.format(precoNormal)
+        tipo = "leve e ganhe"; tipoCor = Color(0xFF2E7D32)
     } else if ((pd?.installmentQuantity ?: 0) > 0) {
         val qtdParc = pd?.installmentQuantity?.takeIf { it > 0 }
-        val valorParc = pd?.installmentPrice?.takeIf { it > 0 }
-            ?: precoPromo?.takeIf { it > 0 } ?: precoNormal
+        val valorParc = pd?.installmentPrice?.takeIf { it > 0 } ?: precoPromo?.takeIf { it > 0 } ?: precoNormal
         val por = precoPromo?.takeIf { it > 0 }
-        precoTexto = if (qtdParc != null && por != null && valorParc > 0)
+        valor = if (qtdParc != null && por != null && valorParc > 0)
             "R$${num.format(por)} | ${qtdParc}x de R$${num.format(valorParc)}"
         else if (qtdParc != null)
             "${f.format(precoNormal)} | ${qtdParc}x de R$${String.format(Locale("pt", "BR"), "%.2f", valorParc)}"
-        else if (valorParc > 0)
-            f.format(valorParc)
-        else
-            item.price
-        badge = "parcelado"
-        badgeColor = Color(0xFFFF9800)
+        else if (valorParc > 0) f.format(valorParc)
+        else item.price
+        tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
     } else if (precoPromo != null && precoPromo > 0 && precoPromo < precoNormal) {
-        precoTexto = "De ${f.format(precoNormal)} | Por ${f.format(precoPromo)}"
-        badge = "de por"
-        badgeColor = Color(0xFFFF9800)
-    } else {
-        precoTexto = f.format(precoNormal)
-        badge = "normal"
-        badgeColor = Color(0xFF9E9E9E)
+        valor = "De ${f.format(precoNormal)} | Por ${f.format(precoPromo)}"
+        tipo = "de por"; tipoCor = Color(0xFFFF9800)
     }
 
     val deptNum = item.department.substringBefore(" -").trim()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                "DEP: $deptNum | EAN: ${item.ean} / SAP: ${item.sap}",
-                color = CINZA_LABEL,
-                fontSize = 11.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                item.description,
-                color = CINZA_TEXTO,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(4.dp))
+        Column(modifier = Modifier.padding(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    if (leveGanhe != null) {
-                        Text(leveGanhe, color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    }
-                    Text(precoTexto, color = CINZA_TEXTO, fontSize = 13.sp)
-                }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color.White)
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                ) {
-                    Text(badge, color = badgeColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                QtyBoxAvulsa(valor = qtd, onChange = onQtdChange)
+                Text(
+                    item.description,
+                    color = Color(0xFF212121),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                )
+                IconButton(onClick = onImprimir, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Filled.Print, contentDescription = "Imprimir", tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Qtd", color = CINZA_LABEL, fontSize = 12.sp)
-                Spacer(Modifier.width(6.dp))
-                OutlinedTextField(
-                    value = qtd.toString(),
-                    onValueChange = { t -> onQtdChange(t.filter { it.isDigit() }.toIntOrNull() ?: 1) },
-                    modifier = Modifier.width(72.dp),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                )
-                Spacer(Modifier.weight(1f))
-                IconButton(onClick = onRemover) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Remover", tint = MinhaLojaRed)
+            Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f).padding(start = 4.dp, end = 8.dp)) {
+                    Text(
+                        "DEP: $deptNum | EAN: ${item.ean} / SAP: ${item.sap}",
+                        color = Color(0xFF757575), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    if (leve != null) {
+                        GreenBadgeContainer {
+                            Text(leve, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
+                            Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 6.dp))
+                        }
+                    } else {
+                        GreenBadgeContainer {
+                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 8.dp))
+                        }
+                    }
                 }
-                Button(
-                    onClick = onImprimir,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed),
-                ) {
-                    Icon(Icons.Filled.Print, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Imprimir", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                IconButton(onClick = onRemover, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Filled.Delete, contentDescription = "Remover", tint = Color(0xFFD81B3A), modifier = Modifier.size(20.dp))
                 }
             }
         }

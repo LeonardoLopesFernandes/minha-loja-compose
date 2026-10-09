@@ -30,6 +30,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -56,6 +57,10 @@ import androidx.core.content.FileProvider
 import io.loja.network.models.PriceTagItem
 import io.loja.ui.GondolaEditavelActivity
 import io.loja.ui.compose.MinhaLojaRed
+import io.loja.ui.compose.components.GreenBadgeContainer
+import io.loja.ui.compose.components.QtyBoxDiaria
+import io.loja.ui.compose.components.StatusBadge
+import io.loja.ui.compose.components.WhiteTypeBadge
 import io.loja.utils.Constants
 import io.loja.utils.SessionExpiredHandler
 import java.io.File
@@ -349,37 +354,55 @@ private fun PriceTagItemCard(
     onQtdChange: (Int) -> Unit,
 ) {
     val f = remember { NumberFormat.getCurrencyInstance(Locale("pt", "BR")) }
+    val num = remember { NumberFormat.getNumberInstance(Locale("pt", "BR")).apply { minimumFractionDigits = 2; maximumFractionDigits = 2 } }
     val pd = item.printingData
     val precoNormal = pd?.price?.value ?: 0.0
     val precoPromo = pd?.promotionalPrice?.value
     val takeAndWin = pd?.takeAndWin
     val movement = item.movement.uppercase()
 
-    var badge = "normal"
-    var badgeColor = Color(0xFF9E9E9E)
-    var destaque: String? = null
+    var tipo = "normal"
+    var tipoCor = Color(0xFF9E9E9E)
+    var promoText: String? = null
+    var separador = false
     var precoTexto = if (precoNormal > 0) f.format(precoNormal) else item.price
 
     when {
         movement.contains("LEVE") || movement.contains("GANHE") -> {
-            badge = "leve e ganhe"; badgeColor = Color(0xFF2E7D32)
+            tipo = "leve e ganhe"; tipoCor = Color(0xFF2E7D32)
             if (takeAndWin != null && takeAndWin.qty > 0 && takeAndWin.totalValue > 0) {
                 val total = if (pd?.template == Constants.SIGN_TEMPLATE_LEVE_GANHE_CADA && precoPromo != null && precoPromo > 0)
                     precoPromo else takeAndWin.totalValue
-                destaque = "Leve ${takeAndWin.qty} por ${f.format(total)}"
+                promoText = "Leve ${takeAndWin.qty} por ${f.format(total)}"
+                separador = true
+                precoTexto = if (precoNormal > 0) f.format(precoNormal) else item.price
             }
         }
         movement.contains("DE") || movement.contains("POR") || movement.contains("PROMOCIONAL") -> {
-            badge = "de por"; badgeColor = Color(0xFFFF9800)
+            tipo = "de por"; tipoCor = Color(0xFFFF9800)
             if (precoPromo != null && precoPromo > 0 && precoPromo < precoNormal) {
-                destaque = "De ${f.format(precoNormal)} | Por ${f.format(precoPromo)}"
+                promoText = "De ${f.format(precoNormal)} | Por ${f.format(precoPromo)}"
             }
         }
         ((pd?.installments?.installmentQuantity ?: 0) > 0) -> {
-            badge = "parcelado"; badgeColor = Color(0xFFFF9800)
+            tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
             val q = pd?.installments?.installmentQuantity
-            val v = pd?.installments?.installmentValue ?: 0.0
-            destaque = if (q != null) "${q}x de R$ ${String.format(Locale("pt", "BR"), "%.2f", v)}" else null
+            val v = pd?.installments?.installmentValue?.takeIf { it > 0 }
+                ?: (pd?.displayPrice ?: 0.0).takeIf { it > 0 }
+                ?: (pd?.unitValue ?: 0.0).takeIf { it > 0 }
+                ?: (pd?.unitQty ?: 0.0).takeIf { it > 0 }
+                ?: precoPromo?.takeIf { it > 0 }
+                ?: precoNormal
+            val por = precoPromo?.takeIf { it > 0 }
+            if (q != null && por != null && v > 0) {
+                promoText = "R$${num.format(por)} | ${q}x de R$${num.format(v)}"
+                separador = false
+                precoTexto = ""
+            } else {
+                promoText = if (precoNormal > 0) f.format(precoNormal) else item.price
+                separador = true
+                precoTexto = if (q != null) "${q}x de R$${String.format(Locale("pt", "BR"), "%.2f", v)}" else f.format(v)
+            }
         }
     }
 
@@ -387,49 +410,40 @@ private fun PriceTagItemCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.Top) {
-            Checkbox(checked = selecionado, onCheckedChange = { onCheck(it) })
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Dep: ${item.department} • EAN: ${item.ean}", color = CINZA_LABEL, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(item.description, color = CINZA_TEXTO, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        if (destaque != null) Text(destaque, color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        Text(precoTexto, color = CINZA_TEXTO, fontSize = 13.sp)
-                    }
-                    Badge(badge, badgeColor)
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = selecionado,
+                    onCheckedChange = onCheck,
+                    colors = CheckboxDefaults.colors(checkedColor = Color(0xFF1B5E20)),
+                    modifier = Modifier.padding(end = 8.dp),
+                )
+                Text(
+                    item.description, color = Color(0xFF1A1A1A), fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(8.dp))
+                QtyBoxDiaria(valor = qtd, onChange = onQtdChange)
+            }
+            Row(modifier = Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("EAN: ${item.ean}", color = Color(0xFF666666), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                if (item.status.equals("Impressa", true)) {
+                    Spacer(Modifier.width(8.dp)); StatusBadge("IMPRESSA", Color(0xFF4CAF50))
+                } else if (item.status.equals("Não impressa", true)) {
+                    Spacer(Modifier.width(8.dp)); StatusBadge("NÃO IMPRESSA", Color(0xFFD81B3A))
                 }
-                Spacer(Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Qtd", color = CINZA_LABEL, fontSize = 12.sp)
-                    Spacer(Modifier.width(6.dp))
-                    OutlinedTextField(
-                        value = qtd.toString(),
-                        onValueChange = { t -> onQtdChange(t.filter { it.isDigit() }.toIntOrNull() ?: 1) },
-                        modifier = Modifier.width(72.dp),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    )
-                    Spacer(Modifier.weight(1f))
-                    if (item.status.equals("Impressa", true)) Badge("IMPRESSA", Color(0xFF4CAF50))
-                    else if (item.status.equals("Não impressa", true)) Badge("NÃO IMPRESSA", Color(0xFFD81B3A))
+            }
+            Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                GreenBadgeContainer {
+                    if (promoText != null) Text(promoText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    if (separador) Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                    if (precoTexto.isNotEmpty()) Text(precoTexto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 6.dp))
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun Badge(texto: String, cor: Color) {
-    Box(
-        modifier = Modifier
-            .background(cor, RoundedCornerShape(20.dp))
-            .padding(horizontal = 8.dp, vertical = 2.dp),
-    ) {
-        Text(texto, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
 
