@@ -45,6 +45,7 @@ class GondolaEditavelActivity : AppCompatActivity() {
     private lateinit var etQuantoFica: EditText
     private lateinit var etPrecoUnitario: EditText
     private lateinit var etPrecoParcelado: EditText
+    private lateinit var etValorAnterior: EditText
     private lateinit var tvPrecoParceladoLabel: TextView
     private lateinit var etParcelas: EditText
     private lateinit var etValorParcela: EditText
@@ -108,6 +109,7 @@ class GondolaEditavelActivity : AppCompatActivity() {
         etQuantoFica = findViewById(R.id.etQuantoFica)
         etPrecoUnitario = findViewById(R.id.etPrecoUnitario)
         etPrecoParcelado = findViewById(R.id.etPrecoParcelado)
+        etValorAnterior = findViewById(R.id.etValorAnterior)
         tvPrecoParceladoLabel = findViewById(R.id.tvPrecoParceladoLabel)
         etParcelas = findViewById(R.id.etParcelas)
         etValorParcela = findViewById(R.id.etValorParcela)
@@ -146,6 +148,7 @@ class GondolaEditavelActivity : AppCompatActivity() {
         etQuantoFica.addTextChangedListener(watcher)
         etPrecoUnitario.addTextChangedListener(watcher)
         etPrecoParcelado.addTextChangedListener(watcher)
+        etValorAnterior.addTextChangedListener(watcher)
         etParcelas.addTextChangedListener(watcher)
         etValorParcela.addTextChangedListener(watcher)
 
@@ -157,6 +160,7 @@ class GondolaEditavelActivity : AppCompatActivity() {
         etQuantoFica.keyListener = decimalListener
         etPrecoUnitario.keyListener = decimalListener
         etPrecoParcelado.keyListener = decimalListener
+        etValorAnterior.keyListener = decimalListener
         etValorParcela.keyListener = decimalListener
 
         etPrecoParcelado.addTextChangedListener(object : android.text.TextWatcher {
@@ -246,7 +250,7 @@ class GondolaEditavelActivity : AppCompatActivity() {
             layoutLeveGanhe.visibility = View.GONE
             layoutParcelado.visibility = View.VISIBLE
 
-            tvPrecoParceladoLabel.text = "PREÇO POR (R$)"
+            etValorAnterior.setText(df.format(normal))
             etPrecoParcelado.setText(df.format(d.promotionalPrice?.value ?: 0.0))
             etParcelas.setText((d.installments?.installmentQuantity ?: 1).toString())
             etValorParcela.setText(df.format(d.installments?.installmentValue ?: 0.0))
@@ -256,9 +260,9 @@ class GondolaEditavelActivity : AppCompatActivity() {
             layoutLeveGanhe.visibility = View.GONE
             layoutParcelado.visibility = View.VISIBLE
 
-            tvPrecoParceladoLabel.text = "PREÇO (R$)"
-            val preco = precoAtual(d)
-            etPrecoParcelado.setText(df.format(preco))
+            etValorAnterior.setText(df.format(if (normal > 0) normal else precoAtual(d)))
+            val promo = (d.promotionalPrice?.value ?: 0.0).takeIf { it > 0 } ?: precoAtual(d)
+            etPrecoParcelado.setText(df.format(promo))
             etParcelas.setText((d.installments?.installmentQuantity ?: 1).toString())
             etValorParcela.setText(df.format(d.installments?.installmentValue ?: 0.0))
         } else if (ehDepor(d)) {
@@ -308,24 +312,25 @@ class GondolaEditavelActivity : AppCompatActivity() {
                 "NA PROMOCAO A UND SAIRA POR R$ ${df.format(unit)}"
             )
         } else if (ehDeporParcelado(d)) {
+            val valorAnterior = parseDouble(etValorAnterior.text) ?: (d.price?.value ?: 0.0)
             val por = parseDouble(etPrecoParcelado.text) ?: (d.promotionalPrice?.value ?: 0.0)
             val parcelas = etParcelas.text.toString().toIntOrNull() ?: (d.installments?.installmentQuantity ?: 1)
             val valorParcela = parseDouble(etValorParcela.text) ?: (d.installments?.installmentValue ?: 0.0)
             preview.setTemplate(carregarTemplate(true), GondolaPreviewView.MODO_PROMOCIONAL)
             preview.setData(
                 codigo, ean, desc,
-                "Por R$", df.format(por), unidade,
-                "${parcelas}X de R$ ${df.format(valorParcela)}",
-                "SEM JUROS"
+                "De R$", df.format(valorAnterior), unidade,
+                "Por R$ ${df.format(por)}",
+                "${parcelas}X de R$ ${df.format(valorParcela)}"
             )
         } else if (ehParcelado(d)) {
-            val preco = parseDouble(etPrecoParcelado.text) ?: precoAtual(d)
+            val valorAnterior = parseDouble(etValorAnterior.text) ?: (d.price?.value ?: 0.0)
             val parcelas = etParcelas.text.toString().toIntOrNull() ?: (d.installments?.installmentQuantity ?: 1)
             val valorParcela = parseDouble(etValorParcela.text) ?: (d.installments?.installmentValue ?: 0.0)
             preview.setTemplate(carregarTemplate(true), GondolaPreviewView.MODO_PROMOCIONAL)
             preview.setData(
                 codigo, ean, desc,
-                "R$", df.format(preco), unidade,
+                "R$", df.format(valorAnterior), unidade,
                 "${parcelas}X de R$ ${df.format(valorParcela)}",
                 "SEM JUROS"
             )
@@ -391,19 +396,23 @@ class GondolaEditavelActivity : AppCompatActivity() {
                 takeAndWinPrice = unit
             )
         } else if (ehDeporParcelado(original)) {
+            val valorAnterior = parseDouble(etValorAnterior.text) ?: (original.price?.value ?: 0.0)
             val por = parseDouble(etPrecoParcelado.text) ?: (original.promotionalPrice?.value ?: 0.0)
             val parcelas = etParcelas.text.toString().toIntOrNull() ?: (original.installments?.installmentQuantity ?: 1)
             val valorParcela = parseDouble(etValorParcela.text) ?: (original.installments?.installmentValue ?: 0.0)
             novo = novo.copy(
-                promotionalPrice = original.promotionalPrice?.copy(value = por),
+                price = original.price?.copy(value = valorAnterior),
+                promotionalPrice = (original.promotionalPrice ?: io.loja.network.PromotionalPriceInfo(por, 0, "", "")).copy(value = por),
                 installments = Installments(parcelas, valorParcela)
             )
         } else if (ehParcelado(original)) {
-            val preco = parseDouble(etPrecoParcelado.text) ?: precoAtual(original)
+            val valorAnterior = parseDouble(etValorAnterior.text) ?: (original.price?.value ?: 0.0)
+            val por = parseDouble(etPrecoParcelado.text) ?: precoAtual(original)
             val parcelas = etParcelas.text.toString().toIntOrNull() ?: (original.installments?.installmentQuantity ?: 1)
             val valorParcela = parseDouble(etValorParcela.text) ?: (original.installments?.installmentValue ?: 0.0)
             novo = novo.copy(
-                promotionalPrice = original.promotionalPrice?.copy(value = preco),
+                price = original.price?.copy(value = valorAnterior),
+                promotionalPrice = (original.promotionalPrice ?: io.loja.network.PromotionalPriceInfo(por, 0, "", "")).copy(value = por),
                 installments = Installments(parcelas, valorParcela)
             )
         } else if (ehDepor(original)) {

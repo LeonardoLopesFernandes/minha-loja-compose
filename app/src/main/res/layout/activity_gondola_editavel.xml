@@ -322,11 +322,34 @@
                 android:visibility="gone">
 
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="VALOR ANTERIOR (R$)"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#DA1C2E"
+                    android:letterSpacing="0.1" />
+
+                <EditText
+                    android:id="@+id/etValorAnterior"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_white_rounded"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:singleLine="true"
+                    android:inputType="numberDecimal"
+                    android:hint="0,00" />
+
+                <TextView
                     android:id="@+id/tvPrecoParceladoLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="PREÇO (R$)"
+                    android:text="PREÇO PROMOCIONAL (R$)"
                     android:textSize="11sp"
                     android:textStyle="bold"
                     android:textColor="#DA1C2E"
