@@ -72,6 +72,7 @@ import io.loja.ui.ModeloEditavelActivity
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.GreenBadgeContainer
 import io.loja.ui.compose.components.QtyBoxAvulsa
+import io.loja.ui.compose.components.SearchField
 import io.loja.ui.compose.components.WhiteTypeBadge
 import io.loja.utils.Constants
 import io.loja.utils.SessionExpiredHandler
@@ -199,39 +200,18 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
 
         Spacer(Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            OutlinedTextField(
-                value = buscaTexto,
-                onValueChange = { buscaTexto = it },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                placeholder = {
-                    Text(
-                        when (vm.buscaTipo) {
-                            "EAN" -> "Digite o EAN"
-                            "SAP" -> "Digite o SAP"
-                            else -> "Buscar Por Descrição"
-                        },
-                        color = CINZA_LABEL,
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = if (vm.buscaTipo == "Descrição") KeyboardType.Text else KeyboardType.Number,
-                ),
-            )
-            Button(
-                onClick = { vm.buscar(buscaTexto) { buscaTexto = "" } },
-                enabled = !vm.buscando,
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
-            ) {
-                Text(if (vm.buscando) "BUSCANDO..." else "BUSCAR", fontWeight = FontWeight.Bold)
-            }
-        }
+        SearchField(
+            value = buscaTexto,
+            onValueChange = { buscaTexto = it },
+            placeholder = when (vm.buscaTipo) {
+                "EAN" -> "Digite o EAN"
+                "SAP" -> "Digite o SAP"
+                else -> "Buscar Por Descrição"
+            },
+            numerico = vm.buscaTipo != "Descrição",
+            buscando = vm.buscando,
+            onBuscar = { vm.buscar(buscaTexto) { buscaTexto = "" } },
+        )
 
         if (vm.colagem.isNotEmpty()) {
             Spacer(Modifier.height(6.dp))
