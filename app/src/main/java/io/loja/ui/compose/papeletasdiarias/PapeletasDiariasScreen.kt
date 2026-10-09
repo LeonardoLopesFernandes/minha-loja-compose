@@ -54,6 +54,7 @@ import androidx.core.content.FileProvider
 import io.loja.network.PriceSign
 import io.loja.ui.ModeloEditavelActivity
 import io.loja.ui.compose.MinhaLojaRed
+import io.loja.ui.compose.components.DepartamentoSelector
 import io.loja.ui.compose.components.GreenBadgeContainer
 import io.loja.ui.compose.components.QtyBoxDiaria
 import io.loja.ui.compose.components.StatusBadge
@@ -164,30 +165,12 @@ fun PapeletasDiariasScreen(
                         Dropdown("STATUS", STATUSES, vm.statusIdx, { it }, { vm.alterarStatus(it) }, Modifier.weight(1f))
                     }
                     Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(8.dp))
-                                .clickable { dialogDept = true }
-                                .padding(horizontal = 12.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(vm.textoDepartamentos(), color = CINZA_TEXTO, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                            Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = MinhaLojaRed)
-                        }
-                        Button(
-                            onClick = { vm.carregarPapeletas() },
-                            enabled = !vm.carregando,
-                            modifier = Modifier.height(52.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
-                        ) { Text(if (vm.carregando) "BUSCANDO..." else "BUSCAR", fontWeight = FontWeight.Bold, fontSize = 13.sp) }
-                    }
+                    DepartamentoSelector(
+                        texto = vm.textoDepartamentos(),
+                        buscando = vm.carregando,
+                        onAbrir = { dialogDept = true },
+                        onBuscar = { vm.carregarPapeletas() },
+                    )
                 }
             }
         }

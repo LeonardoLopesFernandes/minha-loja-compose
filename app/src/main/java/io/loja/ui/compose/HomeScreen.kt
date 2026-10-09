@@ -57,12 +57,14 @@ import io.loja.ui.compose.papeletasdiarias.PapeletasDiariasScreen
 import io.loja.ui.compose.papeletasdiarias.PapeletasDiariasViewModel
 import kotlinx.coroutines.launch
 
+private data class Secao(val titulo: String, val icone: Int)
+
 /** Seções do menu, na mesma ordem do Flutter (MainScreen). */
 private val SECOES = listOf(
-    "ETIQUETA AVULSA",
-    "PAPELETA AVULSA",
-    "ETIQUETAS DIÁRIAS",
-    "PAPELETAS DIÁRIAS",
+    Secao("ETIQUETA AVULSA", R.drawable.eti_avulsa),
+    Secao("PAPELETA AVULSA", R.drawable.pap_avulsa),
+    Secao("ETIQUETAS DIÁRIAS", R.drawable.eti_diaria),
+    Secao("PAPELETAS DIÁRIAS", R.drawable.pap_diaria),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,9 +106,10 @@ fun HomeScreen(onPerfil: () -> Unit) {
                         Spacer(Modifier.width(8.dp))
                         Text("minha loja", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
-                    SECOES.forEachIndexed { index, titulo ->
+                    SECOES.forEachIndexed { index, secao ->
                         NavigationDrawerItem(
-                            label = { Text(titulo, fontWeight = FontWeight.Bold, fontSize = 14.sp) },
+                            icon = { Icon(painterResource(secao.icone), contentDescription = null, tint = Color.White) },
+                            label = { Text(secao.titulo, fontWeight = FontWeight.Bold, fontSize = 14.sp) },
                             selected = index == selecionada,
                             onClick = {
                                 selecionada = index
@@ -130,7 +133,7 @@ fun HomeScreen(onPerfil: () -> Unit) {
                 containerColor = MinhaLojaBg,
                 topBar = {
                     HomeTopBar(
-                        titulo = tituloConteudo ?: SECOES[selecionada],
+                        titulo = tituloConteudo ?: SECOES[selecionada].titulo,
                         onMenu = { scope.launch { drawerState.open() } },
                         onPerfil = onPerfil,
                     )
