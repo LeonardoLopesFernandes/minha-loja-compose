@@ -227,7 +227,7 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
                 onClick = { vm.buscar(buscaTexto) { buscaTexto = "" } },
                 enabled = !vm.buscando,
                 shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed),
+                colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
             ) {
                 Text(if (vm.buscando) "BUSCANDO..." else "BUSCAR", fontWeight = FontWeight.Bold)
             }
@@ -279,7 +279,7 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
                     enabled = !vm.processando,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed),
+                    colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
                 ) {
                     Text(if (vm.processando) "IMPRIMINDO..." else "IMPRIMIR TODAS", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
@@ -338,12 +338,15 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
     if (confirmarLimpar) {
         AlertDialog(
             onDismissRequest = { confirmarLimpar = false },
+            containerColor = Color.White,
+            titleContentColor = Color(0xFF1E293B),
+            textContentColor = Color(0xFF333333),
             title = { Text("Limpar Lista") },
             text = { Text("Tem certeza que deseja remover todos os itens?") },
             confirmButton = {
                 Button(
                     onClick = { vm.limpar(); confirmarLimpar = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed),
+                    colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
                 ) { Text("Sim") }
             },
             dismissButton = {

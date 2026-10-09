@@ -33,11 +33,13 @@ private val DarkColors = darkColorScheme(
 
 @Composable
 fun MinhaLojaTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    // App sempre no tema claro (o design é claro): garante texto branco no
+    // fundo vermelho e dialogs brancos com texto escuro, mesmo em dark mode.
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
+        colorScheme = LightColors,
         content = content,
     )
 }

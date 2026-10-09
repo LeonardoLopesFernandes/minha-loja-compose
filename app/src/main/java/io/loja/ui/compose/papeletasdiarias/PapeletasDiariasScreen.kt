@@ -195,7 +195,7 @@ fun PapeletasDiariasScreen(vm: PapeletasDiariasViewModel, modifier: Modifier = M
                         enabled = !vm.imprimindo,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed),
+                        colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
                     ) { Text(if (vm.imprimindo) "IMPRIMINDO..." else "🖨️ Imprimir Papeletas", fontWeight = FontWeight.Bold) }
                 }
             }
@@ -265,6 +265,9 @@ private fun DialogDepartamentos(vm: PapeletasDiariasViewModel, onFechar: (Boolea
     val depts = vm.departamentosComItens()
     AlertDialog(
         onDismissRequest = { onFechar(false) },
+        containerColor = Color.White,
+        titleContentColor = Color(0xFF1E293B),
+        textContentColor = Color(0xFF333333),
         title = { Text("Todos os departamentos") },
         text = {
             if (depts.isEmpty()) {
@@ -286,7 +289,7 @@ private fun DialogDepartamentos(vm: PapeletasDiariasViewModel, onFechar: (Boolea
                 }
             }
         },
-        confirmButton = { Button(onClick = { onFechar(true) }, colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed)) { Text("OK") } },
+        confirmButton = { Button(onClick = { onFechar(true) }, colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White)) { Text("OK") } },
         dismissButton = { OutlinedButton(onClick = { vm.limparDepartamentos() }) { Text("Limpar") } },
     )
 }
