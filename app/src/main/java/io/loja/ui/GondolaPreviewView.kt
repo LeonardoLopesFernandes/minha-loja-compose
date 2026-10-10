@@ -49,6 +49,9 @@ class GondolaPreviewView @JvmOverloads constructor(
     private var unidade = ""
     private var promoLinha1 = ""
     private var promoLinha2 = ""
+    // Quando true, a linha1 (de cima) sai pequena e a linha2 (de baixo) grande
+    // (usado no "EM ATÉ" pequeno + parcelamento grande).
+    private var promoInvertido = false
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val src = Rect()
@@ -71,7 +74,8 @@ class GondolaPreviewView @JvmOverloads constructor(
         valor: String,
         unidade: String,
         promoLinha1: String,
-        promoLinha2: String
+        promoLinha2: String,
+        promoInvertido: Boolean = false
     ) {
         this.codigo = codigo
         this.ean = ean
@@ -81,6 +85,7 @@ class GondolaPreviewView @JvmOverloads constructor(
         this.unidade = unidade
         this.promoLinha1 = promoLinha1
         this.promoLinha2 = promoLinha2
+        this.promoInvertido = promoInvertido
         invalidate()
     }
 
@@ -232,7 +237,8 @@ class GondolaPreviewView @JvmOverloads constructor(
         // Caixa preta (promocional)
         if (modo == MODO_PROMOCIONAL) {
             if (promoLinha1.isNotEmpty()) {
-                val tam = ajustarTexto(promoLinha1, 54f, 24f, BOX_MAX)
+                val tam = if (promoInvertido) ajustarTexto(promoLinha1, 17f, 10f, BOX_MAX)
+                else ajustarTexto(promoLinha1, 54f, 24f, BOX_MAX)
                 paint.typeface = fonte
                 paint.isFakeBoldText = true
                 paint.textSize = px(tam)

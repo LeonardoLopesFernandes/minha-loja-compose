@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -36,6 +37,7 @@ val VERDE_CONTAINER = Color(0xFF4CAF50)
 fun GreenBadgeContainer(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     Row(
         modifier = modifier
+            .fillMaxWidth()
             .background(VERDE_CONTAINER, RoundedCornerShape(12.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
