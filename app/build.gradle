@@ -8,7 +8,9 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "io.loja"
+        // Pacote diferente do minhaloja-kotlin (io.loja) para os dois apps
+        // poderem ficar instalados ao mesmo tempo.
+        applicationId "io.loja.compose"
         minSdk 26
         targetSdk 34
         // Em CI a versão vem da tag (ex.: v1.1.120 -> 10220). Assim o
@@ -17,6 +19,8 @@ android {
         versionCode (System.getenv("VERSION_CODE")?.toInteger() ?: 56)
         versionName (System.getenv("VERSION_NAME") ?: "1.1.109")
         buildConfigField "String", "MICROSOFT_CLIENT_SECRET", "\"${System.getenv('MICROSOFT_CLIENT_SECRET') ?: ''}\""
+        // App somente em português (Brasil): empacota só pt/pt-rBR.
+        resourceConfigurations += ["pt", "pt-rBR"]
     }
 
     signingConfigs {
