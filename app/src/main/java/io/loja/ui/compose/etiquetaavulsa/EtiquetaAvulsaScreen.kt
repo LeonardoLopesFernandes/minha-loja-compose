@@ -65,7 +65,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -440,6 +442,8 @@ private fun EtiquetaCard(
     onImprimir: () -> Unit,
     onRemover: () -> Unit,
 ) {
+    val clipboard = LocalClipboardManager.current
+    val context = LocalContext.current
     val dismissState = rememberDismissState()
     LaunchedEffect(dismissState.currentValue) {
         if (dismissState.currentValue == DismissValue.DismissedToEnd) onRemover()
@@ -529,6 +533,10 @@ private fun EtiquetaCard(
                     Text(
                         "DEP: $deptNum | EAN: ${item.ean} / SAP: ${item.sap}",
                         color = Color(0xFF757575), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clickable {
+                            clipboard.setText(AnnotatedString(item.ean))
+                            Toast.makeText(context, "EAN copiado: ${item.ean}", Toast.LENGTH_SHORT).show()
+                        },
                     )
                     Spacer(Modifier.height(4.dp))
                     if (leve != null) {

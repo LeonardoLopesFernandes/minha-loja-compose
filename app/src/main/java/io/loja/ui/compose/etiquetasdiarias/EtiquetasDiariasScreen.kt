@@ -47,7 +47,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -333,6 +335,8 @@ private fun PriceTagItemCard(
     onCheck: (Boolean) -> Unit,
     onQtdChange: (Int) -> Unit,
 ) {
+    val clipboard = LocalClipboardManager.current
+    val context = LocalContext.current
     val f = remember { NumberFormat.getCurrencyInstance(Locale("pt", "BR")) }
     val num = remember { NumberFormat.getNumberInstance(Locale("pt", "BR")).apply { minimumFractionDigits = 2; maximumFractionDigits = 2 } }
     val pd = item.printingData
@@ -418,7 +422,10 @@ private fun PriceTagItemCard(
                 QtyBoxDiaria(valor = qtd, onChange = onQtdChange)
             }
             Row(modifier = Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("EAN: ${item.ean}", color = Color(0xFF666666), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Text("EAN: ${item.ean}", color = Color(0xFF666666), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).clickable {
+                    clipboard.setText(AnnotatedString(item.ean))
+                    Toast.makeText(context, "EAN copiado: ${item.ean}", Toast.LENGTH_SHORT).show()
+                })
                 if (item.status.equals("Impressa", true)) {
                     Spacer(Modifier.width(8.dp)); StatusBadge("IMPRESSA", Color(0xFF4CAF50))
                 } else if (item.status.equals("Não impressa", true)) {
