@@ -211,7 +211,7 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
                 "SAP" -> "Digite o SAP"
                 else -> "Buscar Por Descrição"
             },
-            numerico = vm.buscaTipo != "Descrição",
+            numerico = vm.buscaTipo == "EAN" || vm.buscaTipo == "SAP",
             buscando = vm.buscando,
             onBuscar = { vm.buscar(buscaTexto) { buscaTexto = "" } },
         )
