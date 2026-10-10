@@ -37,7 +37,6 @@ val VERDE_CONTAINER = Color(0xFF4CAF50)
 fun GreenBadgeContainer(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     Row(
         modifier = modifier
-            .fillMaxWidth()
             .background(VERDE_CONTAINER, RoundedCornerShape(12.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -506,14 +506,14 @@ private fun PapeletaCard(
                     Spacer(Modifier.height(4.dp))
                     if (leve != null) {
                         GreenBadgeContainer {
-                            Text(leve, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
-                            Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 4.dp))
-                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text(leve, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
+                            Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                             WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 6.dp))
                         }
                     } else {
                         GreenBadgeContainer {
-                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                             WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 8.dp))
                         }
                     }
