@@ -56,6 +56,7 @@ fun WhiteTypeBadge(texto: String, cor: Color, modifier: Modifier = Modifier, sha
     Box(
         modifier = modifier
             .background(Color.White, shape)
+            .border(1.dp, VERDE_CONTAINER, shape)
             .padding(horizontal = 8.dp, vertical = 2.dp),
         contentAlignment = Alignment.Center,
     ) {

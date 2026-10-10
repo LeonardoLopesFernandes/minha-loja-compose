@@ -543,17 +543,34 @@ private fun EtiquetaCard(
                     )
                     Spacer(Modifier.height(4.dp))
                     if (leve != null) {
-                        GreenBadgeContainer {
-                            Text(leve, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
-                            Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
-                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 6.dp))
+                        GreenBadgeContainer(
+                            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                            contentPadding = PaddingValues(start = 10.dp),
+                        ) {
+                            Text(leve, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1, modifier = Modifier.padding(vertical = 4.dp))
+                            Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp))
+                            var tamFonteLeve by remember(valor) { mutableStateOf(14f) }
+                            Text(
+                                valor,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = tamFonteLeve.sp,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Clip,
+                                modifier = Modifier.weight(1f).padding(vertical = 4.dp),
+                                onTextLayout = { if (it.didOverflowWidth && tamFonteLeve > 9f) tamFonteLeve -= 1f },
+                            )
+                            WhiteTypeBadge(
+                                tipo, tipoCor,
+                                modifier = Modifier.fillMaxHeight(),
+                                shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
+                            )
                         }
                     } else {
-                        val parcelado = tipo == "parcelado"
                         GreenBadgeContainer(
-                            modifier = if (parcelado) Modifier.fillMaxWidth().height(IntrinsicSize.Min) else Modifier,
-                            contentPadding = if (parcelado) PaddingValues(start = 10.dp) else PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                            contentPadding = PaddingValues(start = 10.dp),
                         ) {
                             var tamFonte by remember(valor) { mutableStateOf(14f) }
                             Text(
@@ -569,8 +586,8 @@ private fun EtiquetaCard(
                             )
                             WhiteTypeBadge(
                                 tipo, tipoCor,
-                                modifier = if (parcelado) Modifier.fillMaxHeight() else Modifier.padding(start = 8.dp),
-                                shape = if (parcelado) RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp) else RoundedCornerShape(30.dp),
+                                modifier = Modifier.fillMaxHeight(),
+                                shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
                             )
                         }
                     }
