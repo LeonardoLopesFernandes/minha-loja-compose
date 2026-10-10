@@ -240,7 +240,7 @@ class GondolaPreviewView @JvmOverloads constructor(
                 paint.textSize = px(tam)
                 paint.color = 0xFFFFE600.toInt()
                 paint.textAlign = Paint.Align.CENTER
-                canvas.drawText(promoLinha0, tx(BOX_CX), ty(BOX_CY - 34f), paint)
+                canvas.drawText(promoLinha0, tx(BOX_CX), ty(BOX_CY - 44f), paint)
             }
             if (promoLinha1.isNotEmpty()) {
                 val tam = ajustarTexto(promoLinha1, 54f, 24f, BOX_MAX)
