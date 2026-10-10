@@ -419,6 +419,19 @@ class ModeloEditavelActivity : AppCompatActivity() {
             etPrecoLeve.aoAlterarTexto { v ->
                 multiDataList[index] = if (hasInstallment) multiDataList[index].copy(installmentPrice = v.toDoubleBr()) else multiDataList[index].copy(takeAndWinPrice = v.toDoubleBr())
             }
+            if (hasInstallment) {
+                // Ao digitar o nº de parcelas, calcula o valor da parcela.
+                etQtdLeve.addTextChangedListener(object : android.text.TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                    override fun afterTextChanged(s: android.text.Editable?) {
+                        val parcelas = s.toString().toIntOrNull() ?: return
+                        if (parcelas <= 0) return
+                        val base = data.promotionPrice?.takeIf { it > 0 } ?: data.price
+                        if (base > 0) etPrecoLeve.setText(formatarPrecoEdit(base / parcelas))
+                    }
+                })
+            }
         }
 
         etEan.setText(data.ean)
