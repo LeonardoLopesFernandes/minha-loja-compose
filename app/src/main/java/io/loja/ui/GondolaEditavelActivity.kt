@@ -333,8 +333,9 @@ class GondolaEditavelActivity : AppCompatActivity() {
             preview.setData(
                 codigo, ean, desc,
                 "R$", df.format(por), unidade,
-                "EM ATÉ",
-                "${parcelas}x de R$ ${df.format(valorParcela)}"
+                "${parcelas}x de R$ ${df.format(valorParcela)}",
+                "SEM JUROS",
+                "EM ATÉ"
             )
         } else if (ehParcelado(d)) {
             val valorAnterior = parseDouble(etValorAnterior.text) ?: (d.price?.value ?: 0.0)
@@ -344,8 +345,8 @@ class GondolaEditavelActivity : AppCompatActivity() {
             preview.setData(
                 codigo, ean, desc,
                 "R$", df.format(valorAnterior), unidade,
-                "EM ATÉ",
-                "${parcelas}x de R$ ${df.format(valorParcela)}"
+                "${parcelas}X de R$ ${df.format(valorParcela)}",
+                "SEM JUROS"
             )
         } else if (ehDepor(d)) {
             val de = parseDouble(etPrecoDe.text) ?: (d.price?.value ?: 0.0)
