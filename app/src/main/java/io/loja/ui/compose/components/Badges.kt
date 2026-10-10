@@ -3,6 +3,7 @@ package io.loja.ui.compose.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -34,11 +36,15 @@ val VERDE_CONTAINER = Color(0xFF4CAF50)
 
 /** Container verde (badge_green_container): fundo #4CAF50, raio 12. */
 @Composable
-fun GreenBadgeContainer(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
+fun GreenBadgeContainer(
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+    content: @Composable RowScope.() -> Unit,
+) {
     Row(
         modifier = modifier
             .background(VERDE_CONTAINER, RoundedCornerShape(12.dp))
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+            .padding(contentPadding),
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )
@@ -46,11 +52,12 @@ fun GreenBadgeContainer(modifier: Modifier = Modifier, content: @Composable RowS
 
 /** Badge branco (badge_white_container): fundo branco, raio 30, texto colorido 10sp. */
 @Composable
-fun WhiteTypeBadge(texto: String, cor: Color, modifier: Modifier = Modifier) {
+fun WhiteTypeBadge(texto: String, cor: Color, modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(30.dp)) {
     Box(
         modifier = modifier
-            .background(Color.White, RoundedCornerShape(30.dp))
+            .background(Color.White, shape)
             .padding(horizontal = 8.dp, vertical = 2.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(texto, color = cor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
     }

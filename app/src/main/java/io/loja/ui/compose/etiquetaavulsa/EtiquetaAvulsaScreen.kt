@@ -17,8 +17,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -547,9 +550,28 @@ private fun EtiquetaCard(
                             WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 6.dp))
                         }
                     } else {
-                        GreenBadgeContainer {
-                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = if (tipo == "parcelado") 10.sp else 12.sp, maxLines = 1)
-                            WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 8.dp))
+                        val parcelado = tipo == "parcelado"
+                        GreenBadgeContainer(
+                            modifier = if (parcelado) Modifier.fillMaxWidth().height(IntrinsicSize.Min) else Modifier,
+                            contentPadding = if (parcelado) PaddingValues(start = 10.dp) else PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        ) {
+                            var tamFonte by remember(valor) { mutableStateOf(14f) }
+                            Text(
+                                valor,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = tamFonte.sp,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Clip,
+                                modifier = Modifier.weight(1f).padding(vertical = 4.dp),
+                                onTextLayout = { if (it.didOverflowWidth && tamFonte > 9f) tamFonte -= 1f },
+                            )
+                            WhiteTypeBadge(
+                                tipo, tipoCor,
+                                modifier = if (parcelado) Modifier.fillMaxHeight() else Modifier.padding(start = 8.dp),
+                                shape = if (parcelado) RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp) else RoundedCornerShape(30.dp),
+                            )
                         }
                     }
                 }
