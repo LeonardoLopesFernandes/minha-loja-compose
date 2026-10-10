@@ -526,16 +526,10 @@ private fun EtiquetaCard(
             }
             Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f).padding(start = 4.dp, end = 8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "DEP: $deptNum | EAN: ${item.ean} / SAP: ${item.sap}",
-                            color = Color(0xFF757575), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                        )
-                        if (tipo == "parcelado") {
-                            Text(tipo, color = tipoCor, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 6.dp))
-                        }
-                    }
+                    Text(
+                        "DEP: $deptNum | EAN: ${item.ean} / SAP: ${item.sap}",
+                        color = Color(0xFF757575), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
                     Spacer(Modifier.height(4.dp))
                     if (leve != null) {
                         GreenBadgeContainer {
@@ -546,8 +540,8 @@ private fun EtiquetaCard(
                         }
                     } else {
                         GreenBadgeContainer {
-                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            if (tipo != "parcelado") WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 8.dp))
+                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = if (tipo == "parcelado") 10.sp else 12.sp, maxLines = 1)
+                            WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 8.dp))
                         }
                     }
                 }

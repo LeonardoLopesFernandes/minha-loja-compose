@@ -88,6 +88,10 @@ fun EtiquetasDiariasScreen(
         onTitulo(if (vm.isTomorrow) "Etiquetas de amanhã" else "Etiquetas de hoje")
     }
 
+    val fmtDia = SimpleDateFormat("dd/MM", Locale("pt", "BR"))
+    val hojeStr = fmtDia.format(Date())
+    val amanhaStr = fmtDia.format(Date(System.currentTimeMillis() + 86_400_000L))
+
     LaunchedEffect(Unit) {
         vm.eventos.collect { ev ->
             when (ev) {
@@ -132,13 +136,13 @@ fun EtiquetasDiariasScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         DatePill(
-                            titulo = "Hoje",
+                            titulo = "Hoje $hojeStr",
                             selecionado = !vm.isTomorrow,
                             modifier = Modifier.weight(1f),
                             onClick = { if (vm.isTomorrow) vm.voltarHoje() },
                         )
                         DatePill(
-                            titulo = "Amanhã",
+                            titulo = "Amanhã $amanhaStr",
                             selecionado = vm.isTomorrow,
                             modifier = Modifier.weight(1f),
                             onClick = { if (!vm.isTomorrow) vm.irParaAmanha() },

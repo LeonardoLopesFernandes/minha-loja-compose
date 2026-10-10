@@ -58,7 +58,7 @@ class EtiquetasDiariasViewModel(app: Application) : AndroidViewModel(app) {
     val quantidades: SnapshotStateMap<String, Int> = mutableStateMapOf()
     val departamentosSelecionados: SnapshotStateList<String> = mutableStateListOf()
 
-    var currentDate: String = SimpleDateFormat("yyyy-MM-dd", Locale("pt", "BR")).format(Date())
+    var currentDate by mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale("pt", "BR")).format(Date()))
         private set
     var printers: List<PriceTagPrinter> = emptyList()
         private set

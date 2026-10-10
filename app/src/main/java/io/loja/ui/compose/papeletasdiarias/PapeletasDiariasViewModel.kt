@@ -58,7 +58,7 @@ class PapeletasDiariasViewModel(app: Application) : AndroidViewModel(app) {
     val quantidades: SnapshotStateMap<String, Int> = mutableStateMapOf()
     val departamentosSelecionados: SnapshotStateList<String> = mutableStateListOf()
 
-    var currentDate: String = SimpleDateFormat("yyyy-MM-dd", Locale("pt", "BR")).format(Date())
+    var currentDate by mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale("pt", "BR")).format(Date()))
         private set
     var sizes: List<String> = listOf(Constants.SIGN_SIZE_1X1, Constants.SIGN_SIZE_2X1, Constants.SIGN_SIZE_4X1, Constants.SIGN_SIZE_6X1)
         private set

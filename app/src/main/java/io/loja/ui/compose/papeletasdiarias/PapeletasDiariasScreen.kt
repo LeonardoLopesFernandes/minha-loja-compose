@@ -89,6 +89,10 @@ fun PapeletasDiariasScreen(
         onTitulo(if (vm.isTomorrow) "Papeletas de amanhã" else "Papeletas de hoje")
     }
 
+    val fmtDia = SimpleDateFormat("dd/MM", Locale("pt", "BR"))
+    val hojeStr = fmtDia.format(Date())
+    val amanhaStr = fmtDia.format(Date(System.currentTimeMillis() + 86_400_000L))
+
     LaunchedEffect(Unit) {
         vm.eventos.collect { ev ->
             when (ev) {
@@ -135,8 +139,8 @@ fun PapeletasDiariasScreen(
             ) {
                 Column(modifier = Modifier.padding(10.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DatePill("Hoje", !vm.isTomorrow, Modifier.weight(1f)) { if (vm.isTomorrow) vm.voltarHoje() }
-                        DatePill("Amanhã", vm.isTomorrow, Modifier.weight(1f)) { if (!vm.isTomorrow) vm.irParaAmanha() }
+                        DatePill("Hoje $hojeStr", !vm.isTomorrow, Modifier.weight(1f)) { if (vm.isTomorrow) vm.voltarHoje() }
+                        DatePill("Amanhã $amanhaStr", vm.isTomorrow, Modifier.weight(1f)) { if (!vm.isTomorrow) vm.irParaAmanha() }
                     }
                     Spacer(Modifier.height(8.dp))
                     Row(modifier = Modifier.fillMaxWidth()) {
