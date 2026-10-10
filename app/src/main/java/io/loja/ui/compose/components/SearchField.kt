@@ -15,9 +15,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
@@ -40,6 +42,10 @@ fun SearchField(
     onBuscar: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val focusManager = LocalFocusManager.current
+    // Ao trocar o tipo (EAN/SAP <-> Descrição), tira o foco para o teclado
+    // reaparecer com o tipo correto (senão o IME fica no modo número).
+    LaunchedEffect(numerico) { focusManager.clearFocus() }
     Row(
         modifier = modifier
             .fillMaxWidth()

@@ -1,5 +1,7 @@
 package io.loja.ui.compose
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -29,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,15 +41,23 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.loja.R
+import io.loja.network.SessionManager
 import io.loja.ui.compose.etiquetaavulsa.EtiquetaAvulsaScreen
 import io.loja.ui.compose.etiquetaavulsa.EtiquetaAvulsaViewModel
 import io.loja.ui.compose.etiquetasdiarias.EtiquetasDiariasScreen
@@ -74,6 +85,19 @@ fun HomeScreen(onPerfil: () -> Unit) {
     val scope = rememberCoroutineScope()
     var selecionada by rememberSaveable { mutableStateOf(0) }
     var tituloConteudo by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+    var fotoPath by remember { mutableStateOf(SessionManager(context).getProfilePhoto()) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val obs = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                fotoPath = SessionManager(context).getProfilePhoto()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
 
     LaunchedEffect(selecionada) { tituloConteudo = null }
 
@@ -136,6 +160,7 @@ fun HomeScreen(onPerfil: () -> Unit) {
                         titulo = tituloConteudo ?: SECOES[selecionada].titulo,
                         onMenu = { scope.launch { drawerState.open() } },
                         onPerfil = onPerfil,
+                        fotoPath = fotoPath,
                     )
                 },
             ) { innerPadding ->
@@ -170,6 +195,7 @@ private fun HomeTopBar(
     titulo: String,
     onMenu: () -> Unit,
     onPerfil: () -> Unit,
+    fotoPath: String?,
 ) {
     Row(
         modifier = Modifier
@@ -200,12 +226,25 @@ private fun HomeTopBar(
                 .clickable { onPerfil() },
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                Icons.Filled.AccountCircle,
-                contentDescription = "Perfil",
-                tint = Color.White,
-                modifier = Modifier.size(24.dp),
-            )
+            val bmp = remember(fotoPath) {
+                if (fotoPath == null) null
+                else runCatching { BitmapFactory.decodeFile(fotoPath) }.getOrNull()
+            }
+            if (bmp != null) {
+                Image(
+                    bitmap = bmp.asImageBitmap(),
+                    contentDescription = "Perfil",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(40.dp).clip(CircleShape),
+                )
+            } else {
+                Icon(
+                    Icons.Filled.AccountCircle,
+                    contentDescription = "Perfil",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
         }
     }
 }
