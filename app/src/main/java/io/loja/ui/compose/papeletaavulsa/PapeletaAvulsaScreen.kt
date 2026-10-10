@@ -433,20 +433,24 @@ private fun PapeletaCard(
     var tipo = "normal"
     var tipoCor = Color(0xFF9E9E9E)
 
+    val qtdParc = pd?.installmentQuantity ?: 0
+    val valorParc = pd?.installmentPrice?.takeIf { it > 0 } ?: precoPromo?.takeIf { it > 0 } ?: precoNormal
+    val ehDeporParcelado = qtdParc > 0 && precoPromo != null && precoPromo > 0 &&
+        (precoNormal <= 0 || precoPromo < precoNormal)
+
     if (takeQty != null && takeQty > 0 && takePrice != null && takePrice > 0) {
         val totalLeve = Constants.totalLeveGanhePorTemplate(pd?.template, precoPromo, takePrice, takeQty)
         leve = "Leve $takeQty por ${f.format(totalLeve)}"
         valor = f.format(precoNormal)
         tipo = "leve e ganhe"; tipoCor = Color(0xFF2E7D32)
-    } else if ((pd?.installmentQuantity ?: 0) > 0) {
-        val qtdParc = pd?.installmentQuantity?.takeIf { it > 0 }
-        val valorParc = pd?.installmentPrice?.takeIf { it > 0 } ?: precoPromo?.takeIf { it > 0 } ?: precoNormal
+    } else if (ehDeporParcelado) {
+        valor = "De R$${num.format(precoNormal)}|Por R$${num.format(precoPromo!!)}|${qtdParc}x de R$${num.format(valorParc)}"
+        tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
+    } else if (qtdParc > 0) {
         val por = precoPromo?.takeIf { it > 0 }
-        valor = if (qtdParc != null && por != null && valorParc > 0)
+        valor = if (por != null && valorParc > 0)
             "R$${num.format(por)} | ${qtdParc}x de R$${num.format(valorParc)}"
-        else if (qtdParc != null)
-            "${f.format(precoNormal)} | ${qtdParc}x de R$${String.format(Locale("pt", "BR"), "%.2f", valorParc)}"
-        else if (valorParc > 0) f.format(valorParc)
+        else if (valorParc > 0) "${f.format(precoNormal)} | ${qtdParc}x de R$${num.format(valorParc)}"
         else item.price
         tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
     } else if (precoPromo != null && precoPromo > 0 && precoPromo < precoNormal) {

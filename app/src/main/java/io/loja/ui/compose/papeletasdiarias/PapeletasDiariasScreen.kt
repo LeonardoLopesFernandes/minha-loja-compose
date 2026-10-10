@@ -325,6 +325,11 @@ private fun PapeletaDiariaCard(
     var separador = false
     var precoTexto = if (precoNormal > 0) f.format(precoNormal) else item.price
 
+    val parcelasQtd = pd?.installmentQuantity ?: 0
+    val valorParcelaCalc = pd?.installmentPrice?.takeIf { it > 0 } ?: precoPromo?.takeIf { it > 0 } ?: precoNormal
+    val ehDeporParcelado = parcelasQtd > 0 && precoPromo != null && precoPromo > 0 &&
+        (precoNormal <= 0 || precoPromo < precoNormal)
+
     when {
         movement.contains("LEVE") || movement.contains("GANHE") -> {
             tipo = "leve e ganhe"; tipoCor = Color(0xFF2E7D32)
@@ -335,6 +340,12 @@ private fun PapeletaDiariaCard(
                 precoTexto = if (precoNormal > 0) f.format(precoNormal) else item.price
             }
         }
+        ehDeporParcelado -> {
+            tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
+            promoText = "De R$${num.format(precoNormal)}|Por R$${num.format(precoPromo!!)}|${parcelasQtd}x de R$${num.format(valorParcelaCalc)}"
+            separador = false
+            precoTexto = ""
+        }
         movement.contains("DE") || movement.contains("POR") || movement.contains("PROMOCIONAL") -> {
             tipo = "de por"; tipoCor = Color(0xFFFF9800)
             if (precoPromo != null && precoPromo > 0 && precoPromo < precoNormal) {
@@ -343,19 +354,17 @@ private fun PapeletaDiariaCard(
                 precoTexto = ""
             }
         }
-        ((pd?.installmentQuantity ?: 0) > 0) -> {
+        parcelasQtd > 0 -> {
             tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
-            val q = pd?.installmentQuantity?.takeIf { it > 0 }
-            val v = pd?.installmentPrice?.takeIf { it > 0 } ?: precoPromo?.takeIf { it > 0 } ?: precoNormal
             val por = precoPromo?.takeIf { it > 0 }
-            if (q != null && por != null && v > 0) {
-                promoText = "R$${num.format(por)} | ${q}x de R$${num.format(v)}"
+            if (por != null && valorParcelaCalc > 0) {
+                promoText = "R$${num.format(por)} | ${parcelasQtd}x de R$${num.format(valorParcelaCalc)}"
                 separador = false
                 precoTexto = ""
             } else {
                 promoText = if (precoNormal > 0) f.format(precoNormal) else item.price
                 separador = true
-                precoTexto = if (q != null) "${q}x de R$${String.format(Locale("pt", "BR"), "%.2f", v)}" else f.format(v)
+                precoTexto = "${parcelasQtd}x de R$${num.format(valorParcelaCalc)}"
             }
         }
     }

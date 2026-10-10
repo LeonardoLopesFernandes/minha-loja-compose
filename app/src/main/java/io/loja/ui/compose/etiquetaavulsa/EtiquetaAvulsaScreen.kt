@@ -457,19 +457,28 @@ private fun EtiquetaCard(
     var tipo = "normal"
     var tipoCor = Color(0xFF9E9E9E)
 
+    val valorParcCalc = installments?.installmentValue?.takeIf { it > 0 }
+        ?: (pd?.displayPrice ?: 0.0).takeIf { it > 0 }
+        ?: (pd?.unitValue ?: 0.0).takeIf { it > 0 }
+        ?: precoPromo?.takeIf { it > 0 }
+        ?: precoNormal
+    val ehDeporParcelado = installments != null && installments.installmentQuantity > 0 &&
+        precoPromo != null && precoPromo > 0 && (precoNormal <= 0 || precoPromo < precoNormal)
+
     if (takeAndWin != null && takeAndWin.qty > 0 && takeAndWin.totalValue > 0) {
         val totalLeve = if (pd?.template == Constants.SIGN_TEMPLATE_LEVE_GANHE_CADA && precoPromo != null && precoPromo > 0)
             precoPromo else takeAndWin.totalValue
         leve = "Leve ${takeAndWin.qty} por R$ ${String.format(Locale("pt", "BR"), "%.2f", totalLeve)}"
         valor = formatador.format(precoNormal)
         tipo = "leve e ganhe"; tipoCor = Color(0xFF2E7D32)
+    } else if (ehDeporParcelado) {
+        valor = "De R$${num.format(precoNormal)}|Por R$${num.format(precoPromo!!)}|${installments!!.installmentQuantity}x de R$${num.format(valorParcCalc)}"
+        tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
     } else if (installments != null && installments.installmentQuantity > 0) {
         val qtdParc = installments.installmentQuantity
-        val valorParc = listOf(installments.installmentValue, pd?.displayPrice ?: 0.0, pd?.unitValue ?: 0.0, precoPromo ?: 0.0, precoNormal)
-            .firstOrNull { it > 0 } ?: 0.0
         valor = if (precoPromo != null && precoPromo > 0)
-            "R$${num.format(precoPromo)} | ${qtdParc}x de R$${num.format(valorParc)}"
-        else "${formatador.format(precoNormal)} | ${qtdParc}x de R$${String.format(Locale("pt", "BR"), "%.2f", valorParc)}"
+            "R$${num.format(precoPromo)} | ${qtdParc}x de R$${num.format(valorParcCalc)}"
+        else "${formatador.format(precoNormal)} | ${qtdParc}x de R$${num.format(valorParcCalc)}"
         tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
     } else if (precoPromo != null && precoPromo > 0 && precoPromo < precoNormal) {
         valor = "De ${formatador.format(precoNormal)} | Por ${formatador.format(precoPromo)}"

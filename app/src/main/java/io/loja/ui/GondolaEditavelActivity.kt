@@ -312,16 +312,17 @@ class GondolaEditavelActivity : AppCompatActivity() {
                 "NA PROMOCAO A UND SAIRA POR R$ ${df.format(unit)}"
             )
         } else if (ehDeporParcelado(d)) {
-            val valorAnterior = parseDouble(etValorAnterior.text) ?: (d.price?.value ?: 0.0)
+            // Amarelo: o valor "por" como se fosse normal. Preto: "EM ATÉ" +
+            // o parcelamento (parcela x valor da parcela).
             val por = parseDouble(etPrecoParcelado.text) ?: (d.promotionalPrice?.value ?: 0.0)
             val parcelas = etParcelas.text.toString().toIntOrNull() ?: (d.installments?.installmentQuantity ?: 1)
             val valorParcela = parseDouble(etValorParcela.text) ?: (d.installments?.installmentValue ?: 0.0)
             preview.setTemplate(carregarTemplate(true), GondolaPreviewView.MODO_PROMOCIONAL)
             preview.setData(
                 codigo, ean, desc,
-                "De R$", df.format(valorAnterior), unidade,
-                "Por R$ ${df.format(por)}",
-                "${parcelas}X de R$ ${df.format(valorParcela)}"
+                "R$", df.format(por), unidade,
+                "EM ATÉ",
+                "${parcelas}x de R$ ${df.format(valorParcela)}"
             )
         } else if (ehParcelado(d)) {
             val valorAnterior = parseDouble(etValorAnterior.text) ?: (d.price?.value ?: 0.0)
@@ -331,8 +332,8 @@ class GondolaEditavelActivity : AppCompatActivity() {
             preview.setData(
                 codigo, ean, desc,
                 "R$", df.format(valorAnterior), unidade,
-                "${parcelas}X de R$ ${df.format(valorParcela)}",
-                "SEM JUROS"
+                "EM ATÉ",
+                "${parcelas}x de R$ ${df.format(valorParcela)}"
             )
         } else if (ehDepor(d)) {
             val de = parseDouble(etPrecoDe.text) ?: (d.price?.value ?: 0.0)
