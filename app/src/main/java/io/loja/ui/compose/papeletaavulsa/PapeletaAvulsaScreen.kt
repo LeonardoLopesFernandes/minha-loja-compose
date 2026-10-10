@@ -517,23 +517,12 @@ private fun PapeletaCard(
                     Spacer(Modifier.height(4.dp))
                     if (leve != null) {
                         GreenBadgeContainer(
-                            modifier = Modifier.height(IntrinsicSize.Min),
+                            modifier = Modifier.height(28.dp),
                             contentPadding = PaddingValues(start = 10.dp),
                         ) {
-                            Text(leve, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1, modifier = Modifier.padding(vertical = 4.dp))
-                            Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp))
-                            var tamFonteLeve by remember(valor) { mutableStateOf(14f) }
-                            Text(
-                                valor,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = tamFonteLeve.sp,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Clip,
-                                modifier = Modifier.padding(vertical = 4.dp),
-                                onTextLayout = { if (it.didOverflowWidth && tamFonteLeve > 9f) tamFonteLeve -= 1f },
-                            )
+                            Text(leve, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
+                            Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
                             WhiteTypeBadge(
                                 tipo, tipoCor,
                                 modifier = Modifier.fillMaxHeight(),
@@ -543,7 +532,7 @@ private fun PapeletaCard(
                     } else {
                         val parcelado = tipo == "parcelado"
                         GreenBadgeContainer(
-                            modifier = Modifier.height(IntrinsicSize.Min),
+                            modifier = Modifier.height(28.dp),
                             contentPadding = PaddingValues(start = 10.dp),
                         ) {
                             if (parcelado) {
@@ -556,11 +545,11 @@ private fun PapeletaCard(
                                     maxLines = 1,
                                     softWrap = false,
                                     overflow = TextOverflow.Clip,
-                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    modifier = Modifier.weight(1f),
                                     onTextLayout = { if (it.didOverflowWidth && tamFonte > 9f) tamFonte -= 1f },
                                 )
                             } else {
-                                Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1, modifier = Modifier.padding(vertical = 4.dp))
+                                Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
                             }
                             WhiteTypeBadge(
                                 tipo, tipoCor,
