@@ -545,9 +545,6 @@ private fun EtiquetaCard(
                         }
                     }
                 }
-                IconButton(onClick = onRemover, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Remover", tint = Color(0xFFD81B3A), modifier = Modifier.size(20.dp))
-                }
             }
         }
             }
