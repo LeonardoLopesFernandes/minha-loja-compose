@@ -93,8 +93,8 @@ import java.util.Locale
 private val CINZA_LABEL = Color(0xFF8C9BA5)
 private val CINZA_TEXTO = Color(0xFF1E293B)
 
-private val TIPOS = listOf("Comum", "Promocional")
-private val MODELOS = listOf("Misto", "Promocional", "Promocional Editável", "Comum", "Comum Editável", "Vencimentos")
+private val TIPOS = listOf("Normal", "Promocional")
+private val MODELOS = listOf("Misto", "Promocional", "Promocional Editável", "Normal", "Normal Editável", "Vencimentos")
 private val BUSCAS = listOf("EAN", "SAP", "Descrição do item")
 private val TAMANHOS = listOf("1×1", "2×1", "4×1", "6×1")
 

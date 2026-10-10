@@ -315,7 +315,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
         val hasPromo = data.promotionPrice != null && data.promotionPrice > 0
         val hasTake = data.takeAndWinQuantity != null && data.takeAndWinQuantity > 0
         val ehComum = !hasPromo && !hasTake && !hasInstallment
-        val tipoLabel = if (ehComum) "Comum" else "Promocional"
+        val tipoLabel = if (ehComum) "Normal" else "Promocional"
 
         val card = layoutInflater.inflate(R.layout.item_editavel_card, null)
 

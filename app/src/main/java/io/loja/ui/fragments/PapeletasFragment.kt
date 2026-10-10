@@ -201,7 +201,7 @@ class PapeletasFragment : Fragment() {
         var initModelo = true
         var initBusca = true
         var initTamanho = true
-        val tipos = arrayOf("Comum", "Promocional")
+        val tipos = arrayOf("Normal", "Promocional")
         val tipoAdapter = object : ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, tipos) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val v = super.getView(position, convertView, parent) as TextView
@@ -220,7 +220,7 @@ class PapeletasFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        val modelos = arrayOf("Misto", "Promocional", "Promocional Editável", "Comum", "Comum Editável", "Vencimentos")
+        val modelos = arrayOf("Misto", "Promocional", "Promocional Editável", "Normal", "Normal Editável", "Vencimentos")
         val modeloAdapter = object : ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, modelos) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val v = super.getView(position, convertView, parent) as TextView
