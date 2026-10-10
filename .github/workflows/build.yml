@@ -60,8 +60,8 @@ jobs:
       - name: Rename APK
         run: |
           APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
-          cp "$APK" minhaloja-release.apk
-          ls -la minhaloja-release.apk
+          cp "$APK" minhaloja-compose.apk
+          ls -la minhaloja-compose.apk
 
       - name: Notas da release
         if: startsWith(github.ref, 'refs/tags/')
@@ -87,7 +87,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: minhaloja-release.apk
+          files: minhaloja-compose.apk
           body_path: /tmp/notas.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
