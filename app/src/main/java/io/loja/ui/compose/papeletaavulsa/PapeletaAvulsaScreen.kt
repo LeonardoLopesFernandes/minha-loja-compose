@@ -520,12 +520,12 @@ private fun PapeletaCard(
                             modifier = Modifier.height(28.dp),
                             contentPadding = PaddingValues(start = 10.dp),
                         ) {
-                            Text(leve, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
-                            Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
-                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
+                            Text(leve, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
+                            Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                            Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
                             WhiteTypeBadge(
                                 tipo, tipoCor,
-                                modifier = Modifier.fillMaxHeight(),
+                                modifier = Modifier.fillMaxHeight().padding(start = 6.dp),
                                 shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
                             )
                         }
@@ -533,27 +533,23 @@ private fun PapeletaCard(
                         val parcelado = tipo == "parcelado"
                         GreenBadgeContainer(
                             modifier = Modifier.height(28.dp),
-                            contentPadding = PaddingValues(start = 10.dp),
+                            contentPadding = PaddingValues(start = 12.dp),
                         ) {
-                            if (parcelado) {
-                                var tamFonte by remember(valor) { mutableStateOf(14f) }
-                                Text(
-                                    valor,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = tamFonte.sp,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Clip,
-                                    modifier = Modifier.weight(1f),
-                                    onTextLayout = { if (it.didOverflowWidth && tamFonte > 9f) tamFonte -= 1f },
-                                )
-                            } else {
-                                Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1)
-                            }
+                            var tamFonte by remember(valor) { mutableStateOf(14f) }
+                            Text(
+                                valor,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = tamFonte.sp,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Clip,
+                                modifier = if (parcelado) Modifier.weight(1f) else Modifier,
+                                onTextLayout = { if (it.didOverflowWidth && tamFonte > 9f) tamFonte -= 1f },
+                            )
                             WhiteTypeBadge(
                                 tipo, tipoCor,
-                                modifier = Modifier.fillMaxHeight(),
+                                modifier = Modifier.fillMaxHeight().padding(start = 8.dp),
                                 shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
                             )
                         }
