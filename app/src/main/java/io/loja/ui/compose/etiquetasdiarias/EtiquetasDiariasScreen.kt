@@ -23,7 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -199,7 +199,7 @@ fun EtiquetasDiariasScreen(
                     Text("Selecionados: ${vm.selecionadosCount}", color = CINZA_TEXTO, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.weight(1f))
                     OutlinedButton(onClick = { vm.gerarRelatorio() }, shape = RoundedCornerShape(8.dp)) {
-                        Icon(Icons.Filled.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(painterResource(io.loja.R.drawable.ic_pdf), contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
                         Text("RELATÓRIO", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }

@@ -34,13 +34,6 @@
             android:exported="false"
             android:theme="@style/AppTheme.NoActionBar" />
 
-        <!-- MAIN ACTIVITY -->
-        <activity
-            android:name=".ui.MainActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:windowSoftInputMode="adjustResize" />
-
         <!-- BARCODE SCANNER -->
         <activity
             android:name=".ui.BarcodeScannerActivity"
@@ -58,19 +51,7 @@
     android:name=".ui.PdfViewerActivity"
     android:exported="false" />
 
-		<activity
-    android:name=".ui.EtiquetasActivity"
-    android:exported="false"
-    android:theme="@style/AppTheme.NoActionBar"
-    android:windowSoftInputMode="adjustNothing" />
-
-		<activity
-    android:name=".ui.PapeletasDiariasActivity"
-    android:exported="false"
-    android:theme="@style/AppTheme.NoActionBar"
-    android:windowSoftInputMode="adjustNothing" />
-
-        <activity
+				        <activity
             android:name=".ui.ProfileActivity"
             android:exported="false"
             android:theme="@style/AppTheme.NoActionBar" />

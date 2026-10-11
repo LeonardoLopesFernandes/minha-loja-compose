@@ -37,9 +37,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material.icons.filled.Print
-import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -297,7 +295,7 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
                         }
                     }
                 }) {
-                    Icon(Icons.Filled.PictureAsPdf, contentDescription = "PDF", tint = MinhaLojaRed)
+                    Icon(painterResource(io.loja.R.drawable.ic_pdf), contentDescription = "PDF", tint = MinhaLojaRed)
                 }
             }
         }
@@ -432,7 +430,7 @@ private fun FabScanner(modifier: Modifier = Modifier, onAbrir: () -> Unit) {
             },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Filled.QrCodeScanner, contentDescription = "Escanear", tint = Color.White)
+        Icon(painterResource(io.loja.R.drawable.ic_qr_code_small), contentDescription = "Escanear", tint = Color.White)
     }
 }
 
@@ -528,7 +526,7 @@ private fun EtiquetaCard(
                     modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
                 )
                 IconButton(onClick = onImprimir, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Filled.Print, contentDescription = "Imprimir", tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
+                    Icon(painterResource(io.loja.R.drawable.printer), contentDescription = "Imprimir", tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
                 }
             }
             Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
