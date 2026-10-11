@@ -562,18 +562,22 @@ private fun EtiquetaCard(
                             modifier = Modifier.height(28.dp),
                             contentPadding = PaddingValues(start = 12.dp),
                         ) {
-                            var tamFonte by remember(valor) { mutableStateOf(14f) }
-                            Text(
-                                valor,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = tamFonte.sp,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Clip,
-                                modifier = if (parcelado) Modifier.weight(1f) else Modifier,
-                                onTextLayout = { if (it.didOverflowWidth && tamFonte > 9f) tamFonte -= 1f },
-                            )
+                            if (parcelado) {
+                                var tamFonte by remember(valor) { mutableStateOf(14f) }
+                                Text(
+                                    valor,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = tamFonte.sp,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Clip,
+                                    modifier = Modifier.weight(1f),
+                                    onTextLayout = { if (it.didOverflowWidth && tamFonte > 11f) tamFonte -= 1f },
+                                )
+                            } else {
+                                Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
+                            }
                             WhiteTypeBadge(
                                 tipo, tipoCor,
                                 modifier = Modifier.fillMaxHeight().padding(start = 8.dp),
