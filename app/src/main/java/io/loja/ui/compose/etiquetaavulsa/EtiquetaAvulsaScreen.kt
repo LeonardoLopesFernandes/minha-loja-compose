@@ -572,7 +572,7 @@ private fun EtiquetaCard(
                                     maxLines = 1,
                                     softWrap = false,
                                     overflow = TextOverflow.Clip,
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f, fill = false),
                                     onTextLayout = { if (it.didOverflowWidth && tamFonte > 11f) tamFonte -= 1f },
                                 )
                             } else {
