@@ -545,15 +545,15 @@ private fun PapeletaCard(
                                     maxLines = 1,
                                     softWrap = false,
                                     overflow = TextOverflow.Clip,
-                                    modifier = Modifier.weight(1f),
-                                    onTextLayout = { if (it.didOverflowWidth && tamFonte > 12f) tamFonte -= 1f },
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    onTextLayout = { if (it.didOverflowWidth && tamFonte > 11f) tamFonte -= 1f },
                                 )
                             } else {
                                 Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
                             }
                             WhiteTypeBadge(
                                 tipo, tipoCor,
-                                modifier = Modifier.fillMaxHeight().padding(start = 8.dp),
+                                modifier = Modifier.fillMaxHeight().padding(start = if (parcelado) 10.dp else 8.dp),
                                 shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
                             )
                         }
