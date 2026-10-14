@@ -9,8 +9,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -433,11 +435,18 @@ private fun PriceTagItemCard(
                 }
             }
             Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                GreenBadgeContainer {
+                GreenBadgeContainer(
+                    modifier = Modifier.height(28.dp),
+                    contentPadding = PaddingValues(start = 12.dp),
+                ) {
                     if (promoText != null) Text(promoText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     if (separador) Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
                     if (precoTexto.isNotEmpty()) Text(precoTexto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    WhiteTypeBadge(tipo, tipoCor, Modifier.padding(start = 6.dp))
+                    WhiteTypeBadge(
+                        tipo, tipoCor,
+                        modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
+                        shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
+                    )
                 }
             }
         }
