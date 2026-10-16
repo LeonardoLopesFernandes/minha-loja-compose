@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -100,6 +101,9 @@ fun HomeScreen(onPerfil: () -> Unit) {
     }
 
     LaunchedEffect(selecionada) { tituloConteudo = null }
+
+    var mostrarDialogSair by remember { mutableStateOf(false) }
+    BackHandler(enabled = selecionada == 0 || selecionada == 1) { mostrarDialogSair = true }
 
     MinhaLojaTheme {
         ModalNavigationDrawer(
@@ -187,6 +191,23 @@ fun HomeScreen(onPerfil: () -> Unit) {
                 }
             }
         }
+    }
+
+    if (mostrarDialogSair) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { mostrarDialogSair = false },
+            title = { Text("Sair do aplicativo?") },
+            text = { Text("Deseja realmente sair?") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    mostrarDialogSair = false
+                    (context as? android.app.Activity)?.finish()
+                }) { Text("Sair") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { mostrarDialogSair = false }) { Text("Cancelar") }
+            },
+        )
     }
 }
 
