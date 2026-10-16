@@ -27,9 +27,9 @@ object RelatorioPdf {
     private const val ROW_H = 44f
 
     // Larguras das colunas (Quantidade, EAN, Descrição-flextível, Código de Barras)
-    private const val COL_QTD = 70f
-    private const val COL_EAN = 110f
-    private const val COL_BAR = 160f
+    private const val COL_QTD = 44f
+    private const val COL_EAN = 120f
+    private const val COL_BAR = 190f
 
     private const val HEADER_COLOR = 0xFFD32F2F.toInt()
     private const val BORDER_COLOR = 0xFFE0E0E0.toInt()
@@ -56,9 +56,11 @@ object RelatorioPdf {
         }
         val paintHeader = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE; textSize = 10f; isFakeBoldText = true
+            textAlign = Paint.Align.CENTER
         }
         val paintCell = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK; textSize = 10f
+            textAlign = Paint.Align.CENTER
         }
         val paintTotal = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK; textSize = 11f; isFakeBoldText = true
@@ -100,9 +102,9 @@ object RelatorioPdf {
 
         // Cabeçalho da tabela
         canvas.drawRect(M, y, M + (PAGE_W - 2 * M), y + ROW_H, paintHeaderBg)
-        val headers = arrayOf("Quantidade", "EAN", "Descrição", "Código de Barras")
+        val headers = arrayOf("Qtd", "COD EAN", "DESCRIÇÃO", "CÓDIGO DE BARRAS")
         for (i in headers.indices) {
-            canvas.drawText(headers[i], colX(i) + 6f, y + ROW_H - 7f, paintHeader)
+            canvas.drawText(headers[i], colX(i) + colW(i) / 2f, y + ROW_H - 7f, paintHeader)
         }
         y += ROW_H
 
@@ -116,7 +118,7 @@ object RelatorioPdf {
             )
             for (c in 0 until 3) {
                 val text = truncar(valores[c], colW(c) - 12f, paintCell)
-                canvas.drawText(text, colX(c) + 6f, y + ROW_H - 7f, paintCell)
+                canvas.drawText(text, colX(c) + colW(c) / 2f, y + ROW_H - 7f, paintCell)
                 canvas.drawRect(colX(c), y, colX(c) + colW(c), y + ROW_H, paintBorder)
             }
             // Código de barras do EAN
@@ -133,7 +135,7 @@ object RelatorioPdf {
                 )
                 canvas.drawBitmap(barras, null, dst, null)
             } else {
-                canvas.drawText(truncar(itens[i].ean, bw - 12f, paintCell), bx + 6f, y + ROW_H - 7f, paintCell)
+                canvas.drawText(truncar(itens[i].ean, bw - 12f, paintCell), bx + bw / 2f, y + ROW_H - 7f, paintCell)
             }
             y += ROW_H
         }
