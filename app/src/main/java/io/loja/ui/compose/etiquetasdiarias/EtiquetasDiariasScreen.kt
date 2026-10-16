@@ -122,8 +122,9 @@ fun EtiquetasDiariasScreen(
         }
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
     LazyColumn(
-        modifier = modifier.fillMaxSize().background(Color(0xFFEDEFF2)).padding(12.dp),
+        modifier = Modifier.fillMaxSize().background(Color(0xFFEDEFF2)).padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         // ---- Card header: Hoje/Amanhã + contadores ----
@@ -206,14 +207,6 @@ fun EtiquetasDiariasScreen(
                         Text("RELATÓRIO", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
-                Spacer(Modifier.height(8.dp))
-                Button(
-                    onClick = { vm.imprimir() },
-                    enabled = !vm.imprimindo,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
-                ) { Text(if (vm.imprimindo) "IMPRIMINDO..." else "🖨️ Imprimir", fontWeight = FontWeight.Bold) }
             }
         }
 
@@ -252,6 +245,17 @@ fun EtiquetasDiariasScreen(
                 )
             }
         }
+    }
+
+    if (vm.selecionadosCount > 0) {
+        Button(
+            onClick = { vm.imprimir() },
+            enabled = !vm.imprimindo,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
+        ) { Text(if (vm.imprimindo) "IMPRIMINDO..." else "🖨️ Imprimir", fontWeight = FontWeight.Bold) }
+    }
     }
 
     if (dialogDept) {
