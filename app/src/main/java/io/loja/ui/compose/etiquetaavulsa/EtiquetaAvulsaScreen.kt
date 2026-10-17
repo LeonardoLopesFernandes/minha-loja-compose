@@ -509,7 +509,7 @@ private fun EtiquetaCard(
                 contentAlignment = Alignment.CenterStart,
             ) {
                 TrashDrawIcon(
-                    animate = dismissState.progress > 0.3f,
+                    animate = dismissState.progress > 0f,
                     modifier = Modifier.size(30.dp),
                 )
             }

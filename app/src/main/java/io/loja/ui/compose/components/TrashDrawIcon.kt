@@ -26,10 +26,12 @@ fun TrashDrawIcon(
     modifier: Modifier = Modifier,
     tint: Color = Color.White,
 ) {
-    val progress = remember { Animatable(0f) }
+    val progress = remember { Animatable(1f) }
     LaunchedEffect(animate) {
-        progress.snapTo(0f)
-        if (animate) progress.animateTo(1f, animationSpec = tween(1000))
+        if (animate) {
+            progress.snapTo(0f)
+            progress.animateTo(1f, animationSpec = tween(1000))
+        }
     }
 
     val body1 = remember {
