@@ -117,7 +117,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         frameLayout.addView(previewView)
         frameLayout.addView(textView)
 
-        // Badge inferior com o acumulado da sessão
+        // Badge inferior com o acumulado da sessão (clique volta para a lista)
         val badgeContador = TextView(this)
         badgeContador.text = "0 itens adicionados"
         badgeContador.setTextColor(0xFFD7193F.toInt())
@@ -134,15 +134,50 @@ class BarcodeScannerActivity : AppCompatActivity() {
             (16 * density).toInt(), (10 * density).toInt(),
             (16 * density).toInt(), (10 * density).toInt()
         )
-        val badgeParams = FrameLayout.LayoutParams(
+        badgeContador.setOnClickListener { finish() }
+        tvContador = badgeContador
+
+        // Botão de envio direto da câmera
+        val btnEnviarCamera = TextView(this)
+        btnEnviarCamera.text = "ENVIAR IMPRESSÃO"
+        btnEnviarCamera.setTextColor(android.graphics.Color.WHITE)
+        btnEnviarCamera.textSize = 13f
+        btnEnviarCamera.setTypeface(null, android.graphics.Typeface.BOLD)
+        btnEnviarCamera.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        btnEnviarCamera.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 60f
+            setColor(0xFFD7193F.toInt())
+        }
+        btnEnviarCamera.setPadding(
+            (16 * density).toInt(), (10 * density).toInt(),
+            (16 * density).toInt(), (10 * density).toInt()
+        )
+        btnEnviarCamera.setOnClickListener { escolherImpressoraEEnviar() }
+
+        val barraInferior = android.widget.LinearLayout(this)
+        barraInferior.orientation = android.widget.LinearLayout.HORIZONTAL
+        barraInferior.gravity = android.view.Gravity.CENTER_VERTICAL
+        val badgeParams = android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        badgeParams.marginEnd = (8 * density).toInt()
+        barraInferior.addView(badgeContador, badgeParams)
+        barraInferior.addView(
+            btnEnviarCamera,
+            android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+        val barraParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT,
             FrameLayout.LayoutParams.WRAP_CONTENT
         )
-        badgeParams.gravity = android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL
-        badgeParams.bottomMargin = (56 * density).toInt()
-        badgeContador.layoutParams = badgeParams
-        tvContador = badgeContador
-        frameLayout.addView(badgeContador)
+        barraParams.gravity = android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL
+        barraParams.bottomMargin = (56 * density).toInt()
+        frameLayout.addView(barraInferior, barraParams)
 
         setContentView(frameLayout)
 
@@ -455,6 +490,64 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 biparErro()
             } finally {
                 processandoLeitura = false
+            }
+        }
+    }
+
+    private fun escolherImpressoraEEnviar() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Enviar impressão")
+            .setItems(arrayOf("Zebra 1", "Zebra 2")) { _, which ->
+                val printer = if (which == 0) Constants.PRINTER_ZEBRA_1 else Constants.PRINTER_ZEBRA_2
+                enviarImpressao(printer)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun enviarImpressao(printerId: String) {
+        if (!modoContinuo) {
+            ToastUtils.show(this, "Envio disponível no modo contínuo")
+            return
+        }
+        val etiquetas = listaViewModel.getEtiquetas()
+        if (etiquetas.isEmpty()) {
+            ToastUtils.show(this, "Nenhuma etiqueta adicionada")
+            return
+        }
+        val lista = mutableListOf<io.loja.network.PrintingData>()
+        etiquetas.forEach { item ->
+            val pd = item.printingData ?: return@forEach
+            lista.add(
+                pd.copy(
+                    quantity = 1,
+                    template = if (pd.takeAndWin != null) Constants.SIGN_TEMPLATE_MODELO
+                    else Constants.templateNormalizado(pd.template),
+                )
+            )
+        }
+        if (lista.isEmpty()) {
+            ToastUtils.show(this, "Dados de impressão não disponíveis")
+            return
+        }
+        lifecycleScope.launch {
+            try {
+                val resp = withContext(Dispatchers.IO) {
+                    apiService.sendPriceTagsToPrinter(
+                        sessionManager.getUserStore() ?: Constants.DEFAULT_STORE,
+                        printerId,
+                        Constants.TAG_GONDOLA,
+                        io.loja.network.SendPriceTagsRequest(lista),
+                    )
+                }
+                if (resp.isSuccessful) {
+                    ToastUtils.show(this@BarcodeScannerActivity, "${lista.size} etiqueta(s) enviada(s) para impressão!", Toast.LENGTH_LONG)
+                    finish()
+                } else {
+                    ToastUtils.show(this@BarcodeScannerActivity, "Erro ao enviar: ${resp.code()}", Toast.LENGTH_LONG)
+                }
+            } catch (e: Exception) {
+                ToastUtils.show(this@BarcodeScannerActivity, "Erro: ${e.message}", Toast.LENGTH_LONG)
             }
         }
     }
