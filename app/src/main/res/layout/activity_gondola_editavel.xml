@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/header_gradient_rounded"
+            android:background="#FFFFFF"
             android:paddingHorizontal="16dp"
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
@@ -34,7 +34,8 @@
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                android:visibility="gone" />
 
             <TextView
                 android:layout_width="0dp"
@@ -42,7 +43,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="Edição de gôndola"
-                android:textColor="#FFFFFF"
+                android:textColor="#D7193F"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -51,10 +52,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="1/1"
-                android:textColor="#D7193F"
+                android:textColor="#FFFFFF"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:background="@drawable/bg_counter_pill"
+                android:background="@drawable/bg_counter_red"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp" />
         </LinearLayout>
