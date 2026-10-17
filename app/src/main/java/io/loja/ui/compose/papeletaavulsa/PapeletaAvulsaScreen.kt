@@ -262,6 +262,8 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp),
                 ) {
+                    Icon(painterResource(io.loja.R.drawable.ic_clean), contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
                     Text("LIMPAR LISTA", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
                 Button(
@@ -271,6 +273,8 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
                 ) {
+                    Icon(painterResource(io.loja.R.drawable.ic_print_all), contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
                     Text(if (vm.processando) "IMPRIMINDO..." else "IMPRIMIR TODAS", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
