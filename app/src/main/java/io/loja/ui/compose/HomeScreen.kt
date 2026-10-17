@@ -103,7 +103,7 @@ fun HomeScreen(onPerfil: () -> Unit) {
     LaunchedEffect(selecionada) { tituloConteudo = null }
 
     var mostrarDialogSair by remember { mutableStateOf(false) }
-    BackHandler(enabled = selecionada == 0 || selecionada == 1) { mostrarDialogSair = true }
+    BackHandler { mostrarDialogSair = true }
 
     MinhaLojaTheme {
         ModalNavigationDrawer(
