@@ -155,22 +155,59 @@ class BarcodeScannerActivity : AppCompatActivity() {
         )
         btnEnviarCamera.setOnClickListener { escolherImpressoraEEnviar() }
 
-        val barraInferior = android.widget.LinearLayout(this)
-        barraInferior.orientation = android.widget.LinearLayout.HORIZONTAL
-        barraInferior.gravity = android.view.Gravity.CENTER_VERTICAL
-        val badgeParams = android.widget.LinearLayout.LayoutParams(
-            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        val btnPapeletaCamera = TextView(this)
+        btnPapeletaCamera.text = "IMPRIMIR PAPELETA"
+        btnPapeletaCamera.setTextColor(android.graphics.Color.WHITE)
+        btnPapeletaCamera.textSize = 13f
+        btnPapeletaCamera.setTypeface(null, android.graphics.Typeface.BOLD)
+        btnPapeletaCamera.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        btnPapeletaCamera.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 60f
+            setColor(0xFFD7193F.toInt())
+        }
+        btnPapeletaCamera.setPadding(
+            (16 * density).toInt(), (10 * density).toInt(),
+            (16 * density).toInt(), (10 * density).toInt()
         )
-        badgeParams.marginEnd = (8 * density).toInt()
-        barraInferior.addView(badgeContador, badgeParams)
-        barraInferior.addView(
+        btnPapeletaCamera.setOnClickListener {
+            ToastUtils.show(this, "Preview de papeleta será aberto aqui (em implementação)")
+        }
+
+        val linhaAcoes = android.widget.LinearLayout(this)
+        linhaAcoes.orientation = android.widget.LinearLayout.HORIZONTAL
+        linhaAcoes.gravity = android.view.Gravity.CENTER
+        linhaAcoes.addView(
             btnEnviarCamera,
             android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
             )
         )
+        val papeletaParams = android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        papeletaParams.marginStart = (8 * density).toInt()
+        linhaAcoes.addView(btnPapeletaCamera, papeletaParams)
+
+        val barraInferior = android.widget.LinearLayout(this)
+        barraInferior.orientation = android.widget.LinearLayout.VERTICAL
+        barraInferior.gravity = android.view.Gravity.CENTER_HORIZONTAL
+        barraInferior.addView(
+            badgeContador,
+            android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+        val linhaParams = android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        linhaParams.topMargin = (8 * density).toInt()
+        barraInferior.addView(linhaAcoes, linhaParams)
+
         val barraParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT,
             FrameLayout.LayoutParams.WRAP_CONTENT
