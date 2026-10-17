@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -71,12 +73,20 @@ fun DepartamentoSelector(
                 .padding(horizontal = 16.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                if (buscando) "..." else "BUSCAR",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-            )
+            if (buscando) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Text(
+                    "BUSCAR",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                )
+            }
         }
     }
 }
