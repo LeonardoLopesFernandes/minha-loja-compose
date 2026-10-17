@@ -46,7 +46,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -248,6 +254,13 @@ fun EtiquetasDiariasScreen(
     }
 
     if (vm.selecionadosCount > 0) {
+        val pulso = rememberInfiniteTransition(label = "pulso")
+        val escala by pulso.animateFloat(
+            initialValue = 0.85f,
+            targetValue = 1.25f,
+            animationSpec = infiniteRepeatable(tween(450), RepeatMode.Reverse),
+            label = "escala",
+        )
         Button(
             onClick = { vm.imprimir() },
             enabled = !vm.imprimindo,
@@ -255,9 +268,17 @@ fun EtiquetasDiariasScreen(
             shape = RoundedCornerShape(30.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
         ) {
-            Icon(painterResource(io.loja.R.drawable.printer), contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(if (vm.imprimindo) "IMPRIMINDO..." else "Imprimir", fontWeight = FontWeight.Bold)
+            if (vm.imprimindo) {
+                Icon(
+                    painterResource(io.loja.R.drawable.printer),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp).scale(escala),
+                )
+            } else {
+                Icon(painterResource(io.loja.R.drawable.printer), contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Imprimir", fontWeight = FontWeight.Bold)
+            }
         }
     }
     }
