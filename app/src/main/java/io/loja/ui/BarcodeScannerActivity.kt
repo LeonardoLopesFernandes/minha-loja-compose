@@ -630,18 +630,31 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     ToastUtils.show(this@BarcodeScannerActivity, "Dados de papeleta não disponíveis")
                     return@launch
                 }
-                ModeloEditavelActivity.dadosPendentesList = lista.toMutableList()
-                val i = android.content.Intent(this@BarcodeScannerActivity, ModeloEditavelActivity::class.java).apply {
-                    putExtra(ModeloEditavelActivity.EXTRA_SEM_OVERLAY, false)
-                    putExtra(ModeloEditavelActivity.EXTRA_SIZE, Constants.SIGN_SIZE_1X1)
-                    putExtra(ModeloEditavelActivity.EXTRA_ENVIAR_API, false)
-                    putExtra(ModeloEditavelActivity.EXTRA_API_SEM_OVERLAY, true)
-                    putExtra(ModeloEditavelActivity.EXTRA_MODO_EDITAVEL, false)
-                    putExtra(ModeloEditavelActivity.EXTRA_MODO_VENCIMENTOS, false)
-                    putExtra(ModeloEditavelActivity.EXTRA_HIDE_GERAR_PREVIEW, false)
-                    putExtra(ModeloEditavelActivity.EXTRA_MOSTRAR_CHECKBOX_OVERLAY, true)
-                }
-                startActivity(i)
+                val tamanhos = listOf(
+                    "1×1" to Constants.SIGN_SIZE_1X1,
+                    "2×1" to Constants.SIGN_SIZE_2X1,
+                    "4×1" to Constants.SIGN_SIZE_4X1,
+                    "6×1" to Constants.SIGN_SIZE_6X1,
+                )
+                androidx.appcompat.app.AlertDialog.Builder(this@BarcodeScannerActivity)
+                    .setTitle("Tamanho da papeleta")
+                    .setItems(tamanhos.map { it.first }.toTypedArray()) { _, which ->
+                        val size = tamanhos[which].second
+                        ModeloEditavelActivity.dadosPendentesList = lista.toMutableList()
+                        val i = android.content.Intent(this@BarcodeScannerActivity, ModeloEditavelActivity::class.java).apply {
+                            putExtra(ModeloEditavelActivity.EXTRA_SEM_OVERLAY, false)
+                            putExtra(ModeloEditavelActivity.EXTRA_SIZE, size)
+                            putExtra(ModeloEditavelActivity.EXTRA_ENVIAR_API, false)
+                            putExtra(ModeloEditavelActivity.EXTRA_API_SEM_OVERLAY, true)
+                            putExtra(ModeloEditavelActivity.EXTRA_MODO_EDITAVEL, false)
+                            putExtra(ModeloEditavelActivity.EXTRA_MODO_VENCIMENTOS, false)
+                            putExtra(ModeloEditavelActivity.EXTRA_HIDE_GERAR_PREVIEW, false)
+                            putExtra(ModeloEditavelActivity.EXTRA_MOSTRAR_CHECKBOX_OVERLAY, true)
+                        }
+                        startActivity(i)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
             } catch (e: Exception) {
                 ToastUtils.show(this@BarcodeScannerActivity, "Erro: ${e.message}")
             }
