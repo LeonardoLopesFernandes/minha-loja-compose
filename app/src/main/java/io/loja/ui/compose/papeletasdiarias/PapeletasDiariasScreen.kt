@@ -240,10 +240,14 @@ fun PapeletasDiariasScreen(
         Button(
             onClick = { vm.imprimir() },
             enabled = !vm.imprimindo,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
-            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 16.dp),
+            shape = RoundedCornerShape(30.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MinhaLojaRed, contentColor = Color.White),
-        ) { Text(if (vm.imprimindo) "IMPRIMINDO..." else "🖨️ Imprimir Papeletas", fontWeight = FontWeight.Bold) }
+        ) {
+            Icon(painterResource(io.loja.R.drawable.printer), contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(if (vm.imprimindo) "IMPRIMINDO..." else "Imprimir Papeletas", fontWeight = FontWeight.Bold)
+        }
     }
     }
 
