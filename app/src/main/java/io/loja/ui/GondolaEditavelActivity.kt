@@ -452,7 +452,6 @@ class GondolaEditavelActivity : AppCompatActivity() {
         }
         val lista = selecionadosOrdenados.map { items[it] }
 
-        btnEnviar.text = "ENVIANDO..."
         btnEnviar.isEnabled = false
 
         val apiService = ApiClient.getSlApiService(sessionManager)
@@ -472,7 +471,6 @@ class GondolaEditavelActivity : AppCompatActivity() {
                         finish()
                     } else {
                         ToastUtils.show(this@GondolaEditavelActivity, "Erro ao enviar: ${response.code()}", Toast.LENGTH_LONG)
-                        btnEnviar.text = "ENVIAR"
                         btnEnviar.isEnabled = true
                     }
                 }
@@ -480,7 +478,6 @@ class GondolaEditavelActivity : AppCompatActivity() {
                 LogHelper.e("GondolaEditavelActivity: erro enviar", e)
                 withContext(Dispatchers.Main) {
                     ToastUtils.show(this@GondolaEditavelActivity, "Erro: ${e.message}", Toast.LENGTH_LONG)
-                    btnEnviar.text = "ENVIAR"
                     btnEnviar.isEnabled = true
                 }
             }

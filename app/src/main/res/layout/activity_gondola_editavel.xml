@@ -437,53 +437,62 @@
                     android:textColor="#1D1B20" />
             </LinearLayout>
 
-            <!-- BOTTOM BAR -->
+            <!-- BOTTOM BAR (badges flutuantes) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="8dp"
-                android:padding="10dp"
-                android:background="#FFFFFF"
-                android:elevation="8dp">
+                android:gravity="center"
+                android:layout_marginTop="12dp"
+                android:padding="10dp">
 
                 <Button
                     android:id="@+id/btnAnterior"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/btn_outline_gray"
-                    android:text="ANTERIOR"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="#757575"
-                    app:backgroundTint="@null" />
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:layout_marginEnd="14dp"
+                    android:background="@drawable/bg_badge_red"
+                    android:elevation="6dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="0dp"
+                    android:text=""
+                    app:backgroundTint="@null"
+                    app:icon="@drawable/ic_previous"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp" />
 
                 <Button
                     android:id="@+id/btnProximo"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/btn_outline_gray"
-                    android:text="PRÓXIMO"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="#757575"
-                    app:backgroundTint="@null" />
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:layout_marginEnd="14dp"
+                    android:background="@drawable/bg_badge_red"
+                    android:elevation="6dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="0dp"
+                    android:text=""
+                    app:backgroundTint="@null"
+                    app:icon="@drawable/ic_next"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp" />
 
                 <Button
                     android:id="@+id/btnEnviar"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1.2"
-                    android:layout_marginStart="6dp"
-                    android:background="@drawable/btn_red_rounded10"
-                    android:text="ENVIAR"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="#FFFFFF" />
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="14dp"
+                    android:background="@drawable/bg_badge_red"
+                    android:elevation="6dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="0dp"
+                    android:text=""
+                    app:backgroundTint="@null"
+                    app:icon="@drawable/ic_send"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp" />
             </LinearLayout>
 
         </LinearLayout>
