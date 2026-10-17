@@ -407,7 +407,7 @@ private fun FabScanner(modifier: Modifier = Modifier, onAbrir: () -> Unit) {
             .clickable { if (!revelado) revelado = true else onAbrir() },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(painterResource(io.loja.R.drawable.ic_qr_code_small), contentDescription = "Escanear", tint = Color.White)
+        Icon(painterResource(io.loja.R.drawable.ic_barcode_scan), contentDescription = "Escanear", tint = Color.White)
     }
 }
 
