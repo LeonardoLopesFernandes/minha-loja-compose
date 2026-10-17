@@ -80,6 +80,7 @@ import io.loja.ui.BarcodeScannerActivity
 import io.loja.ui.GondolaEditavelActivity
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.GreenBadgeContainer
+import io.loja.ui.compose.components.TrashDrawIcon
 import io.loja.ui.compose.components.QtyBoxAvulsa
 import io.loja.ui.compose.components.SearchField
 import io.loja.ui.compose.components.SpinnerDropdown
@@ -507,7 +508,10 @@ private fun EtiquetaCard(
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
-                Icon(Icons.Filled.Delete, contentDescription = "Excluir", tint = Color.White)
+                TrashDrawIcon(
+                    animate = dismissState.progress > 0.3f,
+                    modifier = Modifier.size(30.dp),
+                )
             }
         },
         dismissContent = {
