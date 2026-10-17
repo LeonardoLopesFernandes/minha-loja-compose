@@ -61,6 +61,10 @@ fun TrashDrawIcon(
 
             fun drawFrom(path: Path, fraction: Float) {
                 if (fraction <= 0f) return
+                if (fraction >= 0.999f) {
+                    drawPath(path, color = tint, style = stroke)
+                    return
+                }
                 val pm = PathMeasure()
                 pm.setPath(path, false)
                 val dest = Path()
