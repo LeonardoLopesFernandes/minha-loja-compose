@@ -170,9 +170,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
             (16 * density).toInt(), (10 * density).toInt(),
             (16 * density).toInt(), (10 * density).toInt()
         )
-        btnPapeletaCamera.setOnClickListener {
-            ToastUtils.show(this, "Preview de papeleta será aberto aqui (em implementação)")
-        }
+        btnPapeletaCamera.setOnClickListener { abrirPreviewPapeleta() }
 
         val linhaAcoes = android.widget.LinearLayout(this)
         linhaAcoes.orientation = android.widget.LinearLayout.HORIZONTAL
@@ -585,6 +583,67 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 ToastUtils.show(this@BarcodeScannerActivity, "Erro: ${e.message}", Toast.LENGTH_LONG)
+            }
+        }
+    }
+
+    private fun abrirPreviewPapeleta() {
+        if (!modoContinuo) {
+            ToastUtils.show(this, "Disponível no modo contínuo")
+            return
+        }
+        val etiquetas = listaViewModel.getEtiquetas()
+        if (etiquetas.isEmpty()) {
+            ToastUtils.show(this, "Nenhuma etiqueta adicionada")
+            return
+        }
+        lifecycleScope.launch {
+            try {
+                val data = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                    .format(java.util.Date())
+                val respostas = withContext(Dispatchers.IO) {
+                    etiquetas.flatMap { et ->
+                        listOf(Constants.TIPO_COMUM, Constants.TIPO_PROMOCIONAL).map { type ->
+                            try {
+                                apiService.getPriceSignStandalone(
+                                    storeId = sessionManager.getUserStore() ?: Constants.DEFAULT_STORE,
+                                    type = type,
+                                    ean = et.ean,
+                                    startDate = data,
+                                )
+                            } catch (e: Exception) { null }
+                        }
+                    }
+                }
+                val vistos = mutableSetOf<String>()
+                val lista = mutableListOf<io.loja.network.PapeletaPrintingData>()
+                respostas.forEach { response ->
+                    if (response != null && response.isSuccessful) {
+                        response.body()?.items?.forEach { item ->
+                            val pd = item.printingData ?: return@forEach
+                            if (!vistos.add(item.ean)) return@forEach
+                            lista.add(pd.copy(quantity = 1, size = Constants.SIGN_SIZE_1X1))
+                        }
+                    }
+                }
+                if (lista.isEmpty()) {
+                    ToastUtils.show(this@BarcodeScannerActivity, "Dados de papeleta não disponíveis")
+                    return@launch
+                }
+                ModeloEditavelActivity.dadosPendentesList = lista.toMutableList()
+                val i = android.content.Intent(this@BarcodeScannerActivity, ModeloEditavelActivity::class.java).apply {
+                    putExtra(ModeloEditavelActivity.EXTRA_SEM_OVERLAY, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_SIZE, Constants.SIGN_SIZE_1X1)
+                    putExtra(ModeloEditavelActivity.EXTRA_ENVIAR_API, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_API_SEM_OVERLAY, true)
+                    putExtra(ModeloEditavelActivity.EXTRA_MODO_EDITAVEL, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_MODO_VENCIMENTOS, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_HIDE_GERAR_PREVIEW, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_MOSTRAR_CHECKBOX_OVERLAY, true)
+                }
+                startActivity(i)
+            } catch (e: Exception) {
+                ToastUtils.show(this@BarcodeScannerActivity, "Erro: ${e.message}")
             }
         }
     }
