@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.GradientDrawable
+import android.graphics.Color
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Bundle
@@ -11,11 +12,10 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ArrayAdapter
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,6 +28,10 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
@@ -35,6 +39,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.ExecutorService
+import io.loja.R
 import io.loja.network.ApiClient
 import io.loja.network.ApiService
 import io.loja.network.PriceTag
@@ -50,6 +55,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private data class ItemScanner(
+    val ean: String,
+    val description: String,
+    val quantity: Int,
+)
 
 class BarcodeScannerActivity : AppCompatActivity() {
 
@@ -599,60 +610,99 @@ class BarcodeScannerActivity : AppCompatActivity() {
             ToastUtils.show(this, "Disponível no modo contínuo")
             return
         }
-        val etiquetas = listaViewModel.getEtiquetas()
-        if (etiquetas.isEmpty()) {
-            ToastUtils.show(this, "Nenhuma etiqueta adicionada")
+        // O scanner de papeletas grava em getPapeletas(); o de etiquetas em
+        // getEtiquetas(). Usa a lista correta para a quantidade bater.
+        val itens: List<ItemScanner> =
+            if (tipoLista == TIPO_LISTA_PAPELETAS) {
+                listaViewModel.getPapeletas().map {
+                    ItemScanner(it.ean, it.description, it.quantity)
+                }
+            } else {
+                listaViewModel.getEtiquetas().map {
+                    ItemScanner(it.ean, it.description, it.quantity)
+                }
+            }
+        if (itens.isEmpty()) {
+            ToastUtils.show(this, "Nenhum item adicionado")
             return
         }
         val density = resources.displayMetrics.density
         fun dp(v: Int) = (v * density).toInt()
-        // Quantidade inicial = quantas vezes o item foi escaneado.
-        val qtds = IntArray(etiquetas.size) {
-            etiquetas[it].quantity.coerceAtLeast(1)
+        // Quantidade inicial = a quantidade da lista (input/escaneada).
+        val qtds = IntArray(itens.size) {
+            itens[it].quantity.coerceAtLeast(1)
         }
-        val selecionados = BooleanArray(etiquetas.size) { true }
+        val selecionados = BooleanArray(itens.size) { true }
         val tamanhos = listOf(
             "1×1" to Constants.SIGN_SIZE_1X1,
             "2×1" to Constants.SIGN_SIZE_2X1,
             "4×1" to Constants.SIGN_SIZE_4X1,
             "6×1" to Constants.SIGN_SIZE_6X1,
         )
+        var sizeIdx = 0
 
+        val sheet = BottomSheetDialog(this)
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(8), dp(20), dp(8))
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            background = GradientDrawable().apply {
+                setColor(Color.WHITE)
+                cornerRadii = floatArrayOf(
+                    dp(16).toFloat(), dp(16).toFloat(),
+                    dp(16).toFloat(), dp(16).toFloat(),
+                    0f, 0f, 0f, 0f
+                )
+            }
         }
         container.addView(TextView(this).apply {
-            text = "Repita cada item e escolha o tamanho"
+            text = "IMPRIMIR PAPELETA"
+            textSize = 15f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(0xFF1E293B.toInt())
+        })
+        container.addView(TextView(this).apply {
+            text = "Escolha quantas vezes repetir cada item e o tamanho"
             textSize = 12f
-            setTextColor(0xFF666666.toInt())
+            setTextColor(0xFF64748B.toInt())
+            setPadding(0, dp(4), 0, dp(12))
         })
 
         val linhas = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
-        for ((i, et) in etiquetas.withIndex()) {
+        for ((i, item) in itens.withIndex()) {
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(0, dp(6), 0, dp(6))
+                setPadding(0, dp(4), 0, dp(4))
             }
-            val nome = TextView(this).apply {
-                text = if (et.description.isNullOrEmpty()) et.ean else et.description
-                textSize = 13f
+            val dados = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+            }
+            dados.addView(TextView(this).apply {
+                text = item.description.ifEmpty { item.ean }
+                textSize = 12f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(0xFF1E293B.toInt())
                 maxLines = 1
                 ellipsize = android.text.TextUtils.TruncateAt.END
-            }
+            })
+            dados.addView(TextView(this).apply {
+                text = item.ean
+                textSize = 11f
+                setTextColor(0xFF64748B.toInt())
+            })
+
             val valor = TextView(this).apply {
                 text = qtds[i].toString()
-                textSize = 14f
+                textSize = 13f
                 setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(0xFF1E293B.toInt())
                 gravity = android.view.Gravity.CENTER
             }
-            val menos = TextView(this).apply {
-                text = "−"
-                textSize = 20f
-                setPadding(dp(10), 0, dp(10), 0)
+            val menos = ImageView(this).apply {
+                setImageResource(R.drawable.ic_remove_circle_outline)
+                setPadding(dp(4), dp(4), dp(4), dp(4))
                 setOnClickListener {
                     if (qtds[i] > 1) {
                         qtds[i]--
@@ -660,10 +710,9 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     }
                 }
             }
-            val mais = TextView(this).apply {
-                text = "+"
-                textSize = 20f
-                setPadding(dp(10), 0, dp(10), 0)
+            val mais = ImageView(this).apply {
+                setImageResource(R.drawable.ic_add_circle_outline)
+                setPadding(dp(4), dp(4), dp(4), dp(4))
                 setOnClickListener {
                     if (qtds[i] < 30) {
                         qtds[i]++
@@ -671,6 +720,25 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     }
                 }
             }
+            val stepper = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+            stepper.addView(
+                menos,
+                LinearLayout.LayoutParams(dp(28), dp(28))
+            )
+            stepper.addView(
+                valor,
+                LinearLayout.LayoutParams(
+                    dp(26), ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            )
+            stepper.addView(
+                mais,
+                LinearLayout.LayoutParams(dp(28), dp(28))
+            )
+
             val check = CheckBox(this).apply {
                 isChecked = true
                 setOnCheckedChangeListener { _, checked ->
@@ -682,20 +750,19 @@ class BarcodeScannerActivity : AppCompatActivity() {
             }
             row.addView(check)
             row.addView(
-                nome,
+                dados,
                 LinearLayout.LayoutParams(
                     0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
                 )
             )
-            row.addView(menos)
-            row.addView(
-                valor,
+            row.addView(stepper)
+            linhas.addView(
+                row,
                 LinearLayout.LayoutParams(
-                    dp(32), ViewGroup.LayoutParams.WRAP_CONTENT
-                )
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(6) }
             )
-            row.addView(mais)
-            linhas.addView(row)
         }
         val scroll = ScrollView(this).apply {
             addView(linhas)
@@ -709,40 +776,64 @@ class BarcodeScannerActivity : AppCompatActivity() {
             text = "Tamanho"
             textSize = 12f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setPadding(0, dp(12), 0, dp(4))
+            setTextColor(0xFF1E293B.toInt())
+            setPadding(0, dp(8), 0, 0)
         })
-        val spinner = Spinner(this)
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            tamanhos.map { it.first }
-        )
-        adapter.setDropDownViewResource(
-            android.R.layout.simple_spinner_dropdown_item
-        )
-        spinner.adapter = adapter
-        container.addView(spinner)
-
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("IMPRIMIR PAPELETA")
-            .setView(container)
-            .setPositiveButton("GERAR PREVIEW") { _, _ ->
-                val size = tamanhos[spinner.selectedItemPosition].second
-                val selEtiquetas =
-                    etiquetas.filterIndexed { i, _ -> selecionados[i] }
-                val selQtds = qtds.filterIndexed { i, _ -> selecionados[i] }
-                if (selEtiquetas.isEmpty()) {
-                    ToastUtils.show(this, "Selecione ao menos um item")
-                } else {
-                    buscarPapeletasEAbrirPreview(selEtiquetas, selQtds, size)
+        val chipGroup = ChipGroup(this).apply {
+            isSingleSelection = true
+            isSelectionRequired = true
+            setPadding(0, dp(8), 0, 0)
+        }
+        for ((idx, t) in tamanhos.withIndex()) {
+            val chip = Chip(this).apply {
+                text = t.first
+                isCheckable = true
+                isChecked = idx == 0
+                isClickable = true
+                setOnCheckedChangeListener { _, checked ->
+                    if (checked) sizeIdx = idx
                 }
             }
-            .setNegativeButton("Cancelar", null)
-            .show()
+            chipGroup.addView(chip)
+        }
+        container.addView(chipGroup)
+
+        val btnGerar = MaterialButton(this).apply {
+            text = "GERAR PREVIEW"
+            setTextColor(Color.WHITE)
+            backgroundTintList =
+                android.content.res.ColorStateList.valueOf(0xFFD7193F.toInt())
+            cornerRadius = dp(8)
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setOnClickListener {
+                val size = tamanhos[sizeIdx].second
+                val selItens = itens.filterIndexed { i, _ -> selecionados[i] }
+                val selQtds = qtds.filterIndexed { i, _ -> selecionados[i] }
+                if (selItens.isEmpty()) {
+                    ToastUtils.show(
+                        this@BarcodeScannerActivity,
+                        "Selecione ao menos um item"
+                    )
+                    return@setOnClickListener
+                }
+                sheet.dismiss()
+                buscarPapeletasEAbrirPreview(selItens, selQtds, size)
+            }
+        }
+        container.addView(
+            btnGerar,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(48)
+            ).apply { topMargin = dp(16) }
+        )
+
+        sheet.setContentView(container)
+        sheet.show()
     }
 
     private fun buscarPapeletasEAbrirPreview(
-        etiquetas: List<PriceTag>,
+        itens: List<ItemScanner>,
         qtds: List<Int>,
         size: String,
     ) {
@@ -756,7 +847,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 val data = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     .format(Date())
                 val respostas = withContext(Dispatchers.IO) {
-                    etiquetas.flatMap { et ->
+                    itens.flatMap { item ->
                         listOf(
                             Constants.TIPO_COMUM,
                             Constants.TIPO_PROMOCIONAL
@@ -767,7 +858,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                                         storeId = sessionManager.getUserStore()
                                             ?: Constants.DEFAULT_STORE,
                                         type = type,
-                                        ean = et.ean,
+                                        ean = item.ean,
                                         startDate = data,
                                     )
                                 } catch (e: Exception) {

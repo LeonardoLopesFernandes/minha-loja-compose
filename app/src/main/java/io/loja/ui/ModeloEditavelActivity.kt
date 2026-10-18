@@ -92,6 +92,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
     private var apiQualidadeInfo: String? = null
     private var gestureDetector: android.view.GestureDetector? = null
     private val previewPdfCache: HashMap<Int, ByteArray> = HashMap()
+    private val previewCardCache: HashMap<String, Bitmap> = HashMap()
     private val previewBitmapCache: HashMap<String, List<Bitmap>> = HashMap()
     private var lastPreviewKey: String? = null
 
@@ -192,10 +193,10 @@ class ModeloEditavelActivity : AppCompatActivity() {
         if (mostrarCheckboxOverlay) {
             findViewById<View>(R.id.layoutOverlay)?.visibility = View.VISIBLE
             cbOverlay.isChecked = !semOverlay
-            tvOverlayLabel.text = if (semOverlay) "Sem modelo" else "Modelo"
+            tvOverlayLabel.text = if (semOverlay) "Sem modelo" else "Com modelo"
             tvOverlayLabel.setOnClickListener { cbOverlay.isChecked = !cbOverlay.isChecked }
             cbOverlay.setOnCheckedChangeListener { _, isChecked ->
-                tvOverlayLabel.text = if (isChecked) "Modelo" else "Sem modelo"
+                tvOverlayLabel.text = if (isChecked) "Com modelo" else "Sem modelo"
                 if (semOverlay == !isChecked) return@setOnCheckedChangeListener
                 semOverlay = !isChecked
                 if (semOverlay) {
@@ -721,19 +722,30 @@ class ModeloEditavelActivity : AppCompatActivity() {
                     results.mapIndexed { idx, data ->
                         async {
                             try {
-                                val response = apiService.previewPriceSign(data.copy(size = Constants.SIGN_SIZE_1X1))
-                                if (!response.isSuccessful) { LogHelper.e("PreviewMulti: HTTP ${response.code()} item $idx"); null }
-                                else {
-                                    val pdfBytes = response.body()?.bytes()
-                                    if (pdfBytes == null || pdfBytes.isEmpty()) null
-                                    else {
-                                        if (apiQualidadeInfo == null) {
-                                            apiQualidadeInfo = medirQualidadeApiPdf(pdfBytes)
-                                        }
-                                        val bmp = renderPdfToBitmap(pdfBytes, halfW.toInt(), halfH.toInt(), maxScale = 4)
-                                        if (bmp != null) { idx to bmp } else null
-                                    }
+                                val key = "prev-$idx-${halfW.toInt()}x${halfH.toInt()}"
+                                val cachedCard = previewCardCache[key]
+                                if (cachedCard != null && !cachedCard.isRecycled) {
+                                    return@async idx to cachedCard
                                 }
+                                val pdfBytes = previewPdfCache[idx] ?: run {
+                                    val response = apiService.previewPriceSign(data.copy(size = Constants.SIGN_SIZE_1X1))
+                                    if (!response.isSuccessful) {
+                                        LogHelper.e("PreviewMulti: HTTP ${response.code()} item $idx")
+                                        return@async null
+                                    }
+                                    val bytes = response.body()?.bytes()
+                                    if (bytes == null || bytes.isEmpty()) return@async null
+                                    previewPdfCache[idx] = bytes
+                                    bytes
+                                }
+                                if (apiQualidadeInfo == null) {
+                                    apiQualidadeInfo = medirQualidadeApiPdf(pdfBytes)
+                                }
+                                val bmp = renderPdfToBitmap(pdfBytes, halfW.toInt(), halfH.toInt(), maxScale = 2)
+                                if (bmp != null) {
+                                    previewCardCache[key] = bmp
+                                    idx to bmp
+                                } else null
                             } catch (e: Exception) {
                                 LogHelper.e("PreviewMulti api", e); null
                             }
@@ -849,22 +861,25 @@ class ModeloEditavelActivity : AppCompatActivity() {
                     results.mapIndexed { idx, data ->
                         async {
                             try {
-                                val response = apiService.previewPriceSign(data.copy(size = Constants.SIGN_SIZE_1X1))
-                                if (!response.isSuccessful) { LogHelper.e("PreviewVenc: falha item $idx"); null }
-                                else {
-                                    val pdfBytes = response.body()?.bytes()
-                                    if (pdfBytes == null || pdfBytes.isEmpty()) null
-                                    else {
-                                        if (apiQualidadeInfo == null) {
-                                            apiQualidadeInfo = medirQualidadeApiPdf(pdfBytes)
-                                        }
-                                        val bmp = renderPdfToBitmap(pdfBytes, halfW.toInt(), halfH.toInt(), maxScale = 4)
-                                        if (bmp != null) {
-                                            desenharValidadeCard(bmp, multiValidades.getOrElse(idx) { "" }, multiDataList[idx])
-                                            idx to bmp
-                                        } else null
+                                val pdfBytes = previewPdfCache[idx] ?: run {
+                                    val response = apiService.previewPriceSign(data.copy(size = Constants.SIGN_SIZE_1X1))
+                                    if (!response.isSuccessful) {
+                                        LogHelper.e("PreviewVenc: falha item $idx")
+                                        return@async null
                                     }
+                                    val bytes = response.body()?.bytes()
+                                    if (bytes == null || bytes.isEmpty()) return@async null
+                                    previewPdfCache[idx] = bytes
+                                    bytes
                                 }
+                                if (apiQualidadeInfo == null) {
+                                    apiQualidadeInfo = medirQualidadeApiPdf(pdfBytes)
+                                }
+                                val bmp = renderPdfToBitmap(pdfBytes, halfW.toInt(), halfH.toInt(), maxScale = 2)
+                                if (bmp != null) {
+                                    desenharValidadeCard(bmp, multiValidades.getOrElse(idx) { "" }, multiDataList[idx])
+                                    idx to bmp
+                                } else null
                             } catch (e: Exception) {
                                 LogHelper.e("PreviewVenc api", e); null
                             }
