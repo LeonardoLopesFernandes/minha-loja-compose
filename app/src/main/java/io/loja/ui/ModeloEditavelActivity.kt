@@ -765,7 +765,13 @@ class ModeloEditavelActivity : AppCompatActivity() {
                 }
 
                 val gridCap = colsQuadrantes * rowsQuadrantes
-                val pages = ceil(cardBitmaps.size / gridCap.toFloat()).toInt().coerceAtLeast(1)
+                val expandedCells = mutableListOf<Int>()
+                for ((i, q) in multiQuantidades.withIndex()) {
+                    repeat(q.coerceAtLeast(1)) { expandedCells.add(i) }
+                }
+                val totalEtiquetas = expandedCells.size
+                val pages = ceil(totalEtiquetas / gridCap.toFloat()).toInt().coerceAtLeast(1)
+                val bitmapPorItem = cardBitmaps.associate { it.first to it.second }
                 val paginas: List<Bitmap> = withContext(Dispatchers.IO) {
                     val pinturaBranca = android.graphics.Paint().apply { color = Color.WHITE }
                     val temp = mutableListOf<Bitmap>()
@@ -777,9 +783,12 @@ class ModeloEditavelActivity : AppCompatActivity() {
                             canvas.drawBitmap(overlayBmp, 0f, 0f, null)
                         }
 
-                        for ((idx, bmp) in cardBitmaps) {
-                            if (idx / gridCap != p) continue
-                            val local = idx % gridCap
+                        val inicio = p * gridCap
+                        val fim = minOf(inicio + gridCap, expandedCells.size)
+                        for (cellIdx in inicio until fim) {
+                            val idx = expandedCells[cellIdx]
+                            val bmp = bitmapPorItem[idx] ?: continue
+                            val local = cellIdx - inicio
                             val col = local % colsQuadrantes; val row = local / colsQuadrantes
                             val left = col * halfW; val top = row * halfH
                             val ehComum = ehPapeletaComum(multiDataList[idx])
@@ -809,7 +818,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                     previewBitmapCache[newKey] = paginasPreview.toList()
                     lastPreviewKey = newKey
                     ivPreview.layoutParams.height = previewHeight
-                    statusPreviewBase = "Preview $sizeLabel (API) · ${cardBitmaps.size} item(ns) em $pages página(s)" +
+                    statusPreviewBase = "Preview $sizeLabel (API) · $totalEtiquetas item(ns) em $pages página(s)" +
                         (apiQualidadeInfo?.let { " · Qualidade: $it" } ?: "")
                     setPaginaPreview(0)
                     tvPreviewStatus.visibility = View.GONE

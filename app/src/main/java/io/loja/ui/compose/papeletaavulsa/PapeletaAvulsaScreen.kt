@@ -310,7 +310,7 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
                         PapeletaCard(
                             item = item,
                             qtd = vm.quantidadeDe(item.ean),
-                            onQtdChange = { vm.setQuantidade(item.ean, it) },
+                            onQtdChange = { vm.setQuantidade(item.ean, it); vm.persistir() },
                             onImprimir = { vm.imprimir(item, vm.quantidadeDe(item.ean)) },
                             onRemover = { vm.remover(item) },
                         )
