@@ -55,7 +55,7 @@ fun TrashDrawIcon(
 
     Canvas(modifier = modifier) {
         val s = size.minDimension / 24f
-        scale(s, pivot = Offset(size.width / 2f, size.height / 2f)) {
+        scale(s, pivot = Offset.Zero) {
             val p = progress.value
             val stroke = Stroke(width = 2f, cap = StrokeCap.Round, join = StrokeJoin.Round)
 
