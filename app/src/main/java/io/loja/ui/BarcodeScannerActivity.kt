@@ -190,22 +190,39 @@ class BarcodeScannerActivity : AppCompatActivity() {
         )
         btnPapeletaCamera.setOnClickListener { abrirPreviewPapeleta() }
 
-        val linhaAcoes = android.widget.LinearLayout(this)
-        linhaAcoes.orientation = android.widget.LinearLayout.HORIZONTAL
-        linhaAcoes.gravity = android.view.Gravity.CENTER
-        linhaAcoes.addView(
-            btnEnviarCamera,
-            android.widget.LinearLayout.LayoutParams(
+        // Badge para digitar o EAN manualmente (branco com texto vermelho)
+        val btnDigitarEan = TextView(this)
+        btnDigitarEan.text = "DIGITAR EAN"
+        btnDigitarEan.setTextColor(0xFFD7193F.toInt())
+        btnDigitarEan.textSize = 14f
+        btnDigitarEan.setTypeface(null, android.graphics.Typeface.BOLD)
+        btnDigitarEan.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        btnDigitarEan.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 60f
+            setColor(0xFFFFFFFF.toInt())
+        }
+        btnDigitarEan.setPadding(
+            (16 * density).toInt(), (10 * density).toInt(),
+            (16 * density).toInt(), (10 * density).toInt()
+        )
+        btnDigitarEan.setOnClickListener { digitarEanManual() }
+
+        // Ações empilhadas: Digitar EAN, Enviar impressão e Imprimir papeleta
+        val colunaAcoes = android.widget.LinearLayout(this)
+        colunaAcoes.orientation = android.widget.LinearLayout.VERTICAL
+        colunaAcoes.gravity = android.view.Gravity.CENTER_HORIZONTAL
+        fun addAcao(view: View) {
+            val lp = android.widget.LinearLayout.LayoutParams(
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
             )
-        )
-        val papeletaParams = android.widget.LinearLayout.LayoutParams(
-            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        papeletaParams.marginStart = (8 * density).toInt()
-        linhaAcoes.addView(btnPapeletaCamera, papeletaParams)
+            lp.topMargin = (8 * density).toInt()
+            colunaAcoes.addView(view, lp)
+        }
+        addAcao(btnDigitarEan)
+        addAcao(btnEnviarCamera)
+        addAcao(btnPapeletaCamera)
 
         val barraInferior = android.widget.LinearLayout(this)
         barraInferior.orientation = android.widget.LinearLayout.VERTICAL
@@ -222,7 +239,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
             android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
         )
         linhaParams.topMargin = (8 * density).toInt()
-        barraInferior.addView(linhaAcoes, linhaParams)
+        barraInferior.addView(colunaAcoes, linhaParams)
 
         val barraParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT,
@@ -315,8 +332,9 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     scanner.process(image)
                         .addOnSuccessListener { barcodes ->
                             if (barcodes.isNotEmpty()) {
-                                val rawValue = barcodes.first()?.rawValue
-                                if (rawValue.isNullOrEmpty()) return@addOnSuccessListener
+                                val raw = barcodes.first()?.rawValue
+                                if (raw.isNullOrEmpty()) return@addOnSuccessListener
+                                val rawValue = normalizarEan(raw)
                                 if (modoContinuo && continuoPronto) {
                                     val agora = System.currentTimeMillis()
                                     if (!processandoLeitura &&
@@ -603,6 +621,36 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 ToastUtils.show(this@BarcodeScannerActivity, "Erro: ${e.message}", Toast.LENGTH_LONG)
             }
         }
+    }
+
+    private fun normalizarEan(raw: String): String {
+        if (!raw.startsWith("0")) return raw
+        val semZeros = raw.trimStart('0')
+        return if (semZeros.isEmpty()) raw else semZeros
+    }
+
+    private fun digitarEanManual() {
+        val input = android.widget.EditText(this).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            hint = "Digite o EAN"
+            setPadding(32, 24, 32, 24)
+        }
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Digitar EAN")
+            .setView(input)
+            .setPositiveButton("OK") { _, _ ->
+                val ean = normalizarEan(input.text.toString().trim())
+                if (ean.isEmpty()) return@setPositiveButton
+                if (modoContinuo) {
+                    processarLeituraContinua(ean)
+                } else {
+                    val intent = Intent().putExtra(EXTRA_EAN, ean)
+                    setResult(RESULT_OK, intent)
+                    finish()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun abrirPreviewPapeleta() {
