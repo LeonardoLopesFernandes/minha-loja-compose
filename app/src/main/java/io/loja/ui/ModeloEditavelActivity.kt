@@ -251,7 +251,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                 findViewById<View>(R.id.layoutMultiForm)?.visibility = View.VISIBLE
                 setupMultiForm()
                 btnGerarPreview.setOnClickListener { gerarPreviewMulti() }
-                btnCompartilhar.text = "IMPRIMIR"
+                btnCompartilhar.text = "IMPRIMIR PAPELETA"
                 btnCompartilhar.setOnClickListener { compartilharPdfMulti() }
                 btnSharePdf.visibility = View.VISIBLE
                 btnSharePdf.isEnabled = false
@@ -265,7 +265,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                 } else {
                     btnGerarPreview.setOnClickListener { gerarPreviewMulti() }
                 }
-                btnCompartilhar.text = "IMPRIMIR"
+                btnCompartilhar.text = "IMPRIMIR PAPELETA"
                 btnCompartilhar.setOnClickListener { compartilharPdfMulti() }
                 btnSharePdf.setOnClickListener { compartilharPdfMulti(shareMode = true) }
                 btnVoltar.setOnClickListener { finish() }
@@ -1709,7 +1709,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                         null
                     }
                     withContext(Dispatchers.Main) {
-                        btnCompartilhar.text = "IMPRIMIR"
+                        btnCompartilhar.text = "IMPRIMIR PAPELETA"
                         btnCompartilhar.isEnabled = true
                         btnSharePdf.isEnabled = true
                         if (response?.isSuccessful == true) {
@@ -1761,7 +1761,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                 enviarParaImpressora(pdfBytes)
 
                 withContext(Dispatchers.Main) {
-                    btnCompartilhar.text = "IMPRIMIR"; btnCompartilhar.isEnabled = true
+                    btnCompartilhar.text = "IMPRIMIR PAPELETA"; btnCompartilhar.isEnabled = true
                     btnSharePdf.isEnabled = true
                     ToastUtils.show(this@ModeloEditavelActivity, "Papeletas enviadas para impressora!")
                     setResult(Activity.RESULT_OK); finish()

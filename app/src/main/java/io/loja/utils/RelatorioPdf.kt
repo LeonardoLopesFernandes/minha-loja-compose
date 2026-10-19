@@ -6,10 +6,13 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.pdf.PdfDocument
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
+import io.loja.R
 import io.loja.network.PriceTag
 import java.io.File
 import java.io.FileOutputStream
@@ -95,18 +98,37 @@ object RelatorioPdf {
         }
 
         // Título
-        canvas.drawText("Relatório de Etiquetas", M, y + 14f, paintTitulo)
+        val logoDrawable = ContextCompat.getDrawable(context, R.drawable.americanas_logo)
+        val logoBmp = logoDrawable?.let {
+            val bmp = Bitmap.createBitmap(
+                it.intrinsicWidth, it.intrinsicHeight, Bitmap.Config.ARGB_8888
+            )
+            val c = android.graphics.Canvas(bmp)
+            it.setBounds(0, 0, c.width, c.height)
+            it.draw(c)
+            bmp
+        }
+        val logoTam = 26f
+        if (logoBmp != null) {
+            canvas.drawBitmap(
+                logoBmp, null,
+                RectF(M, y, M + logoTam, y + logoTam), null
+            )
+        }
+        val tituloX = if (logoBmp != null) M + logoTam + 8f else M
+        canvas.drawText("Relatório de Etiquetas", tituloX, y + 18f, paintTitulo)
         val sub = "${itens.size} ${if (itens.size == 1) "item" else "itens"}"
-        canvas.drawText(sub, PAGE_W - M - paintSub.measureText(sub), y + 12f, paintSub)
-        y += 30f
+        canvas.drawText(sub, PAGE_W - M - paintSub.measureText(sub), y + 18f, paintSub)
+        y += 34f
 
         // Cabeçalho da tabela
-        canvas.drawRect(M, y, M + (PAGE_W - 2 * M), y + ROW_H, paintHeaderBg)
+        val HEADER_H = 28f
+        canvas.drawRect(M, y, M + (PAGE_W - 2 * M), y + HEADER_H, paintHeaderBg)
         val headers = arrayOf("Qtd", "COD EAN", "DESCRIÇÃO", "CÓDIGO DE BARRAS")
         for (i in headers.indices) {
-            canvas.drawText(headers[i], colX(i) + colW(i) / 2f, y + ROW_H - 7f, paintHeader)
+            canvas.drawText(headers[i], colX(i) + colW(i) / 2f, y + HEADER_H - 9f, paintHeader)
         }
-        y += ROW_H
+        y += HEADER_H
 
         // Linhas
         for (i in itens.indices) {

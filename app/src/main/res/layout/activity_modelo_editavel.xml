@@ -209,6 +209,7 @@
                 android:textStyle="bold"
                 android:textColor="#C62828"
                 android:background="@drawable/btn_model_outline"
+                android:visibility="gone"
                 app:backgroundTint="@null" />
 
             <Button
@@ -216,26 +217,27 @@
                 android:layout_width="0dp"
                 android:layout_height="46dp"
                 android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:text="IMPRIMIR"
+                android:layout_marginEnd="6dp"
+                android:text="IMPRIMIR PAPELETA"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:textColor="@color/white"
                 android:background="@drawable/btn_model_red"
                 android:enabled="false" />
-        </LinearLayout>
 
-        <Button
-            android:id="@+id/btnSharePdf"
-            android:layout_width="match_parent"
-            android:layout_height="46dp"
-            android:layout_marginTop="10dp"
-            android:text="COMPARTILHAR PDF"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:textColor="@color/white"
-            android:background="@drawable/btn_dark_red_rounded"
-            android:visibility="gone"
-            android:enabled="false" />
+            <Button
+                android:id="@+id/btnSharePdf"
+                android:layout_width="0dp"
+                android:layout_height="46dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="ENVIAR PDF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:background="@drawable/btn_dark_red_rounded"
+                android:visibility="visible"
+                android:enabled="false" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>
