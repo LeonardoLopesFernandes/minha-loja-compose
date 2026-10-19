@@ -300,7 +300,11 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
                         }
                     }
                 }) {
-                    Icon(painterResource(io.loja.R.drawable.ic_pdf), contentDescription = "PDF", tint = MinhaLojaRed)
+                    Icon(
+                        painterResource(io.loja.R.drawable.ic_pdf_outline),
+                        contentDescription = "PDF",
+                        tint = Color.Unspecified,
+                    )
                 }
             }
         }
