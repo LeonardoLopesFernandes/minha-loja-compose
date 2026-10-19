@@ -208,44 +208,51 @@ class BarcodeScannerActivity : AppCompatActivity() {
         )
         btnDigitarEan.setOnClickListener { digitarEanManual() }
 
-        // Ações empilhadas: Digitar EAN, Enviar impressão e Imprimir papeleta
-        val colunaAcoes = android.widget.LinearLayout(this)
-        colunaAcoes.orientation = android.widget.LinearLayout.VERTICAL
-        colunaAcoes.gravity = android.view.Gravity.CENTER_HORIZONTAL
-        fun addAcao(view: View) {
-            val lp = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        // Layout 2x2: contador + digitar EAN (topo); enviar + imprimir (baixo)
+        fun linhaBadges(esq: View, dir: View): android.widget.LinearLayout {
+            val linha = android.widget.LinearLayout(this)
+            linha.orientation = android.widget.LinearLayout.HORIZONTAL
+            linha.gravity = android.view.Gravity.CENTER
+            val lpEsq = android.widget.LinearLayout.LayoutParams(
+                0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f
             )
-            lp.topMargin = (8 * density).toInt()
-            colunaAcoes.addView(view, lp)
+            lpEsq.marginEnd = (4 * density).toInt()
+            val lpDir = android.widget.LinearLayout.LayoutParams(
+                0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+            )
+            linha.addView(esq, lpEsq)
+            linha.addView(dir, lpDir)
+            return linha
         }
-        addAcao(btnDigitarEan)
-        addAcao(btnEnviarCamera)
-        addAcao(btnPapeletaCamera)
 
         val barraInferior = android.widget.LinearLayout(this)
         barraInferior.orientation = android.widget.LinearLayout.VERTICAL
         barraInferior.gravity = android.view.Gravity.CENTER_HORIZONTAL
+        barraInferior.setPadding(
+            (16 * density).toInt(), 0, (16 * density).toInt(), 0
+        )
         barraInferior.addView(
-            badgeContador,
+            linhaBadges(badgeContador, btnDigitarEan),
             android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                 android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
             )
         )
-        val linhaParams = android.widget.LinearLayout.LayoutParams(
-            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+        val baixoParams = android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
             android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        linhaParams.topMargin = (8 * density).toInt()
-        barraInferior.addView(colunaAcoes, linhaParams)
+        baixoParams.topMargin = (8 * density).toInt()
+        barraInferior.addView(
+            linhaBadges(btnEnviarCamera, btnPapeletaCamera),
+            baixoParams
+        )
 
         val barraParams = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.WRAP_CONTENT
         )
-        barraParams.gravity = android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL
+        barraParams.gravity = android.view.Gravity.BOTTOM
         barraParams.bottomMargin = (56 * density).toInt()
         frameLayout.addView(barraInferior, barraParams)
 
