@@ -784,12 +784,29 @@ class BarcodeScannerActivity : AppCompatActivity() {
             isSelectionRequired = true
             setPadding(0, dp(8), 0, 0)
         }
+        val fundoChip = android.content.res.ColorStateList(
+            arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()),
+            intArrayOf(0xFFD7193F.toInt(), 0xFFF1F5F9.toInt())
+        )
+        val textoChip = android.content.res.ColorStateList(
+            arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()),
+            intArrayOf(Color.WHITE, 0xFF334155.toInt())
+        )
         for ((idx, t) in tamanhos.withIndex()) {
             val chip = Chip(this).apply {
                 text = t.first
                 isCheckable = true
                 isChecked = idx == 0
                 isClickable = true
+                chipBackgroundColor = fundoChip
+                setTextColor(textoChip)
+                chipStrokeWidth = 0f
+                checkedIcon = ContextCompat.getDrawable(
+                    this@BarcodeScannerActivity,
+                    R.drawable.ic_check_circle_dark
+                )
+                isCheckedIconVisible = true
+                checkedIconTint = null
                 setOnCheckedChangeListener { _, checked ->
                     if (checked) sizeIdx = idx
                 }
@@ -830,6 +847,9 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
         sheet.setContentView(container)
         sheet.show()
+        sheet.behavior.isDraggable = false
+        sheet.behavior.state =
+            com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
     }
 
     private fun buscarPapeletasEAbrirPreview(
