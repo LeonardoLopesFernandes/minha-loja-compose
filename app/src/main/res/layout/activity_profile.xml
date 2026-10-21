@@ -111,6 +111,15 @@
                     android:lineSpacingExtra="5.6dp"
                     android:gravity="center" />
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Toque no nome para definir um apelido"
+                    android:textSize="11sp"
+                    android:textColor="#9AA5B1"
+                    android:gravity="center" />
+
                 <Space
                     android:layout_width="0dp"
                     android:layout_height="20dp" />

@@ -32,6 +32,7 @@ class SessionManager(context: Context) {
         private const val KEY_MS_PASSWORD = "MS_PASSWORD"
         private const val KEY_PRINTER_IP = "PRINTER_IP"
         private const val KEY_PROFILE_PHOTO = "PROFILE_PHOTO"
+        private const val KEY_NICKNAME = "PROFILE_NICKNAME"
         private const val TOKEN_EXPIRY_DAYS = 14
         const val DEFAULT_PRINTER_IP = "10.25.168.24"
         const val PRINTER_PORT = 9100
@@ -78,6 +79,31 @@ class SessionManager(context: Context) {
             prefs.edit().remove(KEY_PROFILE_PHOTO).apply()
         } catch (e: Exception) {
             Log.e(TAG, "clearProfilePhoto: Erro", e)
+        }
+    }
+
+    fun saveNickname(nickname: String) {
+        try {
+            prefs.edit().putString(KEY_NICKNAME, nickname.trim()).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "saveNickname: Erro", e)
+        }
+    }
+
+    fun getNickname(): String? {
+        return try {
+            prefs.getString(KEY_NICKNAME, null)?.takeIf { it.isNotBlank() }
+        } catch (e: Exception) {
+            Log.e(TAG, "getNickname: Erro", e)
+            null
+        }
+    }
+
+    fun clearNickname() {
+        try {
+            prefs.edit().remove(KEY_NICKNAME).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "clearNickname: Erro", e)
         }
     }
 

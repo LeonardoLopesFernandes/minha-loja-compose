@@ -34,10 +34,13 @@ class ProfileActivity : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
         val nome = sessionManager.getUserName() ?: "Usuário"
+        val apelido = sessionManager.getNickname()
         val email = sessionManager.getUserEmail() ?: "email@exemplo.com"
         val loja = sessionManager.getUserStore() ?: "L291"
 
-        findViewById<TextView>(R.id.tvProfileName).text = nome
+        val tvNome = findViewById<TextView>(R.id.tvProfileName)
+        tvNome.text = apelido ?: nome
+        tvNome.setOnClickListener { editarApelido(tvNome, nome) }
         findViewById<TextView>(R.id.tvProfileEmail).text = email
         findViewById<TextView>(R.id.tvProfileStore).text = "Loja $loja"
 
@@ -76,6 +79,36 @@ class ProfileActivity : AppCompatActivity() {
         findViewById<FrameLayout>(R.id.btnSairConta).setOnClickListener {
             mostrarDialogSair(sessionManager)
         }
+    }
+
+    private fun editarApelido(tvNome: TextView, nomeOriginal: String) {
+        val edit = EditText(this).apply {
+            setText(sessionManager.getNickname() ?: "")
+            hint = "Deixe vazio para usar o nome completo"
+            setSelection(text.length)
+        }
+        val density = resources.displayMetrics.density
+        val pad = (20 * density).toInt()
+        val container = FrameLayout(this).apply {
+            setPadding(pad, (8 * density).toInt(), pad, 0)
+            addView(edit)
+        }
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Apelido no perfil")
+            .setView(container)
+            .setPositiveButton("Salvar") { _, _ ->
+                val apelido = edit.text.toString().trim()
+                if (apelido.isEmpty()) {
+                    sessionManager.clearNickname()
+                    tvNome.text = nomeOriginal
+                } else {
+                    sessionManager.saveNickname(apelido)
+                    tvNome.text = apelido
+                }
+                Toast.makeText(this, "Apelido salvo", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun carregarFotoSalva() {
