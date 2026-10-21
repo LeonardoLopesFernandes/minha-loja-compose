@@ -84,6 +84,9 @@ import io.loja.ui.compose.components.TrashDrawIcon
 import io.loja.ui.compose.components.QtyBoxAvulsa
 import io.loja.ui.compose.components.SearchField
 import io.loja.ui.compose.components.SpinnerDropdown
+import io.loja.ui.compose.components.FiltroCard
+import io.loja.ui.compose.components.FiltroDivisorHorizontal
+import io.loja.ui.compose.components.FiltroDivisorVertical
 import io.loja.ui.compose.components.WhiteTypeBadge
 import io.loja.utils.Constants
 import io.loja.utils.RelatorioPdf
@@ -162,17 +165,12 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
             .padding(12.dp),
     ) {
         // ---- Filtros ----
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        ) {
+        FiltroCard {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .height(IntrinsicSize.Min)
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
             ) {
                 SpinnerDropdown(
                     label = "IMPRESSORA",
@@ -183,6 +181,7 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
                     onSelect = { vm.setPrinter(it) },
                     modifier = Modifier.weight(1f),
                 )
+                FiltroDivisorVertical()
                 SpinnerDropdown(
                     label = "TIPO",
                     icone = io.loja.R.drawable.ic_qr_code_small,
@@ -192,6 +191,7 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
                     onSelect = { vm.alterarBuscaTipo(listOf("EAN", "SAP", "Descrição")[it]) },
                     modifier = Modifier.weight(1f),
                 )
+                FiltroDivisorVertical()
                 SpinnerDropdown(
                     label = "MODO",
                     icone = io.loja.R.drawable.ic_tune_small,
@@ -202,23 +202,22 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
                     modifier = Modifier.weight(1f),
                 )
             }
+            FiltroDivisorHorizontal()
+            Box(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
+                SearchField(
+                    value = buscaTexto,
+                    onValueChange = { buscaTexto = it },
+                    placeholder = when (vm.buscaTipo) {
+                        "EAN" -> "Digite o EAN"
+                        "SAP" -> "Digite o SAP"
+                        else -> "Buscar Por Descrição"
+                    },
+                    numerico = vm.buscaTipo == "EAN" || vm.buscaTipo == "SAP",
+                    buscando = vm.buscando,
+                    onBuscar = { vm.buscar(buscaTexto) { buscaTexto = "" } },
+                )
+            }
         }
-
-        Spacer(Modifier.height(8.dp))
-
-        // ---- Busca ----
-        SearchField(
-            value = buscaTexto,
-            onValueChange = { buscaTexto = it },
-            placeholder = when (vm.buscaTipo) {
-                "EAN" -> "Digite o EAN"
-                "SAP" -> "Digite o SAP"
-                else -> "Buscar Por Descrição"
-            },
-            numerico = vm.buscaTipo == "EAN" || vm.buscaTipo == "SAP",
-            buscando = vm.buscando,
-            onBuscar = { vm.buscar(buscaTexto) { buscaTexto = "" } },
-        )
 
         // ---- Colagem ----
         if (vm.colagem.isNotEmpty()) {

@@ -84,6 +84,9 @@ import io.loja.ui.compose.components.TrashDrawIcon
 import io.loja.ui.compose.components.QtyBoxAvulsa
 import io.loja.ui.compose.components.SearchField
 import io.loja.ui.compose.components.SpinnerDropdown
+import io.loja.ui.compose.components.FiltroCard
+import io.loja.ui.compose.components.FiltroDivisorHorizontal
+import io.loja.ui.compose.components.FiltroDivisorVertical
 import io.loja.ui.compose.components.WhiteTypeBadge
 import io.loja.utils.Constants
 import io.loja.utils.SessionExpiredHandler
@@ -186,43 +189,48 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
             .background(Color(0xFFF4F6F8))
             .padding(12.dp),
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        ) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SpinnerDropdown("TIPO", io.loja.R.drawable.ic_receipt_small, TIPOS, vm.tipoIdx, { it }, { vm.alterarTipo(it) }, Modifier.weight(1f))
-                    SpinnerDropdown("MODELO", io.loja.R.drawable.ic_tune_small, MODELOS, vm.modeloIdx, { it }, { vm.alterarModelo(it) }, Modifier.weight(1f))
-                }
-                Spacer(Modifier.height(6.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SpinnerDropdown(
-                        "BUSCA", io.loja.R.drawable.ic_qr_code_small, BUSCAS,
-                        BUSCAS.indexOf(vm.buscaTipo).coerceAtLeast(0),
-                        { it }, { vm.alterarBuscaTipo(BUSCAS[it]) }, Modifier.weight(1f),
-                    )
-                    SpinnerDropdown("TAMANHO", io.loja.R.drawable.ic_aspect_ratio_small, TAMANHOS, vm.tamanhoIdx, { it }, { vm.alterarTamanho(it) }, Modifier.weight(1f))
-                }
+        FiltroCard {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+            ) {
+                SpinnerDropdown("TIPO", io.loja.R.drawable.ic_receipt_small, TIPOS, vm.tipoIdx, { it }, { vm.alterarTipo(it) }, Modifier.weight(1f))
+                FiltroDivisorVertical()
+                SpinnerDropdown("MODELO", io.loja.R.drawable.ic_tune_small, MODELOS, vm.modeloIdx, { it }, { vm.alterarModelo(it) }, Modifier.weight(1f))
+            }
+            FiltroDivisorHorizontal()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+            ) {
+                SpinnerDropdown(
+                    "BUSCA", io.loja.R.drawable.ic_qr_code_small, BUSCAS,
+                    BUSCAS.indexOf(vm.buscaTipo).coerceAtLeast(0),
+                    { it }, { vm.alterarBuscaTipo(BUSCAS[it]) }, Modifier.weight(1f),
+                )
+                FiltroDivisorVertical()
+                SpinnerDropdown("TAMANHO", io.loja.R.drawable.ic_aspect_ratio_small, TAMANHOS, vm.tamanhoIdx, { it }, { vm.alterarTamanho(it) }, Modifier.weight(1f))
+            }
+            FiltroDivisorHorizontal()
+            Box(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
+                SearchField(
+                    value = buscaTexto,
+                    onValueChange = { buscaTexto = it },
+                    placeholder = when (vm.buscaTipo) {
+                        "EAN" -> "Digite o EAN"
+                        "SAP" -> "Digite o SAP"
+                        else -> "Buscar Por Descrição"
+                    },
+                    numerico = vm.buscaTipo == "EAN" || vm.buscaTipo == "SAP",
+                    buscando = vm.buscando,
+                    onBuscar = { vm.buscar(buscaTexto) { buscaTexto = "" } },
+                )
             }
         }
-
-        Spacer(Modifier.height(8.dp))
-
-        SearchField(
-            value = buscaTexto,
-            onValueChange = { buscaTexto = it },
-            placeholder = when (vm.buscaTipo) {
-                "EAN" -> "Digite o EAN"
-                "SAP" -> "Digite o SAP"
-                else -> "Buscar Por Descrição"
-            },
-            numerico = vm.buscaTipo == "EAN" || vm.buscaTipo == "SAP",
-            buscando = vm.buscando,
-            onBuscar = { vm.buscar(buscaTexto) { buscaTexto = "" } },
-        )
 
         if (vm.colagem.isNotEmpty()) {
             Spacer(Modifier.height(6.dp))

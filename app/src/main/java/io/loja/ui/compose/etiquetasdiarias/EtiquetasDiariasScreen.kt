@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -74,6 +75,9 @@ import io.loja.ui.GondolaEditavelActivity
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.DepartamentoSelector
 import io.loja.ui.compose.components.SpinnerDropdown
+import io.loja.ui.compose.components.FiltroCard
+import io.loja.ui.compose.components.FiltroDivisorHorizontal
+import io.loja.ui.compose.components.FiltroDivisorVertical
 import io.loja.ui.compose.components.GreenBadgeContainer
 import io.loja.ui.compose.components.QtyBoxDiaria
 import io.loja.ui.compose.components.StatusBadge
@@ -186,19 +190,21 @@ fun EtiquetasDiariasScreen(
 
         // ---- Filtros ----
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SpinnerDropdown("IMPRESSORA", io.loja.R.drawable.ic_printer_small, vm.printerLabels, vm.printerIdx, { it }, { vm.alterarPrinter(it) }, Modifier.weight(1f))
-                        SpinnerDropdown("STATUS", io.loja.R.drawable.ic_tune_small, listOf("Todos os status", "Impressas", "Não impressas"), vm.statusIdx, { it }, { vm.alterarStatus(it) }, Modifier.weight(1f))
-                        SpinnerDropdown("MODO", io.loja.R.drawable.ic_qr_code_small, listOf("Normal", "Edição"), vm.modoIdx, { it }, { vm.alterarModo(it) }, Modifier.weight(1f))
-                    }
-                    Spacer(Modifier.height(8.dp))
+            FiltroCard {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min)
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                ) {
+                    SpinnerDropdown("IMPRESSORA", io.loja.R.drawable.ic_printer_small, vm.printerLabels, vm.printerIdx, { it }, { vm.alterarPrinter(it) }, Modifier.weight(1f))
+                    FiltroDivisorVertical()
+                    SpinnerDropdown("STATUS", io.loja.R.drawable.ic_tune_small, listOf("Todos os status", "Impressas", "Não impressas"), vm.statusIdx, { it }, { vm.alterarStatus(it) }, Modifier.weight(1f))
+                    FiltroDivisorVertical()
+                    SpinnerDropdown("MODO", io.loja.R.drawable.ic_qr_code_small, listOf("Normal", "Edição"), vm.modoIdx, { it }, { vm.alterarModo(it) }, Modifier.weight(1f))
+                }
+                FiltroDivisorHorizontal()
+                Box(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
                     DepartamentoSelector(
                         texto = vm.textoDepartamentos(),
                         buscando = vm.carregando,
