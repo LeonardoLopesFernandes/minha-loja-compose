@@ -69,6 +69,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -103,6 +106,7 @@ private val TAMANHOS = listOf("1×1", "2×1", "4×1", "6×1")
 
 @Composable
 fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modifier) {
+    LaunchedEffect(vm.items.size) { vm.carregarSaldos() }
     val context = LocalContext.current
     val activity = context as? Activity
 
@@ -317,6 +321,7 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
                     items(vm.items, key = { it.id + it.ean }) { item ->
                         PapeletaCard(
                             item = item,
+                            saldo = vm.saldos[item.ean],
                             qtd = vm.quantidadeDe(item.ean),
                             onQtdChange = { vm.setQuantidade(item.ean, it); vm.persistir() },
                             onImprimir = { vm.imprimir(item, vm.quantidadeDe(item.ean)) },
@@ -428,6 +433,7 @@ private fun FabScanner(modifier: Modifier = Modifier, onAbrir: () -> Unit) {
 @Composable
 private fun PapeletaCard(
     item: PriceSign,
+    saldo: Double?,
     qtd: Int,
     onQtdChange: (Int) -> Unit,
     onImprimir: () -> Unit,
@@ -522,8 +528,22 @@ private fun PapeletaCard(
             Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f).padding(start = 4.dp, end = 8.dp)) {
                     Text(
-                        "DEP: $deptNum | EAN: ${item.ean} / SAP: ${item.sap}",
-                        color = Color(0xFF757575), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        buildAnnotatedString {
+                            withStyle(SpanStyle(color = Color(0xFF757575))) {
+                                append("DEP: $deptNum | EAN: ${item.ean} / SAP: ${item.sap}")
+                            }
+                            if (saldo != null) {
+                                withStyle(
+                                    SpanStyle(
+                                        color = if (saldo < 0) Color(0xFFD81B3A) else Color(0xFF2E7D32),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                ) {
+                                    append(" | SALDO: ${saldo.toInt()}")
+                                }
+                            }
+                        },
+                        fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.clickable {
                             clipboard.setText(AnnotatedString(item.ean))
                             Toast.makeText(context, "EAN copiado: ${item.ean}", Toast.LENGTH_SHORT).show()

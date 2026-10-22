@@ -1,5 +1,6 @@
 package io.loja.network
 
+import io.loja.network.models.ProductStoreResponse
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
@@ -41,6 +42,13 @@ interface ApiService {
         @Query("sapId") sapId: String? = null,
         @Query("startDate") startDate: String
     ): Response<SingleLabelResponse>
+
+    @GET("web/product/store/{storeId}")
+    suspend fun getProductStore(
+        @Path("storeId") storeId: String,
+        @Query("ean") ean: String? = null,
+        @Query("sapCode") sapCode: String? = null
+    ): Response<ProductStoreResponse>
 
     @POST("web/price-tag/store/{storeId}/printer/{printerId}/tag/{tagId}/send")
     suspend fun sendPriceTagsToPrinter(

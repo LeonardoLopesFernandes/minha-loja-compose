@@ -133,3 +133,8 @@ data class PriceTagSendResponse(
     @SerializedName("status") val status: String? = null,
     @SerializedName("message") val message: String? = null
 )
+
+// ========== PRODUTO (saldo) ==========
+data class ProductStoreResponse(
+    @SerializedName("stock") val stock: Double = 0.0
+)

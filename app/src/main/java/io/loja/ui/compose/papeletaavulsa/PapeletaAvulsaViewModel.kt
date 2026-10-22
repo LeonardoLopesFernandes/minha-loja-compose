@@ -67,6 +67,7 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
         it.addAll(listaStore.getPapeletas())
     }
     val quantidades: SnapshotStateMap<String, Int> = mutableStateMapOf()
+    val saldos: SnapshotStateMap<String, Double> = mutableStateMapOf()
 
     var tipoIdx by mutableStateOf(1)         // 0 Comum, 1 Promocional
         private set
@@ -108,6 +109,7 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         items.forEach { quantidades[it.ean] = it.quantity.coerceAtLeast(1) }
+        carregarSaldos()
     }
 
     fun alterarTipo(i: Int) { tipoIdx = i }
@@ -197,6 +199,21 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
                 onFim()
                 LogHelper.e("PapeletaAvulsaVM: erro na busca", e)
                 emitir(PapeletaEvento.Toast("Erro: ${e.message}"))
+            }
+        }
+    }
+
+    fun carregarSaldos() {
+        viewModelScope.launch {
+            val loja = session.getUserStore() ?: Constants.DEFAULT_STORE
+            items.forEach { item ->
+                try {
+                    val resp = withContext(Dispatchers.IO) {
+                        api.getProductStore(loja, ean = item.ean)
+                    }
+                    resp.body()?.let { saldos[item.ean] = it.stock }
+                } catch (_: Exception) {
+                }
             }
         }
     }
