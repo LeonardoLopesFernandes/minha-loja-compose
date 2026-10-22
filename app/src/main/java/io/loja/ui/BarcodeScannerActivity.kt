@@ -303,6 +303,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         btnLanterna.textSize = 16f
         btnLanterna.setTypeface(null, android.graphics.Typeface.BOLD)
         btnLanterna.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        btnLanterna.gravity = android.view.Gravity.CENTER
         fun estiloLanterna() {
             btnLanterna.background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
@@ -377,7 +378,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 listaViewModel = ViewModelProvider(this)[ListaViewModel::class.java]
                 apiService = ApiClient.getSlApiService(sessionManager)
                 continuoPronto = true
-                tvInstrucao.text = "Escaneie os itens — volte para concluir"
+                tvInstrucao.text = "Centralize o código para escanear"
             } catch (e: Exception) {
                 LogHelper.e("BarcodeScanner: falha modo contínuo, usando tiro único", e)
                 modoContinuo = false
