@@ -209,7 +209,7 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
             items.forEach { item ->
                 try {
                     val resp = withContext(Dispatchers.IO) {
-                        api.getProductStore(loja, ean = item.ean)
+                        api.getProductStore(loja, ean = item.ean, sapCode = item.sap)
                     }
                     resp.body()?.let { saldos[item.ean] = it.stock }
                 } catch (_: Exception) {
