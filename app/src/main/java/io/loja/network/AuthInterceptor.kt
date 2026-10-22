@@ -32,6 +32,8 @@ class AuthInterceptor(
                 header("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
                 header("Platform-Version", "minhaloja/4.0.5")
                 header("User-Store", "minhaloja/$store")
+                header("Origin", "https://minhaloja.americanas.io")
+                header("Referer", "https://minhaloja.americanas.io/")
             }
 
             val response = chain.proceed(requestBuilder.build())
