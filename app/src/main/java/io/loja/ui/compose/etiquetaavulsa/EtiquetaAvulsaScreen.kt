@@ -491,7 +491,7 @@ private fun EtiquetaCard(
         valor = formatador.format(precoNormal)
         tipo = "leve e ganhe"; tipoCor = Color(0xFF2E7D32)
     } else if (ehDeporParcelado) {
-        valor = "De R$${num.format(precoNormal)} | Por R$${num.format(precoPromo!!)} | ${installments!!.installmentQuantity}x de R$${num.format(valorParcCalc)}"
+        valor = "Por R$${num.format(precoNormal)}|Por R$${num.format(precoPromo!!)}|${installments!!.installmentQuantity}x de R$${num.format(valorParcCalc)}"
         tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
     } else if (installments != null && installments.installmentQuantity > 0) {
         val qtdParc = installments.installmentQuantity

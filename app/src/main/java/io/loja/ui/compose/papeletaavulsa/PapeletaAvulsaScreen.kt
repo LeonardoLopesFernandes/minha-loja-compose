@@ -469,7 +469,7 @@ private fun PapeletaCard(
         valor = f.format(precoNormal)
         tipo = "leve e ganhe"; tipoCor = Color(0xFF2E7D32)
     } else if (ehDeporParcelado) {
-        valor = "De R$${num.format(precoNormal)} | Por R$${num.format(precoPromo!!)} | ${qtdParc}x de R$${num.format(valorParc)}"
+        valor = "Por R$${num.format(precoNormal)}|Por R$${num.format(precoPromo!!)}|${qtdParc}x de R$${num.format(valorParc)}"
         tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
     } else if (qtdParc > 0) {
         val por = precoPromo?.takeIf { it > 0 }

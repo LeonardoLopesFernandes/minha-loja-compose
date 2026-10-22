@@ -445,7 +445,7 @@ private fun PriceTagItemCard(
         }
         ehDeporParcelado -> {
             tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
-            promoText = "De R$${num.format(precoNormal)} | Por R$${num.format(precoPromo!!)} | ${parcelasQtd}x de R$${num.format(valorParcelaCalc)}"
+            promoText = "Por R$${num.format(precoNormal)}|Por R$${num.format(precoPromo!!)}|${parcelasQtd}x de R$${num.format(valorParcelaCalc)}"
             separador = false
             precoTexto = ""
         }
