@@ -206,7 +206,7 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
     fun carregarSaldos() {
         viewModelScope.launch {
             val loja = session.getUserStore() ?: Constants.DEFAULT_STORE
-            items.forEach { item ->
+            items.toList().forEach { item ->
                 try {
                     val resp = withContext(Dispatchers.IO) {
                         api.getProductStore(loja, ean = item.ean, sapCode = item.sap)
@@ -385,7 +385,7 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
             val tamanhoAtual = tamanhoSelecionado
             val lista = mutableListOf<PapeletaPrintingData>()
             val qtds = mutableListOf<Int>()
-            items.forEach { item ->
+            items.toList().forEach { item ->
                 val ehComum = isItemComum(item)
                 if (!usarVencimentos) {
                     if (tipoPapeleta == Constants.SIGN_TYPE_PAPELETA_COMUM && !ehComum) return@forEach

@@ -108,7 +108,7 @@ class EtiquetaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
     fun carregarSaldos() {
         viewModelScope.launch {
             val loja = session.getUserStore() ?: Constants.DEFAULT_STORE
-            items.forEach { item ->
+            items.toList().forEach { item ->
                 try {
                     val resp = withContext(Dispatchers.IO) {
                         api.getProductStore(loja, ean = item.ean, sapCode = item.sap)
