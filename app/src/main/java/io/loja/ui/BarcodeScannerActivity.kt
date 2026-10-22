@@ -84,6 +84,8 @@ class BarcodeScannerActivity : AppCompatActivity() {
     private lateinit var listaViewModel: ListaViewModel
     private lateinit var apiService: ApiService
     private var continuoPronto = false
+    private var camera: androidx.camera.core.Camera? = null
+    private var lanternaOn = false
 
     companion object {
         const val EXTRA_EAN = "EAN"
@@ -113,27 +115,98 @@ class BarcodeScannerActivity : AppCompatActivity() {
             FrameLayout.LayoutParams.MATCH_PARENT
         )
 
-        // Texto de instrução
-        val textView = TextView(this)
-        textView.text = "Aproxime a câmera do código"
-        tvInstrucao = textView
-        textView.setTextColor(android.graphics.Color.WHITE)
-        textView.textSize = 18f
-        textView.setPadding(16, 16, 16, 16)
-        textView.setBackgroundColor(0x80000000.toInt()) // Fundo preto semi-transparente
-        textView.textAlignment = View.TEXT_ALIGNMENT_CENTER
-        
-        val params = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.WRAP_CONTENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT
-        )
-        params.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
-        params.topMargin = 80
-        textView.layoutParams = params
+        val density = resources.displayMetrics.density
 
         val frameLayout = FrameLayout(this)
         frameLayout.addView(previewView)
-        frameLayout.addView(textView)
+
+        // Escurece ao redor do viewfinder (janela transparente no campo de leitura)
+        val dimOverlay = DimOverlayView(this)
+        frameLayout.addView(
+            dimOverlay,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        // Botão voltar (canto superior esquerdo)
+        val btnVoltar = TextView(this)
+        btnVoltar.text = "‹"
+        btnVoltar.setTextColor(android.graphics.Color.WHITE)
+        btnVoltar.textSize = 34f
+        btnVoltar.setPadding(
+            (12 * density).toInt(), 0, (12 * density).toInt(), (8 * density).toInt()
+        )
+        btnVoltar.setOnClickListener { finish() }
+        val voltarParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        )
+        voltarParams.gravity = android.view.Gravity.TOP or android.view.Gravity.START
+        voltarParams.setMargins(
+            (4 * density).toInt(), (32 * density).toInt(), 0, 0
+        )
+        frameLayout.addView(btnVoltar, voltarParams)
+
+        // View do viewfinder (borda branca)
+        val viewfinder = View(this)
+        viewfinder.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 16f * density
+            setColor(android.graphics.Color.TRANSPARENT)
+            setStroke((2 * density).toInt(), android.graphics.Color.WHITE)
+        }
+        frameLayout.addView(viewfinder)
+
+        // Título (logo acima do viewfinder)
+        val tvTitulo = TextView(this)
+        tvTitulo.text = "Escanear código de barras"
+        tvTitulo.setTextColor(android.graphics.Color.WHITE)
+        tvTitulo.textSize = 18f
+        tvTitulo.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        frameLayout.addView(
+            tvTitulo,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        // Subtítulo (logo abaixo do viewfinder)
+        val textView = TextView(this)
+        textView.text = "Centralize o código para escanear"
+        tvInstrucao = textView
+        textView.setTextColor(0xB3FFFFFF.toInt())
+        textView.textSize = 14f
+        textView.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        frameLayout.addView(
+            textView,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        frameLayout.post {
+            val vfW = (frameLayout.width * 0.85f).toInt()
+            val vfH = (200 * density).toInt()
+            val vfLeft = (frameLayout.width - vfW) / 2
+            val vfTop = (frameLayout.height - vfH) / 2 - (30 * density).toInt()
+            viewfinder.layoutParams = FrameLayout.LayoutParams(vfW, vfH).apply {
+                leftMargin = vfLeft
+                topMargin = vfTop
+                gravity = android.view.Gravity.TOP or android.view.Gravity.START
+            }
+            (tvTitulo.layoutParams as FrameLayout.LayoutParams).apply {
+                topMargin = vfTop - (28 * density).toInt()
+                gravity = android.view.Gravity.TOP
+            }
+            (textView.layoutParams as FrameLayout.LayoutParams).apply {
+                topMargin = vfTop + vfH + (10 * density).toInt()
+                gravity = android.view.Gravity.TOP
+            }
+        }
 
         // Badge inferior com o acumulado da sessão (clique volta para a lista)
         val badgeContador = TextView(this)
@@ -147,7 +220,6 @@ class BarcodeScannerActivity : AppCompatActivity() {
             cornerRadius = 60f
             setColor(0xFFFFFFFF.toInt())
         }
-        val density = resources.displayMetrics.density
         badgeContador.setPadding(
             (16 * density).toInt(), (10 * density).toInt(),
             (16 * density).toInt(), (10 * density).toInt()
@@ -225,11 +297,49 @@ class BarcodeScannerActivity : AppCompatActivity() {
             return linha
         }
 
+        val btnLanterna = TextView(this)
+        btnLanterna.text = "Lanterna"
+        btnLanterna.setTextColor(android.graphics.Color.WHITE)
+        btnLanterna.textSize = 16f
+        btnLanterna.setTypeface(null, android.graphics.Typeface.BOLD)
+        btnLanterna.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        fun estiloLanterna() {
+            btnLanterna.background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = 12f * density
+                setColor(
+                    if (lanternaOn) android.graphics.Color.WHITE
+                    else android.graphics.Color.TRANSPARENT
+                )
+                setStroke((1.5f * density).toInt(), android.graphics.Color.WHITE)
+            }
+            btnLanterna.setTextColor(
+                if (lanternaOn) android.graphics.Color.BLACK
+                else android.graphics.Color.WHITE
+            )
+        }
+        estiloLanterna()
+        btnLanterna.setOnClickListener {
+            val cam = camera
+            if (cam != null) {
+                lanternaOn = !lanternaOn
+                cam.cameraControl.enableTorch(lanternaOn)
+                estiloLanterna()
+            }
+        }
+
         val barraInferior = android.widget.LinearLayout(this)
         barraInferior.orientation = android.widget.LinearLayout.VERTICAL
         barraInferior.gravity = android.view.Gravity.CENTER_HORIZONTAL
         barraInferior.setPadding(
             (16 * density).toInt(), 0, (16 * density).toInt(), 0
+        )
+        barraInferior.addView(
+            btnLanterna,
+            android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                (52 * density).toInt()
+            ).apply { bottomMargin = (12 * density).toInt() }
         )
         barraInferior.addView(
             linhaBadges(badgeContador, btnDigitarEan),
@@ -375,7 +485,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
             try {
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
+                camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageAnalysis
                 )
             } catch (e: Exception) {
@@ -1009,5 +1119,29 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 )
             }
         }
+    }
+}
+private class DimOverlayView(context: android.content.Context) : View(context) {
+    private val dimPaint = android.graphics.Paint().apply {
+        color = 0xB3000000.toInt()
+        isAntiAlias = true
+    }
+
+    override fun onDraw(canvas: android.graphics.Canvas) {
+        super.onDraw(canvas)
+        val d = resources.displayMetrics.density
+        val vfW = width * 0.85f
+        val vfH = 200 * d
+        val left = (width - vfW) / 2f
+        val top = (height - vfH) / 2f - 30 * d
+        val path = android.graphics.Path().apply {
+            fillType = android.graphics.Path.FillType.EVEN_ODD
+            addRect(0f, 0f, width.toFloat(), height.toFloat(), android.graphics.Path.Direction.CW)
+            addRoundRect(
+                android.graphics.RectF(left, top, left + vfW, top + vfH),
+                16 * d, 16 * d, android.graphics.Path.Direction.CW
+            )
+        }
+        canvas.drawPath(path, dimPaint)
     }
 }
