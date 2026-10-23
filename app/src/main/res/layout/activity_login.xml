@@ -88,7 +88,7 @@
         android:layout_marginTop="16dp"
         android:alpha="0.0"
         app:layout_constraintTop_toBottomOf="@id/headerLogin"
-        app:layout_constraintBottom_toTopOf="@id/btnSalvarCredenciais"
+        app:layout_constraintBottom_toTopOf="@id/tvVersaoLogin"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -101,54 +101,14 @@
             android:background="@drawable/bg_card_login"
             android:elevation="8dp">
 
-            <!-- E-mail -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="E-mail"
-                android:textColor="#49454F"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <EditText
-                android:id="@+id/etEmail"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="4dp"
-                android:hint="Email Microsoft"
-                android:textSize="14sp"
-                android:textColor="#1A1A1A"
-                android:textColorHint="#9CA3AF"
-                android:inputType="textEmailAddress"
-                android:background="@drawable/bg_input_login_card"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:importantForAutofill="no" />
-
-            <!-- Senha -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Senha"
-                android:textColor="#49454F"
-                android:textSize="12sp"
+                android:text="americanas.io"
+                android:textColor="#1F1F1F"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:layout_marginTop="12dp" />
-
-            <EditText
-                android:id="@+id/etSenha"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="4dp"
-                android:hint="Senha"
-                android:textSize="14sp"
-                android:textColor="#1A1A1A"
-                android:textColorHint="#9CA3AF"
-                android:inputType="textPassword"
-                android:background="@drawable/bg_input_login_card"
-                android:paddingStart="16dp"
-                android:paddingEnd="48dp"
-                android:importantForAutofill="no" />
+                android:layout_gravity="center_horizontal" />
 
             <!-- Botão ENTRAR -->
             <Button
@@ -156,7 +116,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:layout_marginTop="20dp"
-                android:text="ENTRAR"
+                android:text="Login Microsoft"
                 android:textSize="16sp"
                 android:fontFamily="sans-serif-bold"
                 android:textColor="#FFFFFF"
@@ -166,39 +126,6 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 3. Checkbox de Salvar Credenciais -->
-    <LinearLayout
-        android:id="@+id/btnSalvarCredenciais"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:padding="8dp"
-        android:alpha="0.0"
-        app:layout_constraintTop_toBottomOf="@id/containerLogin"
-        app:layout_constraintBottom_toTopOf="@id/tvVersaoLogin"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <ImageView
-            android:id="@+id/imgCheckboxLogin"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_checkbox_unchecked"
-            android:layout_marginEnd="8dp"
-            android:importantForAccessibility="no" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Salvar credenciais e ativar login automático"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp" />
-    </LinearLayout>
 
     <TextView
         android:id="@+id/tvVersaoLogin"

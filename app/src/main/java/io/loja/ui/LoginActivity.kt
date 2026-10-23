@@ -23,16 +23,13 @@ import io.loja.utils.ToastUtils
 class LoginActivity : AppCompatActivity() {
 
     private var autoLoginDisparado = false
-    private var salvarCredenciaisMarcado = false
     private var reconnectEmAndamento = false
     private var webViewAberta = false
-    private lateinit var imgCheckboxLogin: ImageView
     private lateinit var btnEntrar: Button
     private lateinit var logoGrande: LogoAnimadoView
     private lateinit var tvTitulo: TextView
     private lateinit var tvDescricao: TextView
     private lateinit var containerLogin: LinearLayout
-    private lateinit var btnSalvarCredenciais: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,69 +56,13 @@ class LoginActivity : AppCompatActivity() {
         tvDescricao = findViewById(R.id.tvDescricao)
         containerLogin = findViewById(R.id.containerLogin)
         btnEntrar = findViewById<Button>(R.id.btnEntrar)
-        val etEmail = findViewById<EditText>(R.id.etEmail)
-        val etSenha = findViewById<EditText>(R.id.etSenha)
-        btnSalvarCredenciais = findViewById(R.id.btnSalvarCredenciais)
-        imgCheckboxLogin = findViewById(R.id.imgCheckboxLogin)
 
-        etEmail.setText(sessionManager.getUserEmail() ?: "")
-        etSenha.setText(sessionManager.getSavedPassword() ?: "")
-        configurarOlhoSenha(etSenha)
+        animarSplash(mostrarFormulario = true)
 
-        salvarCredenciaisMarcado = sessionManager.hasSavedCredentials()
-        imgCheckboxLogin.setImageResource(
-            if (salvarCredenciaisMarcado) R.drawable.ic_checkbox_checked else R.drawable.ic_checkbox_unchecked
-        )
-
-        if (sessionManager.hasSavedCredentials()) {
-            // Sessão expirada: reconexão automática silenciosa, sem passar pela tela de login
-            reconnectEmAndamento = true
-            containerLogin.visibility = View.INVISIBLE
-            btnSalvarCredenciais.visibility = View.INVISIBLE
-            tvDescricao.text = "Sessão expirada. Reconectando automaticamente..."
-            animarSplash(mostrarFormulario = false)
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (!isFinishing && reconnectEmAndamento) {
-                    webViewAberta = true
-                    abrirLoginMicrosoft(
-                        sessionManager.getUserEmail() ?: "",
-                        sessionManager.getSavedPassword() ?: "",
-                        silencioso = true
-                    )
-                }
-            }, 1000)
-        } else {
-            animarSplash(mostrarFormulario = true)
-        }
-
-        // Botão ENTRAR: abre a página da Microsoft com email e senha já preenchidos
         btnEntrar.setOnClickListener {
-            val email = etEmail.text.toString().trim()
-            val senha = etSenha.text.toString()
-            if (email.isEmpty() || senha.isEmpty()) {
-                ToastUtils.show(this, "Preencha email e senha para entrar", Toast.LENGTH_LONG)
-                return@setOnClickListener
-            }
-            abrirLoginMicrosoft(email, senha, salvar = salvarCredenciaisMarcado)
+            abrirLoginMicrosoft("", "", salvar = false)
         }
 
-        btnSalvarCredenciais.setOnClickListener {
-            salvarCredenciaisMarcado = !salvarCredenciaisMarcado
-            animarCheckbox()
-            if (!salvarCredenciaisMarcado) {
-                ToastUtils.show(this, "Login automático desativado")
-                return@setOnClickListener
-            }
-            val email = etEmail.text.toString().trim()
-            val senha = etSenha.text.toString()
-            if (email.isEmpty() || senha.isEmpty()) {
-                ToastUtils.show(this, "Preencha email e senha para salvar")
-                return@setOnClickListener
-            }
-            sessionManager.saveCredentials(email, senha)
-            ToastUtils.show(this, "Credenciais salvas! Iniciando login automático...")
-            abrirLoginMicrosoft(email, senha, salvar = true)
-        }
     }
 
     private fun animarSplash(mostrarFormulario: Boolean) {
@@ -169,14 +110,6 @@ class LoginActivity : AppCompatActivity() {
                                 .setInterpolator(OvershootInterpolator(0.8f))
                                 .start()
 
-                            // O checkbox surge junto com o card
-                            btnSalvarCredenciais.translationY = 50f
-                            btnSalvarCredenciais.animate()
-                                .alpha(1f)
-                                .translationY(0f)
-                                .setDuration(300)
-                                .setInterpolator(OvershootInterpolator(0.8f))
-                                .start()
                         }
                     }
                     .start()
@@ -192,9 +125,6 @@ class LoginActivity : AppCompatActivity() {
             containerLogin.visibility = View.VISIBLE
             containerLogin.alpha = 1f
             containerLogin.translationY = 0f
-            btnSalvarCredenciais.visibility = View.VISIBLE
-            btnSalvarCredenciais.alpha = 1f
-            btnSalvarCredenciais.translationY = 0f
             tvTitulo.visibility = View.VISIBLE
             tvTitulo.alpha = 1f
             tvDescricao.visibility = View.VISIBLE
@@ -220,26 +150,6 @@ class LoginActivity : AppCompatActivity() {
         } catch (e: Exception) {
             autoLoginDisparado = false
             ToastUtils.show(this, "Erro ao abrir login: ${e.message}", Toast.LENGTH_LONG)
-        }
-    }
-
-    private fun animarCheckbox() {
-        try {
-            val de = if (salvarCredenciaisMarcado) R.drawable.ic_checkbox_unchecked else R.drawable.ic_checkbox_checked
-            val para = if (salvarCredenciaisMarcado) R.drawable.ic_checkbox_checked else R.drawable.ic_checkbox_unchecked
-            val transition = TransitionDrawable(
-                arrayOf(
-                    ContextCompat.getDrawable(this, de),
-                    ContextCompat.getDrawable(this, para)
-                )
-            )
-            transition.isCrossFadeEnabled = true
-            imgCheckboxLogin.setImageDrawable(transition)
-            transition.startTransition(250)
-        } catch (e: Exception) {
-            imgCheckboxLogin.setImageResource(
-                if (salvarCredenciaisMarcado) R.drawable.ic_checkbox_checked else R.drawable.ic_checkbox_unchecked
-            )
         }
     }
 
