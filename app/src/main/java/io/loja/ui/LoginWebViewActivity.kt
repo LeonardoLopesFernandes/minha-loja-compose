@@ -22,6 +22,7 @@ class LoginWebViewActivity : AppCompatActivity() {
     private lateinit var layoutCarregamentoCustom: LinearLayout
     private lateinit var imgLogoPreenchimento: LogoAnimadoView
     private lateinit var tvStatusCarregamento: android.widget.TextView
+    private lateinit var tvMarcaLogo: android.widget.TextView
     
     private var tokenEncontrado = false
     private var loginConcluido = false
@@ -50,6 +51,8 @@ class LoginWebViewActivity : AppCompatActivity() {
         layoutCarregamentoCustom = findViewById(R.id.layoutCarregamentoCustom)
         imgLogoPreenchimento = findViewById(R.id.imgLogoPreenchimento)
         tvStatusCarregamento = findViewById(R.id.tvStatusCarregamento)
+        tvMarcaLogo = findViewById(R.id.tvMarcaLogo)
+        tvMarcaLogo.animate().alpha(1f).setStartDelay(2800).setDuration(400).start()
 
         silencioso = autoLogin && intent.getBooleanExtra(EXTRA_SILENCIOSO, false)
 
