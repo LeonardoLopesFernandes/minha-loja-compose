@@ -28,7 +28,7 @@ class LoginActivity : AppCompatActivity() {
     private var webViewAberta = false
     private lateinit var imgCheckboxLogin: ImageView
     private lateinit var btnEntrar: Button
-    private lateinit var logoGrande: ImageView
+    private lateinit var logoGrande: LogoAnimadoView
     private lateinit var tvTitulo: TextView
     private lateinit var tvDescricao: TextView
     private lateinit var containerLogin: LinearLayout

@@ -1,6 +1,5 @@
 package io.loja.ui
 
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
@@ -8,9 +7,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.webkit.*
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -23,12 +20,11 @@ class LoginWebViewActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var layoutCarregamentoCustom: LinearLayout
-    private lateinit var imgLogoPreenchimento: ImageView
+    private lateinit var imgLogoPreenchimento: LogoAnimadoView
     private lateinit var tvStatusCarregamento: android.widget.TextView
     
     private var tokenEncontrado = false
     private var loginConcluido = false
-    private var pulsoAnimator: ValueAnimator? = null
     private var autoLogin = false
     private var silencioso = false
     private var handlerTimeout: Runnable? = null
@@ -97,29 +93,11 @@ class LoginWebViewActivity : AppCompatActivity() {
     }
 
     private fun iniciarAnimacaoPulse() {
-        if (pulsoAnimator != null && pulsoAnimator!!.isRunning) return
-
-        runOnUiThread {
-            pulsoAnimator = ValueAnimator.ofFloat(1.0f, 0.2f).apply {
-                duration = 900
-                repeatCount = ValueAnimator.INFINITE
-                repeatMode = ValueAnimator.REVERSE
-                interpolator = AccelerateDecelerateInterpolator()
-                addUpdateListener { animator ->
-                    val valorAlpha = animator.animatedValue as Float
-                    imgLogoPreenchimento.alpha = valorAlpha
-                }
-                start()
-            }
-        }
+        runOnUiThread { imgLogoPreenchimento.iniciar() }
     }
 
     private fun pararAnimacaoPulse() {
-        runOnUiThread {
-            pulsoAnimator?.cancel()
-            pulsoAnimator = null
-            imgLogoPreenchimento.alpha = 1.0f
-        }
+        runOnUiThread { imgLogoPreenchimento.parar() }
     }
 
     private fun exibirCarregamento(exibir: Boolean) {

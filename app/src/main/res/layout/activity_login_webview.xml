@@ -20,13 +20,11 @@
         android:focusable="true"
         android:visibility="visible">
 
-        <ImageView
+        <io.loja.ui.LogoAnimadoView
             android:id="@+id/imgLogoPreenchimento"
             android:layout_width="140dp"
             android:layout_height="140dp"
-            android:layout_gravity="center_horizontal"
-            android:src="@drawable/logo_a_branco" 
-            android:scaleType="fitCenter" />
+            android:layout_gravity="center_horizontal" />
 
         <TextView
             android:id="@+id/tvStatusCarregamento"
