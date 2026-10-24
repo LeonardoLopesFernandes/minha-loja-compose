@@ -122,6 +122,10 @@
                 android:textColor="#FFFFFF"
                 android:backgroundTint="#D32F2F"
                 app:cornerRadius="14dp"
+                app:icon="@drawable/ic_microsoft"
+                app:iconGravity="textStart"
+                app:iconTint="@null"
+                app:iconPadding="8dp"
                 android:textAllCaps="false" />
         </LinearLayout>
     </LinearLayout>
