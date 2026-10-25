@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 
 val VERDE_CONTAINER = Color(0xFF4CAF50)
 
-/** Container verde (badge_green_container): fundo #4CAF50, raio 12. */
+/** Container verde (badge_green_container): fundo #4CAF50, cantos levemente arredondados. */
 @Composable
 fun GreenBadgeContainer(
     modifier: Modifier = Modifier,
@@ -43,7 +43,7 @@ fun GreenBadgeContainer(
 ) {
     Row(
         modifier = modifier
-            .background(VERDE_CONTAINER, RoundedCornerShape(12.dp))
+            .background(VERDE_CONTAINER, RoundedCornerShape(6.dp))
             .padding(contentPadding),
         verticalAlignment = Alignment.CenterVertically,
         content = content,

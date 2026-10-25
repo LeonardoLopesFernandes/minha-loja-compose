@@ -582,7 +582,7 @@ private fun EtiquetaCard(
                             WhiteTypeBadge(
                                 tipo, tipoCor,
                                 modifier = Modifier.fillMaxHeight().padding(start = 6.dp),
-                                shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
+                                shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
                             )
                         }
                     } else {
@@ -610,7 +610,7 @@ private fun EtiquetaCard(
                             WhiteTypeBadge(
                                 tipo, tipoCor,
                                 modifier = Modifier.fillMaxHeight().padding(start = if (parcelado) 10.dp else 8.dp),
-                                shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
+                                shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
                             )
                         }
                     }

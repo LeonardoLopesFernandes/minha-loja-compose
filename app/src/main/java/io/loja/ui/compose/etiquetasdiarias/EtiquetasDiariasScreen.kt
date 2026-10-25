@@ -516,7 +516,7 @@ private fun PriceTagItemCard(
                     WhiteTypeBadge(
                         tipo, tipoCor,
                         modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
-                        shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
+                        shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
                     )
                 }
             }

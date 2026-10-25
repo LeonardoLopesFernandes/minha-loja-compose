@@ -9,6 +9,10 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.pdf.PdfDocument
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
+import android.text.TextUtils
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.google.zxing.BarcodeFormat
@@ -147,8 +151,14 @@ object RelatorioPdf {
             val baselineCelula =
                 y + ROW_H / 2f - (paintCell.ascent() + paintCell.descent()) / 2f
             for (c in 0 until 3) {
-                val text = truncar(valores[c], colW(c) - 12f, paintCell)
-                canvas.drawText(text, colX(c) + colW(c) / 2f, baselineCelula, paintCell)
+                if (c == 2) {
+                    desenharDescricaoDuasLinhas(
+                        canvas, valores[c], colX(c) + 6f, y, colW(c) - 12f, paintCell
+                    )
+                } else {
+                    val text = truncar(valores[c], colW(c) - 12f, paintCell)
+                    canvas.drawText(text, colX(c) + colW(c) / 2f, baselineCelula, paintCell)
+                }
                 canvas.drawRect(colX(c), y, colX(c) + colW(c), y + ROW_H, paintBorder)
             }
             // Código de barras do EAN com o número logo abaixo
@@ -228,6 +238,28 @@ object RelatorioPdf {
             }
         }
         return null
+    }
+
+    /** Desenha a descrição centralizada em até duas linhas dentro da coluna. */
+    private fun desenharDescricaoDuasLinhas(
+        canvas: Canvas,
+        texto: String,
+        left: Float,
+        top: Float,
+        width: Float,
+        paint: Paint
+    ) {
+        if (texto.isEmpty()) return
+        val layout = StaticLayout.Builder
+            .obtain(texto, 0, texto.length, TextPaint(paint), width.toInt())
+            .setAlignment(Layout.Alignment.ALIGN_CENTER)
+            .setMaxLines(2)
+            .setEllipsize(TextUtils.TruncateAt.END)
+            .build()
+        canvas.save()
+        canvas.translate(left, top + (ROW_H - layout.height) / 2f)
+        layout.draw(canvas)
+        canvas.restore()
     }
 
     /**
