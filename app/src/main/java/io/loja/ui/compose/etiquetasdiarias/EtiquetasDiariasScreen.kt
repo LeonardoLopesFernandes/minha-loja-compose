@@ -509,7 +509,7 @@ private fun PriceTagItemCard(
                     modifier = Modifier.height(28.dp),
                     contentPadding = PaddingValues(start = 12.dp),
                 ) {
-                    val badgeFont = if (tipo == "parcelado") 14.sp else 12.sp
+                    val badgeFont = 12.sp
                     if (promoText != null) Text(promoText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
                     if (separador) Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont, modifier = Modifier.padding(horizontal = 4.dp))
                     if (precoTexto.isNotEmpty()) Text(precoTexto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
