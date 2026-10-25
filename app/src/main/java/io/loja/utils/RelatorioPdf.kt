@@ -257,6 +257,7 @@ object RelatorioPdf {
             .setEllipsize(TextUtils.TruncateAt.END)
             .build()
         canvas.save()
+        canvas.clipRect(left, top, left + width, top + ROW_H)
         canvas.translate(left, top + (ROW_H - layout.height) / 2f)
         layout.draw(canvas)
         canvas.restore()

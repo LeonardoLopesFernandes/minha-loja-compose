@@ -487,7 +487,7 @@ private fun EtiquetaCard(
     if (takeAndWin != null && takeAndWin.qty > 0 && takeAndWin.totalValue > 0) {
         val totalLeve = if (pd?.template == Constants.SIGN_TEMPLATE_LEVE_GANHE_CADA && precoPromo != null && precoPromo > 0)
             precoPromo else takeAndWin.totalValue
-        leve = "Leve ${takeAndWin.qty} por R$ ${String.format(Locale("pt", "BR"), "%.2f", totalLeve)}"
+        leve = "Leve ${takeAndWin.qty} por R$ ${num.format(totalLeve)}"
         valor = formatador.format(precoNormal)
         tipo = "leve e ganhe"; tipoCor = Color(0xFF2E7D32)
     } else if (ehDeporParcelado) {
