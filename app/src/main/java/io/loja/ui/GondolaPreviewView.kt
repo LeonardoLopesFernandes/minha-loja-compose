@@ -33,9 +33,7 @@ class GondolaPreviewView @JvmOverloads constructor(
         // Área amarela à esquerda da caixa preta
         private const val LEFT_CX = BOX_LEFT / 2f
 
-        // Larguras máximas (template px) para auto-ajuste
-        private const val LEFT_MAX = 330f
-        private const val COMUM_MAX = 700f
+        // Largura máxima (template px) para auto-ajuste
         private const val BOX_MAX = 325f
     }
 
@@ -87,18 +85,6 @@ class GondolaPreviewView @JvmOverloads constructor(
         invalidate()
     }
 
-    private fun ajustarValor(cifrao: String, valor: String, maxTam: Float, minTam: Float, maxLargura: Float): Float {
-        var tam = maxTam
-        val gap = 6f
-        while (tam > minTam) {
-            paint.textSize = tam
-            val w = paint.measureText(cifrao) + gap + paint.measureText(valor)
-            if (w <= maxLargura) return tam
-            tam -= 1f
-        }
-        return tam
-    }
-
     private fun ajustarTexto(texto: String, maxTam: Float, minTam: Float, maxLargura: Float): Float {
         var tam = maxTam
         while (tam > minTam) {
@@ -129,6 +115,35 @@ class GondolaPreviewView @JvmOverloads constructor(
         fun px(p: Float) = p * scale
         fun tx(x: Float) = ox + x * scale
         fun ty(y: Float) = oy + y * scale
+
+        fun drawEscalado(
+            texto: String,
+            x: Float,
+            y: Float,
+            tamanho: Float,
+            alinhamento: Paint.Align,
+            cor: Int,
+            larguraMax: Float
+        ): Float {
+            paint.typeface = fonte
+            paint.isFakeBoldText = false
+            paint.textSize = px(tamanho)
+            paint.color = cor
+            paint.textAlign = Paint.Align.LEFT
+            val largura = paint.measureText(texto)
+            val sx = if (largura > larguraMax) larguraMax / largura else 1f
+            val left = when (alinhamento) {
+                Paint.Align.RIGHT -> -largura
+                Paint.Align.CENTER -> -largura / 2f
+                else -> 0f
+            }
+            canvas.save()
+            canvas.translate(x, y)
+            canvas.scale(sx, 1f)
+            canvas.drawText(texto, left, 0f, paint)
+            canvas.restore()
+            return largura * sx
+        }
 
         var larguraValorPx = 0f
 
@@ -163,102 +178,107 @@ class GondolaPreviewView @JvmOverloads constructor(
             canvas.drawText(descricao, tx(TW / 2f), ty(114f), paint)
         }
 
-        // Preço à vista (fora da caixa preta) — Arial Extra Bold
-        if (valor.isNotEmpty()) {
-            val maxTam = if (modo == MODO_COMUM) 85f else 54f
-            val minTam = if (modo == MODO_COMUM) 40f else 26f
-            val maxLargura = if (modo == MODO_COMUM) COMUM_MAX else LEFT_MAX
-            val tam = ajustarValor(cifrao, valor, maxTam, minTam, maxLargura)
-            val ehDepor = cifrao.startsWith("De R$")
-            // De/Por: alinha na mesma linha da caixa preta (Por R$)
-            val baseline = if (modo == MODO_COMUM) 220f else if (ehDepor) BOX_CY else 230f
-            val centroX = if (modo == MODO_COMUM) TW / 2f else LEFT_CX
+        var comumValorW = 0f
+        var comumCifraoX = TW / 2f
 
-            paint.typeface = fonte
-            paint.isFakeBoldText = true
-            paint.color = 0xFF000000.toInt()
+        // Preço à vista (fora da caixa preta)
+        if (valor.isNotEmpty()) {
+            val ehDepor = cifrao.startsWith("De R$")
+            val cifraoDraw = if (ehDepor) cifrao.replaceFirst("De ", "") else cifrao
+            val tam = if (modo == MODO_COMUM) 110f else 54f
+            // De/Por: alinha na mesma linha da caixa preta (Por R$)
+            val baseline = if (modo == MODO_COMUM) 240f else if (ehDepor) BOX_CY else 230f
+            val centroX = if (modo == MODO_COMUM) TW / 2f - 80f else LEFT_CX
 
             if (modo == MODO_PROMOCIONAL) {
-                // R$ perto do SAP (esquerda) e valor grande quase na caixa preta (direita).
-                // Milhar (X.XXX,XX) ou De/Por ficam menores para não estourar.
-                val temMilhar = valor.contains('.')
-                val parteInteira = valor.substringBefore(',').replace(".", "")
-                // De/Por e valores longos ficam menores: milhar em 60, 5 dígitos/De/Por em 75
-                val maxValor = when {
-                    temMilhar -> 60f
-                    ehDepor || parteInteira.length >= 3 -> 75f
-                    else -> 110f
-                }
-                val tamValor = ajustarTexto(valor, maxValor, 50f, 280f)
-                paint.textAlign = Paint.Align.RIGHT
-                paint.textSize = px(tamValor)
-                canvas.drawText(valor, tx(345f), ty(baseline), paint)
-                larguraValorPx = paint.measureText(valor)
-
-                val maxCifrao = if (ehDepor && (temMilhar || parteInteira.length >= 3)) 30f else 45f
-                val tamCifrao = ajustarTexto(cifrao, maxCifrao, 26f, 100f)
-                paint.textAlign = Paint.Align.LEFT
+                larguraValorPx = drawEscalado(
+                    valor, tx(345f), ty(baseline), 110f,
+                    Paint.Align.RIGHT, 0xFF000000.toInt(), px(240f)
+                )
+                val maxCifrao = if (ehDepor) 30f else 45f
+                val tamCifrao = ajustarTexto(cifraoDraw, maxCifrao, 26f, 100f)
+                paint.typeface = fonte
                 paint.textSize = px(tamCifrao)
-                canvas.drawText(cifrao, tx(20f), ty(baseline), paint)
-            } else {
+                paint.color = 0xFF000000.toInt()
                 paint.textAlign = Paint.Align.LEFT
+                canvas.drawText(cifraoDraw, tx(20f), ty(baseline), paint)
+            } else {
+                paint.typeface = fonte
                 paint.textSize = px(tam)
-                val cw = paint.measureText(cifrao)
-                val vw2 = paint.measureText(valor)
-                val gap = px(6f)
-                val total = cw + gap + vw2
-                val startX = tx(centroX) - total / 2f
-
-                canvas.drawText(cifrao, startX, ty(baseline), paint)
-                canvas.drawText(valor, startX + cw + gap, ty(baseline), paint)
+                paint.color = 0xFF000000.toInt()
+                paint.textAlign = Paint.Align.LEFT
+                val cifraoW = paint.measureText(cifraoDraw) / scale
+                val valorWpx = drawEscalado(
+                    valor, tx(TW - 30f), ty(baseline), tam,
+                    Paint.Align.RIGHT, 0xFF000000.toInt(), px(240f)
+                )
+                val valorW = valorWpx / scale
+                val valorLeft = (TW - 30f) - valorW
+                val cifraoCenterMax = valorLeft - 10f - cifraoW / 2f
+                val cifraoX = min(cifraoCenterMax, centroX)
+                paint.textSize = px(tam)
+                paint.textAlign = Paint.Align.CENTER
+                canvas.drawText(cifraoDraw, tx(cifraoX), ty(baseline), paint)
+                comumValorW = valorW
+                comumCifraoX = cifraoX
             }
-            paint.isFakeBoldText = false
         }
 
         // R$/PCE + valor unitário (promocional: separados)
         if (unidade.isNotEmpty()) {
+            val numero = unidade.substringAfter("R$/PCE ").trim()
             paint.typeface = fonte
             paint.textSize = px(15f)
             paint.color = 0xFF000000.toInt()
             if (modo == MODO_PROMOCIONAL) {
-                val numero = unidade.substringAfter("R$/PCE ").trim()
                 paint.textAlign = Paint.Align.LEFT
-                canvas.drawText("R$/PCE", tx(30f), ty(262f), paint)
-                canvas.drawText("R$" + numero, tx(345f) - larguraValorPx, ty(262f), paint)
+                canvas.drawText("R$/PCE", tx(20f), ty(290f), paint)
+                paint.textAlign = Paint.Align.CENTER
+                canvas.drawText(
+                    "R$" + numero, tx(345f) - larguraValorPx / 2f, ty(290f), paint
+                )
             } else {
                 paint.textAlign = Paint.Align.CENTER
-                val ux = tx(TW / 2f)
-                canvas.drawText(unidade, ux, ty(252f), paint)
+                canvas.drawText("R$/PCE", tx(comumCifraoX), ty(290f), paint)
+                canvas.drawText(
+                    "R$" + numero, tx(TW - 30f) - comumValorW / 2f, ty(290f), paint
+                )
             }
         }
 
         // Caixa preta (promocional)
         if (modo == MODO_PROMOCIONAL) {
+            val ehParc = promoLinha0 == "EM ATÉ"
             if (promoLinha0.isNotEmpty()) {
                 val tam = ajustarTexto(promoLinha0, 17f, 10f, BOX_MAX)
                 paint.typeface = fonte
+                paint.isFakeBoldText = false
                 paint.textSize = px(tam)
                 paint.color = 0xFFFFE600.toInt()
                 paint.textAlign = Paint.Align.CENTER
                 canvas.drawText(promoLinha0, tx(BOX_CX), ty(BOX_CY - 44f), paint)
             }
             if (promoLinha1.isNotEmpty()) {
-                val tam = ajustarTexto(promoLinha1, 54f, 24f, BOX_MAX)
-                paint.typeface = fonte
-                paint.isFakeBoldText = true
-                paint.textSize = px(tam)
-                paint.color = 0xFFFFE600.toInt()
-                paint.textAlign = Paint.Align.CENTER
-                canvas.drawText(promoLinha1, tx(BOX_CX), ty(BOX_CY), paint)
-                paint.isFakeBoldText = false
+                drawEscalado(
+                    promoLinha1,
+                    tx(BOX_CX),
+                    ty(if (ehParc) BOX_CY + 22f else BOX_CY + 12f),
+                    75f,
+                    Paint.Align.CENTER,
+                    0xFFFFE600.toInt(),
+                    px(310f)
+                )
             }
             if (promoLinha2.isNotEmpty()) {
                 val tam = ajustarTexto(promoLinha2, 17f, 10f, BOX_MAX)
                 paint.typeface = fonte
+                paint.isFakeBoldText = false
                 paint.textSize = px(tam)
                 paint.color = 0xFFFFE600.toInt()
                 paint.textAlign = Paint.Align.CENTER
-                canvas.drawText(promoLinha2, tx(BOX_CX), ty(252f), paint)
+                canvas.drawText(
+                    promoLinha2, tx(BOX_CX), ty(if (ehParc) 268f else 252f), paint
+                )
             }
         }
     }

@@ -348,7 +348,8 @@ class GondolaEditavelActivity : AppCompatActivity() {
                 codigo, ean, desc,
                 "R$", df.format(valorAnterior), unidade,
                 "${parcelas}X de R$ ${df.format(valorParcela)}",
-                "SEM JUROS"
+                "SEM JUROS",
+                "EM ATÉ"
             )
         } else if (ehDepor(d)) {
             val de = parseDouble(etPrecoDe.text) ?: (d.price?.value ?: 0.0)
