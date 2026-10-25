@@ -250,8 +250,11 @@ object RelatorioPdf {
         paint: Paint
     ) {
         if (texto.isEmpty()) return
+        // O StaticLayout já centraliza as linhas; o TextPaint precisa ficar
+        // alinhado à esquerda para não deslocar o texto (centralização dupla).
+        val textPaint = TextPaint(paint).apply { textAlign = Paint.Align.LEFT }
         val layout = StaticLayout.Builder
-            .obtain(texto, 0, texto.length, TextPaint(paint), width.toInt())
+            .obtain(texto, 0, texto.length, textPaint, width.toInt())
             .setAlignment(Layout.Alignment.ALIGN_CENTER)
             .setMaxLines(2)
             .setEllipsize(TextUtils.TruncateAt.END)
