@@ -3,6 +3,7 @@ package io.loja.utils
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
@@ -27,7 +28,8 @@ object RelatorioPdf {
     private const val PAGE_W = 595
     private const val PAGE_H = 842
     private const val M = 24f
-    private const val ROW_H = 44f
+    private const val ROW_H = 64f
+    private const val EAN_ALTURA_TEXTO = 14f
 
     // Larguras das colunas (Quantidade, EAN, Descrição-flextível, Código de Barras)
     private const val COL_QTD = 44f
@@ -63,6 +65,10 @@ object RelatorioPdf {
         }
         val paintCell = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK; textSize = 10f
+            textAlign = Paint.Align.CENTER
+        }
+        val paintEan = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK; textSize = 9f
             textAlign = Paint.Align.CENTER
         }
         val paintTotal = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -138,26 +144,40 @@ object RelatorioPdf {
                 itens[i].ean,
                 itens[i].description
             )
+            val baselineCelula =
+                y + ROW_H / 2f - (paintCell.ascent() + paintCell.descent()) / 2f
             for (c in 0 until 3) {
                 val text = truncar(valores[c], colW(c) - 12f, paintCell)
-                canvas.drawText(text, colX(c) + colW(c) / 2f, y + ROW_H - 7f, paintCell)
+                canvas.drawText(text, colX(c) + colW(c) / 2f, baselineCelula, paintCell)
                 canvas.drawRect(colX(c), y, colX(c) + colW(c), y + ROW_H, paintBorder)
             }
-            // Código de barras do EAN
+            // Código de barras do EAN com o número logo abaixo
             val bx = colX(3)
             val bw = colW(3)
             canvas.drawRect(bx, y, bx + bw, y + ROW_H, paintBorder)
+            val barLeft = bx + 6f
+            val barRight = bx + bw - 6f
+            val barBottom = y + ROW_H - EAN_ALTURA_TEXTO
+            val eanBaseline = y + ROW_H - 4f
             val barras = criarCodigoBarras(itens[i].ean)
             if (barras != null) {
                 val dst = Rect(
-                    (bx + 6f).toInt(),
+                    barLeft.toInt(),
                     (y + 4f).toInt(),
-                    (bx + bw - 6f).toInt(),
-                    (y + ROW_H - 4f).toInt()
+                    barRight.toInt(),
+                    barBottom.toInt()
                 )
                 canvas.drawBitmap(barras, null, dst, null)
+                desenharEanDistribuido(
+                    canvas, itens[i].ean, barLeft, barRight, eanBaseline, paintEan
+                )
             } else {
-                canvas.drawText(truncar(itens[i].ean, bw - 12f, paintCell), bx + bw / 2f, y + ROW_H - 7f, paintCell)
+                canvas.drawText(
+                    truncar(itens[i].ean, bw - 12f, paintCell),
+                    bx + bw / 2f,
+                    baselineCelula,
+                    paintCell
+                )
             }
             y += ROW_H
         }
@@ -208,6 +228,35 @@ object RelatorioPdf {
             }
         }
         return null
+    }
+
+    /**
+     * Desenha o EAN abaixo do código de barras distribuindo os caracteres por
+     * quase toda a largura das barras (como o número impresso no código).
+     */
+    private fun desenharEanDistribuido(
+        canvas: Canvas,
+        ean: String,
+        left: Float,
+        right: Float,
+        baseline: Float,
+        paint: Paint
+    ) {
+        if (ean.isEmpty()) return
+        val largura = right - left
+        val passo = largura / ean.length
+        val maiorCaractere = ean.maxOf { paint.measureText(it.toString()) }
+        val alinhamento = paint.textAlign
+        paint.textAlign = Paint.Align.CENTER
+        if (passo >= maiorCaractere * 1.15f) {
+            ean.forEachIndexed { i, c ->
+                canvas.drawText(c.toString(), left + passo * (i + 0.5f), baseline, paint)
+            }
+        } else {
+            // Conteúdo muito longo (ex.: CODE_128): mantém centralizado sem estourar.
+            canvas.drawText(truncar(ean, largura, paint), (left + right) / 2f, baseline, paint)
+        }
+        paint.textAlign = alinhamento
     }
 
     private fun truncar(texto: String, maxWidth: Float, paint: Paint): String {
