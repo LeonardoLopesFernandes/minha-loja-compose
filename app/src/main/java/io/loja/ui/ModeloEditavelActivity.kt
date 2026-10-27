@@ -1723,7 +1723,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                     return@launch
                 }
                 val scales = if (shareMode) listOf(6, 4, 2) else listOf(12, 8, 4, 2)
-                val dpis = if (shareMode) listOf(300, 600, 1200) else listOf(1200, 600, 300)
+                val dpis = listOf(300, 600)
                 var resultFile: File? = null
                 for (dpi in dpis) {
                     for (s in scales) {
