@@ -66,6 +66,7 @@ private data class ItemScanner(
     val ean: String,
     val description: String,
     val quantity: Int,
+    val tipo: String,
 )
 
 class BarcodeScannerActivity : AppCompatActivity() {
@@ -695,6 +696,65 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
     }
 
+    private fun tipoEtiqueta(item: PriceTag): String {
+        val pd = item.printingData
+        return classificarTipo(
+            template = pd?.template,
+            movement = item.movement,
+            takeAndWin = pd?.takeAndWin != null ||
+                (pd?.takeAndWinQuantity ?: 0) > 0,
+            installmentQty = pd?.installments?.installmentQuantity,
+        )
+    }
+
+    private fun tipoPapeleta(item: io.loja.network.PriceSign): String {
+        val pd = item.printingData
+        return classificarTipo(
+            template = pd?.template,
+            movement = item.movement,
+            takeAndWin = (pd?.takeAndWinQuantity ?: 0) > 0,
+            installmentQty = pd?.installmentQuantity,
+        )
+    }
+
+    private fun classificarTipo(
+        template: String?,
+        movement: String,
+        takeAndWin: Boolean,
+        installmentQty: Int?,
+    ): String {
+        val t = template?.lowercase(Locale.getDefault()) ?: ""
+        val m = movement.lowercase(Locale.getDefault())
+        if (t.contains("parcelad") ||
+            m.contains("parcelad") ||
+            (installmentQty ?: 0) > 0
+        ) {
+            return "Parcelado"
+        }
+        if (t.contains("leve") || m.contains("leve") || takeAndWin) {
+            return "Leve e Ganhe"
+        }
+        if (t.contains("de/por") ||
+            t.contains("de_por") ||
+            t.contains("depor") ||
+            t.contains("por_de") ||
+            m.contains("de/por") ||
+            m.contains("depor")
+        ) {
+            return "De/Por"
+        }
+        return "Normal"
+    }
+
+    private fun corTipo(tipo: String): Int {
+        return when (tipo) {
+            "Leve e Ganhe" -> 0xFFD97706.toInt()
+            "De/Por" -> 0xFFD7193F.toInt()
+            "Parcelado" -> 0xFF7C3AED.toInt()
+            else -> 0xFF475569.toInt()
+        }
+    }
+
     private fun escolherEtiquetasEEnviar() {
         if (!modoContinuo) {
             ToastUtils.show(this, "Envio disponível no modo contínuo")
@@ -706,7 +766,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
             return
         }
         val itens = etiquetas.map {
-            ItemScanner(it.ean, it.description, it.quantity)
+            ItemScanner(it.ean, it.description, it.quantity, tipoEtiqueta(it))
         }
         val density = resources.displayMetrics.density
         fun dp(v: Int) = (v * density).toInt()
@@ -766,6 +826,23 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 textSize = 11f
                 setTextColor(0xFF64748B.toInt())
             })
+            dados.addView(
+                TextView(this).apply {
+                    text = item.tipo
+                    textSize = 10f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(corTipo(item.tipo))
+                    setPadding(dp(6), dp(2), dp(6), dp(2))
+                    background = GradientDrawable().apply {
+                        setColor(0xFFF1F5F9.toInt())
+                        cornerRadius = dp(4).toFloat()
+                    }
+                },
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = dp(3) }
+            )
 
             val input = EditText(this).apply {
                 setText(qtds[i].toString())
@@ -1008,11 +1085,11 @@ class BarcodeScannerActivity : AppCompatActivity() {
         val itens: List<ItemScanner> =
             if (tipoLista == TIPO_LISTA_PAPELETAS) {
                 listaViewModel.getPapeletas().map {
-                    ItemScanner(it.ean, it.description, it.quantity)
+                    ItemScanner(it.ean, it.description, it.quantity, tipoPapeleta(it))
                 }
             } else {
                 listaViewModel.getEtiquetas().map {
-                    ItemScanner(it.ean, it.description, it.quantity)
+                    ItemScanner(it.ean, it.description, it.quantity, tipoEtiqueta(it))
                 }
             }
         if (itens.isEmpty()) {
@@ -1085,6 +1162,23 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 textSize = 11f
                 setTextColor(0xFF64748B.toInt())
             })
+            dados.addView(
+                TextView(this).apply {
+                    text = item.tipo
+                    textSize = 10f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(corTipo(item.tipo))
+                    setPadding(dp(6), dp(2), dp(6), dp(2))
+                    background = GradientDrawable().apply {
+                        setColor(0xFFF1F5F9.toInt())
+                        cornerRadius = dp(4).toFloat()
+                    }
+                },
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = dp(3) }
+            )
 
             val input = EditText(this).apply {
                 setText(qtds[i].toString())
@@ -1215,7 +1309,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         container.addView(chipGroup)
 
         val btnGerar = MaterialButton(this).apply {
-            text = "GERAR PREVIEW"
+            text = "VISUALIZAR PAPELETA"
             setTextColor(Color.WHITE)
             backgroundTintList =
                 android.content.res.ColorStateList.valueOf(0xFFD7193F.toInt())
