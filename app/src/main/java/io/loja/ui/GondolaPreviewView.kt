@@ -53,8 +53,15 @@ class GondolaPreviewView @JvmOverloads constructor(
     private val src = Rect()
     private val dst = RectF()
 
-    // Arial Bold (fallback: sans-serif bold)
-    private val fonte = Typeface.create("arial", Typeface.BOLD)
+    // Mesma fonte condensada usada no preview do Flutter.
+    private val fonte: Typeface = try {
+        Typeface.createFromAsset(
+            context.assets,
+            "fonts/HelveticaNeueCondensed.otf"
+        )
+    } catch (_: Exception) {
+        Typeface.create("arial", Typeface.BOLD)
+    }
 
     fun setTemplate(bmp: Bitmap?, modo: Int) {
         this.template = bmp
@@ -86,6 +93,7 @@ class GondolaPreviewView @JvmOverloads constructor(
     }
 
     private fun ajustarTexto(texto: String, maxTam: Float, minTam: Float, maxLargura: Float): Float {
+        paint.isFakeBoldText = true
         var tam = maxTam
         while (tam > minTam) {
             paint.textSize = tam
@@ -97,6 +105,7 @@ class GondolaPreviewView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        paint.isFakeBoldText = true
         val t = template ?: return
         val vw = width.toFloat()
         val vh = height.toFloat()
@@ -127,7 +136,7 @@ class GondolaPreviewView @JvmOverloads constructor(
             sy: Float = 1f
         ): Float {
             paint.typeface = fonte
-            paint.isFakeBoldText = false
+            paint.isFakeBoldText = true
             paint.textSize = px(tamanho)
             paint.color = cor
             paint.textAlign = Paint.Align.LEFT
@@ -289,7 +298,7 @@ class GondolaPreviewView @JvmOverloads constructor(
             // De/Por: alinha na mesma linha da caixa preta (Por R$)
             val baseline = if (modo == MODO_COMUM) 240f
             else if (ehDepor) BOX_CY + 38f
-            else if (leve) 220f
+            else if (leve) 250f
             else 230f
             val centroX = if (modo == MODO_COMUM) TW / 2f - 80f else LEFT_CX
 
