@@ -123,7 +123,8 @@ class GondolaPreviewView @JvmOverloads constructor(
             tamanho: Float,
             alinhamento: Paint.Align,
             cor: Int,
-            larguraMax: Float
+            larguraMax: Float,
+            sy: Float = 1f
         ): Float {
             paint.typeface = fonte
             paint.isFakeBoldText = false
@@ -139,13 +140,113 @@ class GondolaPreviewView @JvmOverloads constructor(
             }
             canvas.save()
             canvas.translate(x, y)
-            canvas.scale(sx, 1f)
+            canvas.scale(sx, sy)
             canvas.drawText(texto, left, 0f, paint)
             canvas.restore()
             return largura * sx
         }
 
+        fun drawTexto(
+            texto: String,
+            x: Float,
+            y: Float,
+            tamanho: Float,
+            alinhamento: Paint.Align,
+            cor: Int
+        ) {
+            paint.typeface = fonte
+            paint.isFakeBoldText = true
+            paint.textSize = px(tamanho)
+            paint.color = cor
+            paint.textAlign = alinhamento
+            canvas.drawText(texto, x, y, paint)
+        }
+
+        // Valor com a vírgula em commaScale e escala vertical sy.
+        fun drawValor(
+            texto: String,
+            x: Float,
+            y: Float,
+            tamanho: Float,
+            alinhamento: Paint.Align,
+            cor: Int,
+            larguraMax: Float,
+            sy: Float = 1f,
+            commaScale: Float = 1f
+        ): Float {
+            paint.typeface = fonte
+            paint.isFakeBoldText = true
+            paint.color = cor
+            paint.textAlign = Paint.Align.LEFT
+            val partes = texto.split(",")
+            fun medida(s: String, size: Float): Float {
+                paint.textSize = px(size)
+                return paint.measureText(s)
+            }
+            val wAntes = medida(if (partes.size == 2) partes[0] else texto, tamanho)
+            val wVirgula = if (partes.size == 2) medida(",", tamanho * commaScale) else 0f
+            val wDepois = if (partes.size == 2) medida(partes[1], tamanho) else 0f
+            val total = wAntes + wVirgula + wDepois
+            val sx = if (total > larguraMax) larguraMax / total else 1f
+            val left = when (alinhamento) {
+                Paint.Align.RIGHT -> -total
+                Paint.Align.CENTER -> -total / 2f
+                else -> 0f
+            }
+            canvas.save()
+            canvas.translate(x, y)
+            canvas.scale(sx, sy)
+            var cx = left
+            if (partes.size == 2) {
+                paint.textSize = px(tamanho)
+                canvas.drawText(partes[0], cx, 0f, paint)
+                cx += wAntes
+                paint.textSize = px(tamanho * commaScale)
+                canvas.drawText(",", cx, 0f, paint)
+                cx += wVirgula
+                paint.textSize = px(tamanho)
+                canvas.drawText(partes[1], cx, 0f, paint)
+            } else {
+                paint.textSize = px(tamanho)
+                canvas.drawText(texto, cx, 0f, paint)
+            }
+            canvas.restore()
+            return total * sx
+        }
+
+        // Força a largura exata (para igualar as linhas da caixa preta).
+        fun drawLarguraFixa(
+            texto: String,
+            x: Float,
+            y: Float,
+            tamanho: Float,
+            alinhamento: Paint.Align,
+            cor: Int,
+            larguraAlvo: Float
+        ) {
+            if (larguraAlvo <= 0f) return
+            paint.typeface = fonte
+            paint.isFakeBoldText = true
+            paint.textSize = px(tamanho)
+            paint.color = cor
+            paint.textAlign = Paint.Align.LEFT
+            val largura = paint.measureText(texto)
+            val sx = larguraAlvo / largura
+            val left = when (alinhamento) {
+                Paint.Align.RIGHT -> -largura
+                Paint.Align.CENTER -> -largura / 2f
+                else -> 0f
+            }
+            canvas.save()
+            canvas.translate(x, y)
+            canvas.scale(sx, 1f)
+            canvas.drawText(texto, left, 0f, paint)
+            canvas.restore()
+        }
+
         var larguraValorPx = 0f
+        val ehDepor = cifrao.startsWith("De R$")
+        val leve = promoLinha1.contains(" por R$")
 
         // Código lateral (SAP) na vertical (promocional: mais ao topo)
         if (codigo.isNotEmpty()) {
@@ -183,25 +284,48 @@ class GondolaPreviewView @JvmOverloads constructor(
 
         // Preço à vista (fora da caixa preta)
         if (valor.isNotEmpty()) {
-            val ehDepor = cifrao.startsWith("De R$")
-            val cifraoDraw = if (ehDepor) cifrao.replaceFirst("De ", "") else cifrao
+            val cifraoDraw = cifrao
             val tam = if (modo == MODO_COMUM) 110f else 54f
             // De/Por: alinha na mesma linha da caixa preta (Por R$)
-            val baseline = if (modo == MODO_COMUM) 240f else if (ehDepor) BOX_CY else 230f
+            val baseline = if (modo == MODO_COMUM) 240f
+            else if (ehDepor) BOX_CY + 38f
+            else if (leve) 220f
+            else 230f
             val centroX = if (modo == MODO_COMUM) TW / 2f - 80f else LEFT_CX
 
             if (modo == MODO_PROMOCIONAL) {
-                larguraValorPx = drawEscalado(
-                    valor, tx(345f), ty(baseline), 110f,
-                    Paint.Align.RIGHT, 0xFF000000.toInt(), px(240f)
-                )
-                val maxCifrao = if (ehDepor) 30f else 45f
-                val tamCifrao = ajustarTexto(cifraoDraw, maxCifrao, 26f, 100f)
-                paint.typeface = fonte
-                paint.textSize = px(tamCifrao)
-                paint.color = 0xFF000000.toInt()
-                paint.textAlign = Paint.Align.LEFT
-                canvas.drawText(cifraoDraw, tx(20f), ty(baseline), paint)
+                if (leve) {
+                    // R$ e valor na horizontal, esticados só na vertical (1.5x)
+                    // e com a vírgula em 60% apenas no valor unitário maior.
+                    paint.typeface = fonte
+                    paint.textSize = px(110f)
+                    val cifraoW = paint.measureText(cifraoDraw) / scale
+                    val maxValor = 345f - (20f + cifraoW + 8f)
+                    larguraValorPx = drawValor(
+                        valor, tx(345f), ty(baseline), 110f,
+                        Paint.Align.RIGHT, 0xFF000000.toInt(), px(maxValor),
+                        sy = 1.5f, commaScale = 0.6f
+                    )
+                    drawEscalado(
+                        cifraoDraw, tx(20f), ty(baseline), 110f,
+                        Paint.Align.LEFT, 0xFF000000.toInt(), px(cifraoW),
+                        sy = 1.5f
+                    )
+                } else {
+                    larguraValorPx = drawValor(
+                        valor, tx(345f), ty(baseline), 110f,
+                        Paint.Align.RIGHT, 0xFF000000.toInt(), px(243f)
+                    )
+                    if (ehDepor) {
+                        drawTexto("De", tx(20f), ty(baseline - 45f), 45f,
+                            Paint.Align.LEFT, 0xFF000000.toInt())
+                        drawTexto("R$", tx(20f), ty(baseline), 45f,
+                            Paint.Align.LEFT, 0xFF000000.toInt())
+                    } else {
+                        drawTexto(cifraoDraw, tx(20f), ty(baseline), 45f,
+                            Paint.Align.LEFT, 0xFF000000.toInt())
+                    }
+                }
             } else {
                 paint.typeface = fonte
                 paint.textSize = px(tam)
@@ -249,36 +373,47 @@ class GondolaPreviewView @JvmOverloads constructor(
         // Caixa preta (promocional)
         if (modo == MODO_PROMOCIONAL) {
             val ehParc = promoLinha0 == "EM ATÉ"
+            var larguraPromo1 = 0f
             if (promoLinha0.isNotEmpty()) {
                 val tam = ajustarTexto(promoLinha0, 17f, 10f, BOX_MAX)
-                paint.typeface = fonte
-                paint.isFakeBoldText = false
-                paint.textSize = px(tam)
-                paint.color = 0xFFFFE600.toInt()
-                paint.textAlign = Paint.Align.CENTER
-                canvas.drawText(promoLinha0, tx(BOX_CX), ty(BOX_CY - 44f), paint)
+                drawTexto(promoLinha0, tx(BOX_CX), ty(BOX_CY - 44f), tam,
+                    Paint.Align.CENTER, 0xFFFFFFFF.toInt())
             }
-            if (promoLinha1.isNotEmpty()) {
-                drawEscalado(
+            if (ehDepor && promoLinha1.isNotEmpty()) {
+                val por = promoLinha1.replaceFirst("Por R$", "").trim()
+                if (por.isNotEmpty()) {
+                    val esquerda = BOX_LEFT + 12f
+                    val direita = BOX_RIGHT - 10f
+                    val baseBox = BOX_CY + 38f
+                    drawValor(por, tx(direita), ty(baseBox), 110f,
+                        Paint.Align.RIGHT, 0xFFFFFFFF.toInt(), px(243f))
+                    drawTexto("Por", tx(esquerda), ty(baseBox - 45f), 45f,
+                        Paint.Align.LEFT, 0xFFFFFFFF.toInt())
+                    drawTexto("R$", tx(esquerda), ty(baseBox), 45f,
+                        Paint.Align.LEFT, 0xFFFFFFFF.toInt())
+                }
+            } else if (promoLinha1.isNotEmpty()) {
+                larguraPromo1 = drawEscalado(
                     promoLinha1,
                     tx(BOX_CX),
                     ty(if (ehParc) BOX_CY + 22f else BOX_CY + 12f),
                     75f,
                     Paint.Align.CENTER,
-                    0xFFFFE600.toInt(),
+                    0xFFFFFFFF.toInt(),
                     px(310f)
                 )
             }
             if (promoLinha2.isNotEmpty()) {
                 val tam = ajustarTexto(promoLinha2, 17f, 10f, BOX_MAX)
-                paint.typeface = fonte
-                paint.isFakeBoldText = false
-                paint.textSize = px(tam)
-                paint.color = 0xFFFFE600.toInt()
-                paint.textAlign = Paint.Align.CENTER
-                canvas.drawText(
-                    promoLinha2, tx(BOX_CX), ty(if (ehParc) 268f else 252f), paint
-                )
+                if (leve && larguraPromo1 > 0f) {
+                    // Mesma largura do "N por R$ ..." e um pouco mais abaixo.
+                    drawLarguraFixa(promoLinha2, tx(BOX_CX), ty(256f), tam,
+                        Paint.Align.CENTER, 0xFFFFFFFF.toInt(), larguraPromo1)
+                } else {
+                    drawTexto(promoLinha2, tx(BOX_CX),
+                        ty(if (ehParc) 268f else 252f), tam,
+                        Paint.Align.CENTER, 0xFFFFFFFF.toInt())
+                }
             }
         }
     }
