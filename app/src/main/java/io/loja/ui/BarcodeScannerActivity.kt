@@ -8,12 +8,18 @@ import android.graphics.Color
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Bundle
+import android.text.Editable
+import android.text.InputFilter
+import android.text.InputType
+import android.text.TextWatcher
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
+import android.view.WindowManager
 import android.widget.CheckBox
-import android.widget.ImageView
+import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -243,7 +249,13 @@ class BarcodeScannerActivity : AppCompatActivity() {
             (16 * density).toInt(), (10 * density).toInt(),
             (16 * density).toInt(), (10 * density).toInt()
         )
-        btnEnviarCamera.setOnClickListener { escolherImpressoraEEnviar() }
+        btnEnviarCamera.setOnClickListener {
+            if (tipoLista == TIPO_LISTA_PAPELETAS) {
+                abrirPreviewPapeleta()
+            } else {
+                escolherEtiquetasEEnviar()
+            }
+        }
 
         val btnPapeletaCamera = TextView(this)
         btnPapeletaCamera.text = "IMPRIMIR PAPELETA"
@@ -683,18 +695,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
     }
 
-    private fun escolherImpressoraEEnviar() {
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Enviar impressão")
-            .setItems(arrayOf("Zebra 1", "Zebra 2")) { _, which ->
-                val printer = if (which == 0) Constants.PRINTER_ZEBRA_1 else Constants.PRINTER_ZEBRA_2
-                enviarImpressao(printer)
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
-
-    private fun enviarImpressao(printerId: String) {
+    private fun escolherEtiquetasEEnviar() {
         if (!modoContinuo) {
             ToastUtils.show(this, "Envio disponível no modo contínuo")
             return
@@ -704,16 +705,230 @@ class BarcodeScannerActivity : AppCompatActivity() {
             ToastUtils.show(this, "Nenhuma etiqueta adicionada")
             return
         }
-        val lista = mutableListOf<io.loja.network.PrintingData>()
-        etiquetas.forEach { item ->
-            val pd = item.printingData ?: return@forEach
-            lista.add(
-                pd.copy(
-                    quantity = 1,
-                    template = if (pd.takeAndWin != null) Constants.SIGN_TEMPLATE_MODELO
-                    else Constants.templateNormalizado(pd.template),
+        val itens = etiquetas.map {
+            ItemScanner(it.ean, it.description, it.quantity)
+        }
+        val density = resources.displayMetrics.density
+        fun dp(v: Int) = (v * density).toInt()
+        val qtds = IntArray(itens.size) {
+            itens[it].quantity.coerceIn(1, 999)
+        }
+        val selecionados = BooleanArray(itens.size) { true }
+
+        val sheet = BottomSheetDialog(this)
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            background = GradientDrawable().apply {
+                setColor(Color.WHITE)
+                cornerRadii = floatArrayOf(
+                    dp(16).toFloat(), dp(16).toFloat(),
+                    dp(16).toFloat(), dp(16).toFloat(),
+                    0f, 0f, 0f, 0f
+                )
+            }
+        }
+        container.addView(TextView(this).apply {
+            text = "ENVIAR ETIQUETAS"
+            textSize = 15f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(0xFF1E293B.toInt())
+        })
+        container.addView(TextView(this).apply {
+            text = "Escolha quais etiquetas enviar e a quantidade de cada uma"
+            textSize = 12f
+            setTextColor(0xFF64748B.toInt())
+            setPadding(0, dp(4), 0, dp(12))
+        })
+
+        val linhas = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        for ((i, item) in itens.withIndex()) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dp(4), 0, dp(4))
+            }
+            val dados = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+            }
+            dados.addView(TextView(this).apply {
+                text = item.description.ifEmpty { item.ean }
+                textSize = 12f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(0xFF1E293B.toInt())
+                maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            })
+            dados.addView(TextView(this).apply {
+                text = item.ean
+                textSize = 11f
+                setTextColor(0xFF64748B.toInt())
+            })
+
+            val input = EditText(this).apply {
+                setText(qtds[i].toString())
+                inputType = InputType.TYPE_CLASS_NUMBER
+                filters = arrayOf(InputFilter.LengthFilter(3))
+                textSize = 13f
+                gravity = Gravity.CENTER
+                setTextColor(0xFF1E293B.toInt())
+                setPadding(dp(4), dp(4), dp(4), dp(4))
+                setSingleLine(true)
+                background = GradientDrawable().apply {
+                    setColor(Color.WHITE)
+                    cornerRadius = dp(6).toFloat()
+                    setStroke(dp(1), 0xFFC8C6C4.toInt())
+                }
+                addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(
+                        s: CharSequence?,
+                        start: Int,
+                        count: Int,
+                        after: Int,
+                    ) {
+                    }
+
+                    override fun onTextChanged(
+                        s: CharSequence?,
+                        start: Int,
+                        before: Int,
+                        count: Int,
+                    ) {
+                    }
+
+                    override fun afterTextChanged(s: Editable?) {
+                        val v = s?.toString()?.toIntOrNull()
+                        if (v != null && v > 0) {
+                            qtds[i] = v.coerceAtMost(999)
+                        }
+                    }
+                })
+                setOnFocusChangeListener { _, hasFocus ->
+                    if (!hasFocus) {
+                        val v = (text.toString().toIntOrNull() ?: 1)
+                            .coerceIn(1, 999)
+                        qtds[i] = v
+                        setText(v.toString())
+                        setSelection(text.length)
+                    }
+                }
+            }
+            val check = CheckBox(this).apply {
+                isChecked = true
+                setOnCheckedChangeListener { _, checked ->
+                    selecionados[i] = checked
+                    input.isEnabled = checked
+                    input.alpha = if (checked) 1f else 0.4f
+                }
+            }
+            row.addView(check)
+            row.addView(
+                dados,
+                LinearLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
                 )
             )
+            row.addView(
+                input,
+                LinearLayout.LayoutParams(dp(52), dp(38)).apply {
+                    marginStart = dp(6)
+                }
+            )
+            linhas.addView(
+                row,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(6) }
+            )
+        }
+
+        val scroll = ScrollView(this).apply {
+            addView(linhas)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(260)
+            )
+        }
+        container.addView(scroll)
+
+        val btnEnviar = MaterialButton(this).apply {
+            text = "ENVIAR"
+            setTextColor(Color.WHITE)
+            backgroundTintList =
+                android.content.res.ColorStateList.valueOf(0xFFD7193F.toInt())
+            cornerRadius = dp(8)
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setOnClickListener {
+                val selItens = mutableListOf<ItemScanner>()
+                val selQtds = mutableListOf<Int>()
+                for (idx in itens.indices) {
+                    if (selecionados[idx]) {
+                        selItens.add(itens[idx])
+                        selQtds.add(qtds[idx].coerceIn(1, 999))
+                    }
+                }
+                if (selItens.isEmpty()) {
+                    ToastUtils.show(
+                        this@BarcodeScannerActivity,
+                        "Selecione ao menos uma etiqueta"
+                    )
+                    return@setOnClickListener
+                }
+                sheet.dismiss()
+                escolherImpressora(selItens, selQtds)
+            }
+        }
+        container.addView(
+            btnEnviar,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(48)
+            ).apply { topMargin = dp(16) }
+        )
+
+        sheet.setContentView(container)
+        sheet.window?.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
+        sheet.show()
+        sheet.behavior.isDraggable = false
+        sheet.behavior.state =
+            com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+    }
+
+    private fun escolherImpressora(itens: List<ItemScanner>, qtds: List<Int>) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Enviar impressão")
+            .setItems(arrayOf("Zebra 1", "Zebra 2")) { _, which ->
+                val printer = if (which == 0) Constants.PRINTER_ZEBRA_1
+                else Constants.PRINTER_ZEBRA_2
+                enviarImpressao(printer, itens, qtds)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun enviarImpressao(
+        printerId: String,
+        itens: List<ItemScanner>,
+        qtds: List<Int>,
+    ) {
+        val qtdPorEan = itens.mapIndexed { i, item ->
+            item.ean to qtds.getOrElse(i) { 1 }.coerceIn(1, 999)
+        }.toMap()
+        val etiquetas = listaViewModel.getEtiquetas()
+        val lista = mutableListOf<io.loja.network.PrintingData>()
+        etiquetas.forEach { item ->
+            val qtd = qtdPorEan[item.ean] ?: return@forEach
+            val pd = item.printingData ?: return@forEach
+            val template =
+                if (pd.takeAndWin != null) Constants.SIGN_TEMPLATE_MODELO
+                else Constants.templateNormalizado(pd.template)
+            repeat(qtd) {
+                lista.add(pd.copy(quantity = 1, template = template))
+            }
         }
         if (lista.isEmpty()) {
             ToastUtils.show(this, "Dados de impressão não disponíveis")
@@ -730,13 +945,25 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     )
                 }
                 if (resp.isSuccessful) {
-                    ToastUtils.show(this@BarcodeScannerActivity, "${lista.size} etiqueta(s) enviada(s) para impressão!", Toast.LENGTH_LONG)
+                    ToastUtils.show(
+                        this@BarcodeScannerActivity,
+                        "${lista.size} etiqueta(s) enviada(s) para impressão!",
+                        Toast.LENGTH_LONG
+                    )
                     finish()
                 } else {
-                    ToastUtils.show(this@BarcodeScannerActivity, "Erro ao enviar: ${resp.code()}", Toast.LENGTH_LONG)
+                    ToastUtils.show(
+                        this@BarcodeScannerActivity,
+                        "Erro ao enviar: ${resp.code()}",
+                        Toast.LENGTH_LONG
+                    )
                 }
             } catch (e: Exception) {
-                ToastUtils.show(this@BarcodeScannerActivity, "Erro: ${e.message}", Toast.LENGTH_LONG)
+                ToastUtils.show(
+                    this@BarcodeScannerActivity,
+                    "Erro: ${e.message}",
+                    Toast.LENGTH_LONG
+                )
             }
         }
     }
@@ -796,7 +1023,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         fun dp(v: Int) = (v * density).toInt()
         // Quantidade inicial = a quantidade da lista (input/escaneada).
         val qtds = IntArray(itens.size) {
-            itens[it].quantity.coerceAtLeast(1)
+            itens[it].quantity.coerceIn(1, 999)
         }
         val selecionados = BooleanArray(itens.size) { true }
         val tamanhos = listOf(
@@ -827,7 +1054,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
             setTextColor(0xFF1E293B.toInt())
         })
         container.addView(TextView(this).apply {
-            text = "Escolha quantas vezes repetir cada item e o tamanho"
+            text = "Escolha quais itens, a quantidade e o tamanho"
             textSize = 12f
             setTextColor(0xFF64748B.toInt())
             setPadding(0, dp(4), 0, dp(12))
@@ -859,59 +1086,60 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 setTextColor(0xFF64748B.toInt())
             })
 
-            val valor = TextView(this).apply {
-                text = qtds[i].toString()
+            val input = EditText(this).apply {
+                setText(qtds[i].toString())
+                inputType = InputType.TYPE_CLASS_NUMBER
+                filters = arrayOf(InputFilter.LengthFilter(3))
                 textSize = 13f
-                setTypeface(null, android.graphics.Typeface.BOLD)
+                gravity = Gravity.CENTER
                 setTextColor(0xFF1E293B.toInt())
-                gravity = android.view.Gravity.CENTER
-            }
-            val menos = ImageView(this).apply {
-                setImageResource(R.drawable.ic_remove_circle_outline)
                 setPadding(dp(4), dp(4), dp(4), dp(4))
-                setOnClickListener {
-                    if (qtds[i] > 1) {
-                        qtds[i]--
-                        valor.text = qtds[i].toString()
-                    }
+                setSingleLine(true)
+                background = GradientDrawable().apply {
+                    setColor(Color.WHITE)
+                    cornerRadius = dp(6).toFloat()
+                    setStroke(dp(1), 0xFFC8C6C4.toInt())
                 }
-            }
-            val mais = ImageView(this).apply {
-                setImageResource(R.drawable.ic_add_circle_outline)
-                setPadding(dp(4), dp(4), dp(4), dp(4))
-                setOnClickListener {
-                    if (qtds[i] < 30) {
-                        qtds[i]++
-                        valor.text = qtds[i].toString()
+                addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(
+                        s: CharSequence?,
+                        start: Int,
+                        count: Int,
+                        after: Int,
+                    ) {
                     }
-                }
-            }
-            val stepper = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = android.view.Gravity.CENTER_VERTICAL
-            }
-            stepper.addView(
-                menos,
-                LinearLayout.LayoutParams(dp(28), dp(28))
-            )
-            stepper.addView(
-                valor,
-                LinearLayout.LayoutParams(
-                    dp(26), ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-            )
-            stepper.addView(
-                mais,
-                LinearLayout.LayoutParams(dp(28), dp(28))
-            )
 
+                    override fun onTextChanged(
+                        s: CharSequence?,
+                        start: Int,
+                        before: Int,
+                        count: Int,
+                    ) {
+                    }
+
+                    override fun afterTextChanged(s: Editable?) {
+                        val v = s?.toString()?.toIntOrNull()
+                        if (v != null && v > 0) {
+                            qtds[i] = v.coerceAtMost(999)
+                        }
+                    }
+                })
+                setOnFocusChangeListener { _, hasFocus ->
+                    if (!hasFocus) {
+                        val v = (text.toString().toIntOrNull() ?: 1)
+                            .coerceIn(1, 999)
+                        qtds[i] = v
+                        setText(v.toString())
+                        setSelection(text.length)
+                    }
+                }
+            }
             val check = CheckBox(this).apply {
                 isChecked = true
                 setOnCheckedChangeListener { _, checked ->
                     selecionados[i] = checked
-                    menos.isEnabled = checked
-                    mais.isEnabled = checked
-                    valor.alpha = if (checked) 1f else 0.4f
+                    input.isEnabled = checked
+                    input.alpha = if (checked) 1f else 0.4f
                 }
             }
             row.addView(check)
@@ -921,7 +1149,12 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
                 )
             )
-            row.addView(stepper)
+            row.addView(
+                input,
+                LinearLayout.LayoutParams(dp(52), dp(38)).apply {
+                    marginStart = dp(6)
+                }
+            )
             linhas.addView(
                 row,
                 LinearLayout.LayoutParams(
@@ -933,7 +1166,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         val scroll = ScrollView(this).apply {
             addView(linhas)
             layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(280)
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(260)
             )
         }
         container.addView(scroll)
@@ -992,7 +1225,9 @@ class BarcodeScannerActivity : AppCompatActivity() {
             setOnClickListener {
                 val size = tamanhos[sizeIdx].second
                 val selItens = itens.filterIndexed { i, _ -> selecionados[i] }
-                val selQtds = qtds.filterIndexed { i, _ -> selecionados[i] }
+                val selQtds = qtds
+                    .filterIndexed { i, _ -> selecionados[i] }
+                    .map { it.coerceIn(1, 999) }
                 if (selItens.isEmpty()) {
                     ToastUtils.show(
                         this@BarcodeScannerActivity,
@@ -1012,6 +1247,9 @@ class BarcodeScannerActivity : AppCompatActivity() {
         )
 
         sheet.setContentView(container)
+        sheet.window?.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
         sheet.show()
         sheet.behavior.isDraggable = false
         sheet.behavior.state =
