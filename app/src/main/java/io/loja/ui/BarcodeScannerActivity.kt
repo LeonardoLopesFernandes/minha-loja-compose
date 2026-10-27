@@ -67,6 +67,7 @@ private data class ItemScanner(
     val description: String,
     val quantity: Int,
     val tipo: String,
+    val valor: String,
 )
 
 class BarcodeScannerActivity : AppCompatActivity() {
@@ -696,14 +697,95 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
     }
 
+    private fun valorEtiqueta(item: PriceTag): String {
+        val pd = item.printingData
+        val tipo = tipoEtiqueta(item)
+        val normal = pd?.price?.value ?: 0.0
+        val promo = pd?.promotionalPrice?.value
+        val take = pd?.takeAndWin
+        val inst = pd?.installments
+        return when {
+            tipo == "Leve e Ganhe" &&
+                take != null &&
+                take.qty > 0 &&
+                take.totalValue > 0 -> {
+                val total =
+                    if (pd?.template == Constants.SIGN_TEMPLATE_LEVE_GANHE_CADA &&
+                        (promo ?: 0.0) > 0
+                    ) promo!! else take.totalValue
+                "Leve ${take.qty} por ${formatarValor(total)}"
+            }
+            tipo == "Parcelado" &&
+                inst != null &&
+                inst.installmentQuantity > 0 -> {
+                val parcela =
+                    if (inst.installmentValue > 0) inst.installmentValue
+                    else (pd?.displayPrice ?: 0.0)
+                val base = if (normal > 0) "${formatarValor(normal)} | " else ""
+                "$base${inst.installmentQuantity}x de ${formatarValor(parcela)}"
+            }
+            tipo == "De/Por" && (promo ?: 0.0) > 0 ->
+                "De ${formatarValor(normal)} | Por ${formatarValor(promo!!)}"
+            normal > 0 -> formatarValor(normal)
+            (promo ?: 0.0) > 0 -> formatarValor(promo!!)
+            else -> normalizarValor(item.price)
+        }
+    }
+
+    private fun valorPapeleta(item: io.loja.network.PriceSign): String {
+        val pd = item.printingData
+        val tipo = tipoPapeleta(item)
+        val normal = pd?.price ?: 0.0
+        val promo = pd?.promotionPrice
+        val takeQty = pd?.takeAndWinQuantity ?: 0
+        val instQty = pd?.installmentQuantity ?: 0
+        return when {
+            tipo == "Leve e Ganhe" && takeQty > 0 -> {
+                val total = Constants.totalLeveGanhePorTemplate(
+                    pd?.template,
+                    pd?.promotionPrice,
+                    pd?.takeAndWinPrice,
+                    takeQty,
+                )
+                "Leve $takeQty por ${formatarValor(total)}"
+            }
+            tipo == "Parcelado" && instQty > 0 -> {
+                val parcela = pd?.installmentPrice ?: 0.0
+                val base = if (normal > 0) "${formatarValor(normal)} | " else ""
+                "$base${instQty}x de ${formatarValor(parcela)}"
+            }
+            tipo == "De/Por" && (promo ?: 0.0) > 0 ->
+                "De ${formatarValor(normal)} | Por ${formatarValor(promo!!)}"
+            normal > 0 -> formatarValor(normal)
+            (promo ?: 0.0) > 0 -> formatarValor(promo!!)
+            else -> normalizarValor(item.price)
+        }
+    }
+
+    private fun formatarValor(value: Double): String =
+        "R$ " + String.format(Locale("pt", "BR"), "%.2f", value)
+
+    private fun normalizarValor(raw: String): String {
+        val value = raw.trim()
+        if (value.isEmpty()) return "R$ --"
+        return if (value.uppercase(Locale.getDefault()).startsWith("R$")) {
+            value
+        } else {
+            "R$ $value"
+        }
+    }
+
     private fun tipoEtiqueta(item: PriceTag): String {
         val pd = item.printingData
+        val take = pd?.takeAndWin
         return classificarTipo(
             template = pd?.template,
             movement = item.movement,
-            takeAndWin = pd?.takeAndWin != null ||
+            takeAndWin = (take != null && take.qty > 0 && take.totalValue > 0) ||
                 (pd?.takeAndWinQuantity ?: 0) > 0,
             installmentQty = pd?.installments?.installmentQuantity,
+            promoPrice = pd?.promotionalPrice?.value,
+            normalPrice = pd?.price?.value ?: 0.0,
         )
     }
 
@@ -714,6 +796,8 @@ class BarcodeScannerActivity : AppCompatActivity() {
             movement = item.movement,
             takeAndWin = (pd?.takeAndWinQuantity ?: 0) > 0,
             installmentQty = pd?.installmentQuantity,
+            promoPrice = pd?.promotionPrice,
+            normalPrice = pd?.price ?: 0.0,
         )
     }
 
@@ -722,6 +806,8 @@ class BarcodeScannerActivity : AppCompatActivity() {
         movement: String,
         takeAndWin: Boolean,
         installmentQty: Int?,
+        promoPrice: Double?,
+        normalPrice: Double,
     ): String {
         val t = template?.lowercase(Locale.getDefault()) ?: ""
         val m = movement.lowercase(Locale.getDefault())
@@ -734,12 +820,15 @@ class BarcodeScannerActivity : AppCompatActivity() {
         if (t.contains("leve") || m.contains("leve") || takeAndWin) {
             return "Leve e Ganhe"
         }
-        if (t.contains("de/por") ||
+        val promo = promoPrice ?: 0.0
+        if ((promo > 0 && (normalPrice <= 0 || promo < normalPrice)) ||
+            t.contains("de/por") ||
             t.contains("de_por") ||
             t.contains("depor") ||
             t.contains("por_de") ||
             m.contains("de/por") ||
-            m.contains("depor")
+            m.contains("depor") ||
+            m.contains("promocional")
         ) {
             return "De/Por"
         }
@@ -748,11 +837,73 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
     private fun corTipo(tipo: String): Int {
         return when (tipo) {
-            "Leve e Ganhe" -> 0xFFD97706.toInt()
-            "De/Por" -> 0xFFD7193F.toInt()
-            "Parcelado" -> 0xFF7C3AED.toInt()
-            else -> 0xFF475569.toInt()
+            "Leve e Ganhe" -> 0xFF2E7D32.toInt()
+            "De/Por", "Parcelado" -> 0xFFFF9800.toInt()
+            else -> 0xFF9E9E9E.toInt()
         }
+    }
+
+    private fun adicionarBadgeValor(
+        parent: LinearLayout,
+        item: ItemScanner,
+        dp: (Int) -> Int,
+    ) {
+        val badge = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(10), 0, 0, 0)
+            background = GradientDrawable().apply {
+                setColor(0xFF4CAF50.toInt())
+                cornerRadius = dp(6).toFloat()
+            }
+        }
+        val valor = TextView(this).apply {
+            text = item.valor
+            textSize = 12f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setPadding(0, dp(4), dp(6), dp(4))
+        }
+        badge.addView(
+            valor,
+            LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+            )
+        )
+        val tipo = TextView(this).apply {
+            text = item.tipo.uppercase(Locale.getDefault())
+            textSize = 10f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(corTipo(item.tipo))
+            gravity = Gravity.CENTER
+            maxLines = 1
+            setPadding(dp(8), dp(4), dp(8), dp(4))
+            background = GradientDrawable().apply {
+                setColor(Color.WHITE)
+                cornerRadii = floatArrayOf(
+                    0f, 0f,
+                    dp(6).toFloat(), dp(6).toFloat(),
+                    dp(6).toFloat(), dp(6).toFloat(),
+                    0f, 0f
+                )
+                setStroke(dp(1), 0xFF4CAF50.toInt())
+            }
+        }
+        badge.addView(
+            tipo,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        )
+        parent.addView(
+            badge,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(28)
+            ).apply { topMargin = dp(4) }
+        )
     }
 
     private fun escolherEtiquetasEEnviar() {
@@ -766,7 +917,13 @@ class BarcodeScannerActivity : AppCompatActivity() {
             return
         }
         val itens = etiquetas.map {
-            ItemScanner(it.ean, it.description, it.quantity, tipoEtiqueta(it))
+            ItemScanner(
+                it.ean,
+                it.description,
+                it.quantity,
+                tipoEtiqueta(it),
+                valorEtiqueta(it),
+            )
         }
         val density = resources.displayMetrics.density
         fun dp(v: Int) = (v * density).toInt()
@@ -826,23 +983,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 textSize = 11f
                 setTextColor(0xFF64748B.toInt())
             })
-            dados.addView(
-                TextView(this).apply {
-                    text = item.tipo
-                    textSize = 10f
-                    setTypeface(null, android.graphics.Typeface.BOLD)
-                    setTextColor(corTipo(item.tipo))
-                    setPadding(dp(6), dp(2), dp(6), dp(2))
-                    background = GradientDrawable().apply {
-                        setColor(0xFFF1F5F9.toInt())
-                        cornerRadius = dp(4).toFloat()
-                    }
-                },
-                LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply { topMargin = dp(3) }
-            )
+            adicionarBadgeValor(dados, item) { v -> dp(v) }
 
             val input = EditText(this).apply {
                 setText(qtds[i].toString())
@@ -1085,11 +1226,23 @@ class BarcodeScannerActivity : AppCompatActivity() {
         val itens: List<ItemScanner> =
             if (tipoLista == TIPO_LISTA_PAPELETAS) {
                 listaViewModel.getPapeletas().map {
-                    ItemScanner(it.ean, it.description, it.quantity, tipoPapeleta(it))
+                    ItemScanner(
+                        it.ean,
+                        it.description,
+                        it.quantity,
+                        tipoPapeleta(it),
+                        valorPapeleta(it),
+                    )
                 }
             } else {
                 listaViewModel.getEtiquetas().map {
-                    ItemScanner(it.ean, it.description, it.quantity, tipoEtiqueta(it))
+                    ItemScanner(
+                        it.ean,
+                        it.description,
+                        it.quantity,
+                        tipoEtiqueta(it),
+                        valorEtiqueta(it),
+                    )
                 }
             }
         if (itens.isEmpty()) {
@@ -1162,23 +1315,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 textSize = 11f
                 setTextColor(0xFF64748B.toInt())
             })
-            dados.addView(
-                TextView(this).apply {
-                    text = item.tipo
-                    textSize = 10f
-                    setTypeface(null, android.graphics.Typeface.BOLD)
-                    setTextColor(corTipo(item.tipo))
-                    setPadding(dp(6), dp(2), dp(6), dp(2))
-                    background = GradientDrawable().apply {
-                        setColor(0xFFF1F5F9.toInt())
-                        cornerRadius = dp(4).toFloat()
-                    }
-                },
-                LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply { topMargin = dp(3) }
-            )
+            adicionarBadgeValor(dados, item) { v -> dp(v) }
 
             val input = EditText(this).apply {
                 setText(qtds[i].toString())
