@@ -25,6 +25,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -891,15 +892,18 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 cornerRadius = dp(12).toFloat()
             }
         }
+        val duasLinhas = item.tipo == "Parcelado"
+        val alturaBadge = if (duasLinhas) dp(34) else dp(24)
         val valor = TextView(this).apply {
             text = item.valor
             textSize = 10f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
-            maxLines = 1
+            maxLines = if (duasLinhas) 2 else 1
             ellipsize = android.text.TextUtils.TruncateAt.END
-            setPadding(0, dp(4), 0, dp(4))
-            maxWidth = (resources.displayMetrics.widthPixels - dp(230))
+            setPadding(0, dp(2), 0, dp(2))
+            maxWidth = (resources.displayMetrics.widthPixels -
+                dp(if (duasLinhas) 170 else 230))
                 .coerceAtLeast(dp(80))
         }
         badge.addView(
@@ -941,7 +945,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         parent.addView(
             badge,
             LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, dp(24)
+                ViewGroup.LayoutParams.WRAP_CONTENT, alturaBadge
             ).apply { topMargin = dp(4); marginStart = dp(40) }
         )
     }
@@ -1003,6 +1007,9 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
         val checks = mutableListOf<CheckBox>()
         val inputs = mutableListOf<EditText>()
+        val itemCols = mutableListOf<LinearLayout>()
+        val rowTipos = mutableListOf<String>()
+        var filtroAtual: String? = null
         var master: CheckBox? = null
         var sincronizando = false
         for ((i, item) in itens.withIndex()) {
@@ -1010,6 +1017,8 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 orientation = LinearLayout.VERTICAL
                 setPadding(0, dp(4), 0, dp(4))
             }
+            itemCols.add(itemCol)
+            rowTipos.add(item.tipo)
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
@@ -1087,7 +1096,12 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     input.alpha = if (checked) 1f else 0.4f
                     if (!sincronizando) {
                         sincronizando = true
-                        master?.isChecked = selecionados.all { it }
+                        val visiveis = itens.indices.filter { idx ->
+                            filtroAtual == null ||
+                                rowTipos.getOrNull(idx) == filtroAtual
+                        }
+                        master?.isChecked = visiveis.isNotEmpty() &&
+                            visiveis.all { selecionados[it] }
                         sincronizando = false
                     }
                 }
@@ -1133,7 +1147,10 @@ class BarcodeScannerActivity : AppCompatActivity() {
             setOnCheckedChangeListener { _, checked ->
                 if (sincronizando) return@setOnCheckedChangeListener
                 sincronizando = true
-                for (idx in itens.indices) {
+                val visiveis = itens.indices.filter { idx ->
+                    filtroAtual == null || rowTipos.getOrNull(idx) == filtroAtual
+                }
+                for (idx in visiveis) {
                     selecionados[idx] = checked
                     checks.getOrNull(idx)?.isChecked = checked
                     inputs.getOrNull(idx)?.let { inp ->
@@ -1145,7 +1162,55 @@ class BarcodeScannerActivity : AppCompatActivity() {
             }
         }
         master = masterCheck
-        container.addView(masterCheck)
+        val filtroBtn = MaterialButton(this).apply {
+            text = "Filtro: Todos"
+            textSize = 11f
+            setTextColor(0xFF334155.toInt())
+            backgroundTintList =
+                android.content.res.ColorStateList.valueOf(0xFFF1F5F9.toInt())
+            cornerRadius = dp(6)
+            minimumWidth = 0
+            setPadding(dp(8), 0, dp(8), 0)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, dp(36)
+            )
+        }
+        filtroBtn.setOnClickListener {
+            val opcoes = arrayOf(
+                "Todos", "Normal", "Leve e Ganhe", "De/Por", "Parcelado"
+            )
+            AlertDialog.Builder(this@BarcodeScannerActivity)
+                .setTitle("Filtrar por tipo")
+                .setItems(opcoes) { _, which ->
+                    filtroAtual = if (which == 0) null else opcoes[which]
+                    filtroBtn.text = "Filtro: ${filtroAtual ?: "Todos"}"
+                    for (idx in itemCols.indices) {
+                        itemCols[idx].visibility =
+                            if (filtroAtual == null ||
+                                rowTipos[idx] == filtroAtual
+                            ) View.VISIBLE else View.GONE
+                    }
+                    sincronizando = true
+                    val visiveis = itens.indices.filter { idx ->
+                        filtroAtual == null ||
+                            rowTipos.getOrNull(idx) == filtroAtual
+                    }
+                    masterCheck.isChecked = visiveis.isNotEmpty() &&
+                        visiveis.all { selecionados[it] }
+                    sincronizando = false
+                }
+                .show()
+        }
+        val filtroRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        filtroRow.addView(
+            masterCheck,
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        )
+        filtroRow.addView(filtroBtn)
+        container.addView(filtroRow)
 
         val scroll = ScrollView(this).apply {
             addView(linhas)
@@ -1388,6 +1453,9 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
         val checks = mutableListOf<CheckBox>()
         val inputs = mutableListOf<EditText>()
+        val itemCols = mutableListOf<LinearLayout>()
+        val rowTipos = mutableListOf<String>()
+        var filtroAtual: String? = null
         var master: CheckBox? = null
         var sincronizando = false
         for ((i, item) in itens.withIndex()) {
@@ -1395,6 +1463,8 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 orientation = LinearLayout.VERTICAL
                 setPadding(0, dp(4), 0, dp(4))
             }
+            itemCols.add(itemCol)
+            rowTipos.add(item.tipo)
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
@@ -1472,7 +1542,12 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     input.alpha = if (checked) 1f else 0.4f
                     if (!sincronizando) {
                         sincronizando = true
-                        master?.isChecked = selecionados.all { it }
+                        val visiveis = itens.indices.filter { idx ->
+                            filtroAtual == null ||
+                                rowTipos.getOrNull(idx) == filtroAtual
+                        }
+                        master?.isChecked = visiveis.isNotEmpty() &&
+                            visiveis.all { selecionados[it] }
                         sincronizando = false
                     }
                 }
@@ -1517,7 +1592,10 @@ class BarcodeScannerActivity : AppCompatActivity() {
             setOnCheckedChangeListener { _, checked ->
                 if (sincronizando) return@setOnCheckedChangeListener
                 sincronizando = true
-                for (idx in itens.indices) {
+                val visiveis = itens.indices.filter { idx ->
+                    filtroAtual == null || rowTipos.getOrNull(idx) == filtroAtual
+                }
+                for (idx in visiveis) {
                     selecionados[idx] = checked
                     checks.getOrNull(idx)?.isChecked = checked
                     inputs.getOrNull(idx)?.let { inp ->
@@ -1529,7 +1607,55 @@ class BarcodeScannerActivity : AppCompatActivity() {
             }
         }
         master = masterCheck
-        container.addView(masterCheck)
+        val filtroBtn = MaterialButton(this).apply {
+            text = "Filtro: Todos"
+            textSize = 11f
+            setTextColor(0xFF334155.toInt())
+            backgroundTintList =
+                android.content.res.ColorStateList.valueOf(0xFFF1F5F9.toInt())
+            cornerRadius = dp(6)
+            minimumWidth = 0
+            setPadding(dp(8), 0, dp(8), 0)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, dp(36)
+            )
+        }
+        filtroBtn.setOnClickListener {
+            val opcoes = arrayOf(
+                "Todos", "Normal", "Leve e Ganhe", "De/Por", "Parcelado"
+            )
+            AlertDialog.Builder(this@BarcodeScannerActivity)
+                .setTitle("Filtrar por tipo")
+                .setItems(opcoes) { _, which ->
+                    filtroAtual = if (which == 0) null else opcoes[which]
+                    filtroBtn.text = "Filtro: ${filtroAtual ?: "Todos"}"
+                    for (idx in itemCols.indices) {
+                        itemCols[idx].visibility =
+                            if (filtroAtual == null ||
+                                rowTipos[idx] == filtroAtual
+                            ) View.VISIBLE else View.GONE
+                    }
+                    sincronizando = true
+                    val visiveis = itens.indices.filter { idx ->
+                        filtroAtual == null ||
+                            rowTipos.getOrNull(idx) == filtroAtual
+                    }
+                    masterCheck.isChecked = visiveis.isNotEmpty() &&
+                        visiveis.all { selecionados[it] }
+                    sincronizando = false
+                }
+                .show()
+        }
+        val filtroRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        filtroRow.addView(
+            masterCheck,
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        )
+        filtroRow.addView(filtroBtn)
+        container.addView(filtroRow)
 
         val scroll = ScrollView(this).apply {
             addView(linhas)
