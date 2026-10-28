@@ -825,29 +825,47 @@ class BarcodeScannerActivity : AppCompatActivity() {
     ): String {
         val t = template?.lowercase(Locale.getDefault()) ?: ""
         val m = movement.lowercase(Locale.getDefault())
-        if (t.contains("leve") ||
-            t.contains("ganhe") ||
-            m.contains("leve") ||
-            m.contains("ganhe")
-        ) {
-            return "Leve e Ganhe"
-        }
         val promo = promoPrice ?: 0.0
-        val parcelado = t.contains("parcelad") ||
+        val parceladoData = t.contains("parcelad") ||
             m.contains("parcelad") ||
             (installmentQty ?: 0) > 0
-        val depor = t.contains("de/por") ||
-            t.contains("de_por") ||
-            t.contains("depor") ||
-            t.contains("por_de") ||
-            m.contains("de/por") ||
+        val movementLeve = m.contains("leve") || m.contains("ganhe")
+        val movementParcelado = m.contains("parcelad")
+        val movementDepor = m.contains("de/por") ||
             m.contains("depor") ||
             m.contains("promocional")
-        if (parcelado && promo > 0 && (normalPrice <= 0 || promo < normalPrice)) {
+        val movementNormal = m.contains("comum") || m.contains("normal")
+        if (movementLeve) return "Leve e Ganhe"
+        if (movementParcelado) return "Parcelado"
+        if (movementDepor) {
+            if (parceladoData &&
+                promo > 0 &&
+                (normalPrice <= 0 || promo < normalPrice)
+            ) {
+                return "Parcelado"
+            }
+            return "De/Por"
+        }
+        if (movementNormal) {
+            return if (parceladoData) "Parcelado" else "Normal"
+        }
+        if (t.contains("leve") || t.contains("ganhe")) {
+            return "Leve e Ganhe"
+        }
+        if (parceladoData &&
+            promo > 0 &&
+            (normalPrice <= 0 || promo < normalPrice)
+        ) {
             return "Parcelado"
         }
-        if (depor) return "De/Por"
-        if (parcelado) return "Parcelado"
+        if (t.contains("de/por") ||
+            t.contains("de_por") ||
+            t.contains("depor") ||
+            t.contains("por_de")
+        ) {
+            return "De/Por"
+        }
+        if (parceladoData) return "Parcelado"
         return "Normal"
     }
 
@@ -924,7 +942,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
             badge,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, dp(24)
-            ).apply { topMargin = dp(4) }
+            ).apply { topMargin = dp(4); marginStart = dp(40) }
         )
     }
 
@@ -983,11 +1001,18 @@ class BarcodeScannerActivity : AppCompatActivity() {
         val linhas = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
+        val checks = mutableListOf<CheckBox>()
+        val inputs = mutableListOf<EditText>()
+        var master: CheckBox? = null
+        var sincronizando = false
         for ((i, item) in itens.withIndex()) {
+            val itemCol = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, dp(4), 0, dp(4))
+            }
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, dp(4), 0, dp(4))
             }
             val dados = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -1005,7 +1030,6 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 textSize = 11f
                 setTextColor(0xFF64748B.toInt())
             })
-            adicionarBadgeValor(dados, item) { v -> dp(v) }
 
             val input = EditText(this).apply {
                 setText(qtds[i].toString())
@@ -1061,8 +1085,15 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     selecionados[i] = checked
                     input.isEnabled = checked
                     input.alpha = if (checked) 1f else 0.4f
+                    if (!sincronizando) {
+                        sincronizando = true
+                        master?.isChecked = selecionados.all { it }
+                        sincronizando = false
+                    }
                 }
             }
+            checks.add(check)
+            inputs.add(input)
             row.addView(check)
             row.addView(
                 dados,
@@ -1072,18 +1103,49 @@ class BarcodeScannerActivity : AppCompatActivity() {
             )
             row.addView(
                 input,
-                LinearLayout.LayoutParams(dp(52), dp(38)).apply {
-                    marginStart = dp(6)
+                LinearLayout.LayoutParams(dp(44), dp(32)).apply {
+                    marginStart = dp(4)
                 }
             )
-            linhas.addView(
+            itemCol.addView(
                 row,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            )
+            adicionarBadgeValor(itemCol, item) { v -> dp(v) }
+            linhas.addView(
+                itemCol,
                 LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 ).apply { bottomMargin = dp(6) }
             )
         }
+
+        val masterCheck = CheckBox(this).apply {
+            text = "Selecionar todos"
+            textSize = 12f
+            isChecked = true
+            setTextColor(0xFF1E293B.toInt())
+            setPadding(0, dp(2), 0, dp(2))
+            setOnCheckedChangeListener { _, checked ->
+                if (sincronizando) return@setOnCheckedChangeListener
+                sincronizando = true
+                for (idx in itens.indices) {
+                    selecionados[idx] = checked
+                    checks.getOrNull(idx)?.isChecked = checked
+                    inputs.getOrNull(idx)?.let { inp ->
+                        inp.isEnabled = checked
+                        inp.alpha = if (checked) 1f else 0.4f
+                    }
+                }
+                sincronizando = false
+            }
+        }
+        master = masterCheck
+        container.addView(masterCheck)
 
         val scroll = ScrollView(this).apply {
             addView(linhas)
@@ -1324,11 +1386,18 @@ class BarcodeScannerActivity : AppCompatActivity() {
         val linhas = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
+        val checks = mutableListOf<CheckBox>()
+        val inputs = mutableListOf<EditText>()
+        var master: CheckBox? = null
+        var sincronizando = false
         for ((i, item) in itens.withIndex()) {
+            val itemCol = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, dp(4), 0, dp(4))
+            }
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(0, dp(4), 0, dp(4))
             }
             val dados = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -1346,7 +1415,6 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 textSize = 11f
                 setTextColor(0xFF64748B.toInt())
             })
-            adicionarBadgeValor(dados, item) { v -> dp(v) }
 
             val input = EditText(this).apply {
                 setText(qtds[i].toString())
@@ -1402,8 +1470,15 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     selecionados[i] = checked
                     input.isEnabled = checked
                     input.alpha = if (checked) 1f else 0.4f
+                    if (!sincronizando) {
+                        sincronizando = true
+                        master?.isChecked = selecionados.all { it }
+                        sincronizando = false
+                    }
                 }
             }
+            checks.add(check)
+            inputs.add(input)
             row.addView(check)
             row.addView(
                 dados,
@@ -1413,18 +1488,49 @@ class BarcodeScannerActivity : AppCompatActivity() {
             )
             row.addView(
                 input,
-                LinearLayout.LayoutParams(dp(52), dp(38)).apply {
-                    marginStart = dp(6)
+                LinearLayout.LayoutParams(dp(44), dp(32)).apply {
+                    marginStart = dp(4)
                 }
             )
-            linhas.addView(
+            itemCol.addView(
                 row,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            )
+            adicionarBadgeValor(itemCol, item) { v -> dp(v) }
+            linhas.addView(
+                itemCol,
                 LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 ).apply { bottomMargin = dp(6) }
             )
         }
+        val masterCheck = CheckBox(this).apply {
+            text = "Selecionar todos"
+            textSize = 12f
+            isChecked = true
+            setTextColor(0xFF1E293B.toInt())
+            setPadding(0, dp(2), 0, dp(2))
+            setOnCheckedChangeListener { _, checked ->
+                if (sincronizando) return@setOnCheckedChangeListener
+                sincronizando = true
+                for (idx in itens.indices) {
+                    selecionados[idx] = checked
+                    checks.getOrNull(idx)?.isChecked = checked
+                    inputs.getOrNull(idx)?.let { inp ->
+                        inp.isEnabled = checked
+                        inp.alpha = if (checked) 1f else 0.4f
+                    }
+                }
+                sincronizando = false
+            }
+        }
+        master = masterCheck
+        container.addView(masterCheck)
+
         val scroll = ScrollView(this).apply {
             addView(linhas)
             layoutParams = LinearLayout.LayoutParams(
