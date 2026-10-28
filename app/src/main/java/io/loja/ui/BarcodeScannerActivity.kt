@@ -586,7 +586,12 @@ class BarcodeScannerActivity : AppCompatActivity() {
                                             codSap = singleData.codSap,
                                             takeAndWin = singleData.takeAndWin,
                                             referenceDate = singleData.referenceDate,
-                                            template = singleData.template ?: if (singleData.takeAndWin != null) Constants.SIGN_TEMPLATE_MODELO else null,
+                                            template = singleData.template ?: if (
+                                                singleData.takeAndWin.qty > 0 &&
+                                                singleData.takeAndWin.totalValue > 0 &&
+                                                (item.movement.contains("leve", true) ||
+                                                    item.movement.contains("ganhe", true))
+                                            ) Constants.SIGN_TEMPLATE_MODELO else null,
                                             productName = null,
                                             promotionPrice = null,
                                             takeAndWinQuantity = null,
@@ -713,7 +718,8 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     if (pd?.template == Constants.SIGN_TEMPLATE_LEVE_GANHE_CADA &&
                         (promo ?: 0.0) > 0
                     ) promo!! else take.totalValue
-                "Leve ${take.qty} por ${formatarValor(total)}"
+                val normalPart = if (normal > 0) " | ${formatarValor(normal)}" else ""
+                "Leve ${take.qty} por ${formatarValor(total)}$normalPart"
             }
             tipo == "Parcelado" &&
                 inst != null &&
@@ -721,8 +727,14 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 val parcela =
                     if (inst.installmentValue > 0) inst.installmentValue
                     else (pd?.displayPrice ?: 0.0)
-                val base = if (normal > 0) "${formatarValor(normal)} | " else ""
-                "$base${inst.installmentQuantity}x de ${formatarValor(parcela)}"
+                if ((promo ?: 0.0) > 0 && promo!! < normal) {
+                    "De ${formatarValor(normal)} | Por ${formatarValor(promo)} | " +
+                        "${inst.installmentQuantity}x de ${formatarValor(parcela)}"
+                } else {
+                    val base = if (normal > 0) formatarValor(normal)
+                    else normalizarValor(item.price)
+                    "$base | ${inst.installmentQuantity}x de ${formatarValor(parcela)}"
+                }
             }
             tipo == "De/Por" && (promo ?: 0.0) > 0 ->
                 "De ${formatarValor(normal)} | Por ${formatarValor(promo!!)}"
@@ -747,12 +759,19 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     pd?.takeAndWinPrice,
                     takeQty,
                 )
-                "Leve $takeQty por ${formatarValor(total)}"
+                val normalPart = if (normal > 0) " | ${formatarValor(normal)}" else ""
+                "Leve $takeQty por ${formatarValor(total)}$normalPart"
             }
             tipo == "Parcelado" && instQty > 0 -> {
                 val parcela = pd?.installmentPrice ?: 0.0
-                val base = if (normal > 0) "${formatarValor(normal)} | " else ""
-                "$base${instQty}x de ${formatarValor(parcela)}"
+                if ((promo ?: 0.0) > 0 && promo!! < normal) {
+                    "De ${formatarValor(normal)} | Por ${formatarValor(promo)} | " +
+                        "${instQty}x de ${formatarValor(parcela)}"
+                } else {
+                    val base = if (normal > 0) formatarValor(normal)
+                    else normalizarValor(item.price)
+                    "$base | ${instQty}x de ${formatarValor(parcela)}"
+                }
             }
             tipo == "De/Por" && (promo ?: 0.0) > 0 ->
                 "De ${formatarValor(normal)} | Por ${formatarValor(promo!!)}"
@@ -777,12 +796,9 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
     private fun tipoEtiqueta(item: PriceTag): String {
         val pd = item.printingData
-        val take = pd?.takeAndWin
         return classificarTipo(
             template = pd?.template,
             movement = item.movement,
-            takeAndWin = (take != null && take.qty > 0 && take.totalValue > 0) ||
-                (pd?.takeAndWinQuantity ?: 0) > 0,
             installmentQty = pd?.installments?.installmentQuantity,
             promoPrice = pd?.promotionalPrice?.value,
             normalPrice = pd?.price?.value ?: 0.0,
@@ -794,7 +810,6 @@ class BarcodeScannerActivity : AppCompatActivity() {
         return classificarTipo(
             template = pd?.template,
             movement = item.movement,
-            takeAndWin = (pd?.takeAndWinQuantity ?: 0) > 0,
             installmentQty = pd?.installmentQuantity,
             promoPrice = pd?.promotionPrice,
             normalPrice = pd?.price ?: 0.0,
@@ -804,34 +819,35 @@ class BarcodeScannerActivity : AppCompatActivity() {
     private fun classificarTipo(
         template: String?,
         movement: String,
-        takeAndWin: Boolean,
         installmentQty: Int?,
         promoPrice: Double?,
         normalPrice: Double,
     ): String {
         val t = template?.lowercase(Locale.getDefault()) ?: ""
         val m = movement.lowercase(Locale.getDefault())
-        if (t.contains("parcelad") ||
-            m.contains("parcelad") ||
-            (installmentQty ?: 0) > 0
+        if (t.contains("leve") ||
+            t.contains("ganhe") ||
+            m.contains("leve") ||
+            m.contains("ganhe")
         ) {
-            return "Parcelado"
-        }
-        if (t.contains("leve") || m.contains("leve") || takeAndWin) {
             return "Leve e Ganhe"
         }
         val promo = promoPrice ?: 0.0
-        if ((promo > 0 && (normalPrice <= 0 || promo < normalPrice)) ||
-            t.contains("de/por") ||
+        val parcelado = t.contains("parcelad") ||
+            m.contains("parcelad") ||
+            (installmentQty ?: 0) > 0
+        val depor = t.contains("de/por") ||
             t.contains("de_por") ||
             t.contains("depor") ||
             t.contains("por_de") ||
             m.contains("de/por") ||
             m.contains("depor") ||
             m.contains("promocional")
-        ) {
-            return "De/Por"
+        if (parcelado && promo > 0 && (normalPrice <= 0 || promo < normalPrice)) {
+            return "Parcelado"
         }
+        if (depor) return "De/Por"
+        if (parcelado) return "Parcelado"
         return "Normal"
     }
 
@@ -854,27 +870,30 @@ class BarcodeScannerActivity : AppCompatActivity() {
             setPadding(dp(10), 0, 0, 0)
             background = GradientDrawable().apply {
                 setColor(0xFF4CAF50.toInt())
-                cornerRadius = dp(6).toFloat()
+                cornerRadius = dp(12).toFloat()
             }
         }
         val valor = TextView(this).apply {
             text = item.valor
-            textSize = 12f
+            textSize = 10f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
-            setPadding(0, dp(4), dp(6), dp(4))
+            setPadding(0, dp(4), 0, dp(4))
+            maxWidth = (resources.displayMetrics.widthPixels - dp(230))
+                .coerceAtLeast(dp(80))
         }
         badge.addView(
             valor,
             LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             )
         )
         val tipo = TextView(this).apply {
             text = item.tipo.uppercase(Locale.getDefault())
-            textSize = 10f
+            textSize = 9f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(corTipo(item.tipo))
             gravity = Gravity.CENTER
@@ -884,11 +903,14 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 setColor(Color.WHITE)
                 cornerRadii = floatArrayOf(
                     0f, 0f,
-                    dp(6).toFloat(), dp(6).toFloat(),
-                    dp(6).toFloat(), dp(6).toFloat(),
+                    dp(12).toFloat(), dp(12).toFloat(),
+                    dp(12).toFloat(), dp(12).toFloat(),
                     0f, 0f
                 )
-                setStroke(dp(1), 0xFF4CAF50.toInt())
+                setStroke(
+                    (1.5 * resources.displayMetrics.density).toInt(),
+                    0xFF4CAF50.toInt()
+                )
             }
         }
         badge.addView(
@@ -896,12 +918,12 @@ class BarcodeScannerActivity : AppCompatActivity() {
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
-            )
+            ).apply { marginStart = dp(4) }
         )
         parent.addView(
             badge,
             LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(28)
+                ViewGroup.LayoutParams.WRAP_CONTENT, dp(24)
             ).apply { topMargin = dp(4) }
         )
     }
@@ -1141,9 +1163,18 @@ class BarcodeScannerActivity : AppCompatActivity() {
         etiquetas.forEach { item ->
             val qtd = qtdPorEan[item.ean] ?: return@forEach
             val pd = item.printingData ?: return@forEach
-            val template =
-                if (pd.takeAndWin != null) Constants.SIGN_TEMPLATE_MODELO
-                else Constants.templateNormalizado(pd.template)
+            val templateOriginal = Constants.templateNormalizado(pd.template)
+            val template = when {
+                pd.template?.contains("leve", true) == true ||
+                    item.movement.contains("leve", true) ||
+                    item.movement.contains("ganhe", true) ->
+                    Constants.SIGN_TEMPLATE_MODELO
+                item.movement.contains("de/por", true) ->
+                    templateOriginal ?: Constants.SIGN_TEMPLATE_DEPOR
+                item.movement.contains("parcelado", true) ->
+                    templateOriginal ?: Constants.SIGN_TEMPLATE_DEPOR_PARCELADO
+                else -> templateOriginal
+            }
             repeat(qtd) {
                 lista.add(pd.copy(quantity = 1, template = template))
             }
