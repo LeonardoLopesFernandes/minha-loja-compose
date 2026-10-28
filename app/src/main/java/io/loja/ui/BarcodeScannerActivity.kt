@@ -21,6 +21,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -892,18 +893,17 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 cornerRadius = dp(12).toFloat()
             }
         }
-        val duasLinhas = item.tipo == "Parcelado"
-        val alturaBadge = if (duasLinhas) dp(34) else dp(24)
+        val alturaBadge = dp(26)
         val valor = TextView(this).apply {
             text = item.valor
             textSize = 10f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(Color.WHITE)
-            maxLines = if (duasLinhas) 2 else 1
+            maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
             setPadding(0, dp(2), 0, dp(2))
             maxWidth = (resources.displayMetrics.widthPixels -
-                dp(if (duasLinhas) 170 else 230))
+                dp(if (item.tipo == "Parcelado") 160 else 230))
                 .coerceAtLeast(dp(80))
         }
         badge.addView(
@@ -1036,7 +1036,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
             })
             dados.addView(TextView(this).apply {
                 text = item.ean
-                textSize = 11f
+                textSize = 9f
                 setTextColor(0xFF64748B.toInt())
             })
 
@@ -1163,7 +1163,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
         master = masterCheck
         val filtroBtn = MaterialButton(this).apply {
-            text = "Filtro: Todos"
+            text = "Todos"
             textSize = 11f
             setTextColor(0xFF334155.toInt())
             backgroundTintList =
@@ -1171,6 +1171,13 @@ class BarcodeScannerActivity : AppCompatActivity() {
             cornerRadius = dp(6)
             minimumWidth = 0
             setPadding(dp(8), 0, dp(8), 0)
+            icon = ContextCompat.getDrawable(
+                this@BarcodeScannerActivity, R.drawable.ic_filter_list
+            )
+            iconTint =
+                android.content.res.ColorStateList.valueOf(0xFF334155.toInt())
+            iconGravity = MaterialButton.ICON_GRAVITY_START
+            iconPadding = dp(4)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, dp(36)
             )
@@ -1179,27 +1186,30 @@ class BarcodeScannerActivity : AppCompatActivity() {
             val opcoes = arrayOf(
                 "Todos", "Normal", "Leve e Ganhe", "De/Por", "Parcelado"
             )
-            AlertDialog.Builder(this@BarcodeScannerActivity)
-                .setTitle("Filtrar por tipo")
-                .setItems(opcoes) { _, which ->
-                    filtroAtual = if (which == 0) null else opcoes[which]
-                    filtroBtn.text = "Filtro: ${filtroAtual ?: "Todos"}"
-                    for (idx in itemCols.indices) {
-                        itemCols[idx].visibility =
-                            if (filtroAtual == null ||
-                                rowTipos[idx] == filtroAtual
-                            ) View.VISIBLE else View.GONE
-                    }
-                    sincronizando = true
-                    val visiveis = itens.indices.filter { idx ->
-                        filtroAtual == null ||
-                            rowTipos.getOrNull(idx) == filtroAtual
-                    }
-                    masterCheck.isChecked = visiveis.isNotEmpty() &&
-                        visiveis.all { selecionados[it] }
-                    sincronizando = false
+            val popup = PopupMenu(this@BarcodeScannerActivity, filtroBtn)
+            opcoes.forEachIndexed { idx, label ->
+                popup.menu.add(0, idx, idx, label)
+            }
+            popup.setOnMenuItemClickListener { item ->
+                filtroAtual = if (item.itemId == 0) null else opcoes[item.itemId]
+                filtroBtn.text = filtroAtual ?: "Todos"
+                for (idx in itemCols.indices) {
+                    itemCols[idx].visibility =
+                        if (filtroAtual == null ||
+                            rowTipos[idx] == filtroAtual
+                        ) View.VISIBLE else View.GONE
                 }
-                .show()
+                sincronizando = true
+                val visiveis = itens.indices.filter { idx ->
+                    filtroAtual == null ||
+                        rowTipos.getOrNull(idx) == filtroAtual
+                }
+                masterCheck.isChecked = visiveis.isNotEmpty() &&
+                    visiveis.all { selecionados[it] }
+                sincronizando = false
+                true
+            }
+            popup.show()
         }
         val filtroRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -1482,7 +1492,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
             })
             dados.addView(TextView(this).apply {
                 text = item.ean
-                textSize = 11f
+                textSize = 9f
                 setTextColor(0xFF64748B.toInt())
             })
 
@@ -1608,7 +1618,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
         master = masterCheck
         val filtroBtn = MaterialButton(this).apply {
-            text = "Filtro: Todos"
+            text = "Todos"
             textSize = 11f
             setTextColor(0xFF334155.toInt())
             backgroundTintList =
@@ -1616,6 +1626,13 @@ class BarcodeScannerActivity : AppCompatActivity() {
             cornerRadius = dp(6)
             minimumWidth = 0
             setPadding(dp(8), 0, dp(8), 0)
+            icon = ContextCompat.getDrawable(
+                this@BarcodeScannerActivity, R.drawable.ic_filter_list
+            )
+            iconTint =
+                android.content.res.ColorStateList.valueOf(0xFF334155.toInt())
+            iconGravity = MaterialButton.ICON_GRAVITY_START
+            iconPadding = dp(4)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, dp(36)
             )
@@ -1624,27 +1641,30 @@ class BarcodeScannerActivity : AppCompatActivity() {
             val opcoes = arrayOf(
                 "Todos", "Normal", "Leve e Ganhe", "De/Por", "Parcelado"
             )
-            AlertDialog.Builder(this@BarcodeScannerActivity)
-                .setTitle("Filtrar por tipo")
-                .setItems(opcoes) { _, which ->
-                    filtroAtual = if (which == 0) null else opcoes[which]
-                    filtroBtn.text = "Filtro: ${filtroAtual ?: "Todos"}"
-                    for (idx in itemCols.indices) {
-                        itemCols[idx].visibility =
-                            if (filtroAtual == null ||
-                                rowTipos[idx] == filtroAtual
-                            ) View.VISIBLE else View.GONE
-                    }
-                    sincronizando = true
-                    val visiveis = itens.indices.filter { idx ->
-                        filtroAtual == null ||
-                            rowTipos.getOrNull(idx) == filtroAtual
-                    }
-                    masterCheck.isChecked = visiveis.isNotEmpty() &&
-                        visiveis.all { selecionados[it] }
-                    sincronizando = false
+            val popup = PopupMenu(this@BarcodeScannerActivity, filtroBtn)
+            opcoes.forEachIndexed { idx, label ->
+                popup.menu.add(0, idx, idx, label)
+            }
+            popup.setOnMenuItemClickListener { item ->
+                filtroAtual = if (item.itemId == 0) null else opcoes[item.itemId]
+                filtroBtn.text = filtroAtual ?: "Todos"
+                for (idx in itemCols.indices) {
+                    itemCols[idx].visibility =
+                        if (filtroAtual == null ||
+                            rowTipos[idx] == filtroAtual
+                        ) View.VISIBLE else View.GONE
                 }
-                .show()
+                sincronizando = true
+                val visiveis = itens.indices.filter { idx ->
+                    filtroAtual == null ||
+                        rowTipos.getOrNull(idx) == filtroAtual
+                }
+                masterCheck.isChecked = visiveis.isNotEmpty() &&
+                    visiveis.all { selecionados[it] }
+                sincronizando = false
+                true
+            }
+            popup.show()
         }
         val filtroRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
