@@ -557,19 +557,8 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
         else -> Constants.SIGN_TEMPLATE_MODELO_EDITAVEL
     }
 
-    private fun ajustarDadosLeveGanhe(data: PapeletaPrintingData): PapeletaPrintingData {
-        if (data.template != Constants.SIGN_TEMPLATE_LEVE_GANHE_CADA) return data
-        val total = Constants.totalLeveGanhe(data.promotionPrice, data.takeAndWinPrice, data.takeAndWinQuantity)
-        val qty = data.takeAndWinQuantity ?: 0
-        val unitario = (data.takeAndWinPrice ?: 0.0).takeIf { it > 0 } ?: if (qty > 0) total / qty else total
-        return data.copy(
-            template = Constants.SIGN_TEMPLATE_LEVE_GANHE_TOTAL,
-            promotionPrice = unitario,
-            takeAndWinPrice = total,
-            installmentPrice = null,
-            installmentQuantity = null,
-        )
-    }
+    private fun ajustarDadosLeveGanhe(data: PapeletaPrintingData): PapeletaPrintingData =
+        Constants.ajustarDadosLeveGanhe(data)
 
     private fun isItemComum(item: PriceSign): Boolean {
         val data = item.printingData ?: return true

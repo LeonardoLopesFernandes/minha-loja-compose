@@ -1,4 +1,6 @@
 package io.loja.utils
+import io.loja.network.PapeletaPrintingData
+
 
 object Constants {
     const val DEFAULT_STORE = "L291"
@@ -72,6 +74,29 @@ object Constants {
     ): Double {
         if (template == SIGN_TEMPLATE_MODELO) return takeAndWinPrice ?: 0.0
         return totalLeveGanhe(promotionPrice, takeAndWinPrice, takeAndWinQuantity)
+    }
+
+    /**
+     * Normaliza o leve_ganhe_cada para o mesmo conteúdo do modo promocional
+     * (leve_ganhe_total), para o scanner mostrar "Leve X por R$ ..." igual.
+     */
+    fun ajustarDadosLeveGanhe(data: PapeletaPrintingData): PapeletaPrintingData {
+        if (data.template != SIGN_TEMPLATE_LEVE_GANHE_CADA) return data
+        val total = totalLeveGanhe(
+            data.promotionPrice,
+            data.takeAndWinPrice,
+            data.takeAndWinQuantity
+        )
+        val qty = data.takeAndWinQuantity ?: 0
+        val unitario = (data.takeAndWinPrice ?: 0.0).takeIf { it > 0 }
+            ?: if (qty > 0) total / qty else total
+        return data.copy(
+            template = SIGN_TEMPLATE_LEVE_GANHE_TOTAL,
+            promotionPrice = unitario,
+            takeAndWinPrice = total,
+            installmentPrice = null,
+            installmentQuantity = null,
+        )
     }
 
     const val MOVEMENT_ALL = ""

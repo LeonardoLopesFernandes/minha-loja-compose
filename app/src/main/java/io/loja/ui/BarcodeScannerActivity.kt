@@ -1816,7 +1816,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                             val pd = item.printingData ?: return@forEach
                             if (!vistos.add(item.ean)) return@forEach
                             lista.add(
-                                pd.copy(
+                                Constants.ajustarDadosLeveGanhe(pd).copy(
                                     quantity = 1,
                                     size = Constants.SIGN_SIZE_1X1
                                 )
