@@ -347,7 +347,7 @@ class EletroSemanaActivity : AppCompatActivity() {
             canvas,
             data.productName.ifBlank { "PRODUTO" }.uppercase(Locale.getDefault()),
             cx,
-            top + h * 0.315f,
+            top + h * 0.335f,
             contentW,
             h * 0.14f,
             w * 0.095f,
@@ -377,7 +377,7 @@ class EletroSemanaActivity : AppCompatActivity() {
         val groupW = qtdW + gap + precoW
         val qtdX = cx - groupW / 2f
         val precoX = qtdX + qtdW + gap
-        val instY = top + h * 0.49f
+        val instY = top + h * 0.51f
         desenharTextoY(canvas, qtdTexto, qtdX, instY, paintQtd)
         desenharTextoY(canvas, precoTexto, precoX, instY, paintPreco)
 
@@ -393,7 +393,7 @@ class EletroSemanaActivity : AppCompatActivity() {
             canvas,
             "sem juros",
             qtdX + (qtdW - paintSub.measureText("sem juros")) / 2f,
-            top + h * 0.545f,
+            top + h * 0.565f,
             paintSub,
         )
 
