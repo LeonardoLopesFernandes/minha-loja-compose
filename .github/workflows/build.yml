@@ -57,18 +57,10 @@ jobs:
           KEY_PASSWORD: minhaloja123
           MICROSOFT_CLIENT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
 
-      - name: Rename APKs
+      - name: Rename APK
         run: |
-          for APK in app/build/outputs/apk/release/*.apk; do
-            NOME=$(basename "$APK")
-            case "$NOME" in
-              *arm64-v8a*) DEST="minhaloja-compose-arm64-v8a.apk" ;;
-              *armeabi-v7a*) DEST="minhaloja-compose-armeabi-v7a.apk" ;;
-              *) DEST="minhaloja-compose-universal.apk" ;;
-            esac
-            cp "$APK" "$DEST"
-          done
-          ls -la minhaloja-compose-*.apk
+          cp app/build/outputs/apk/release/*arm64-v8a*.apk minhaloja-compose-arm64-v8a.apk
+          ls -la minhaloja-compose-arm64-v8a.apk
 
       - name: Notas da release
         if: startsWith(github.ref, 'refs/tags/')
@@ -94,7 +86,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: minhaloja-compose-*.apk
+          files: minhaloja-compose-arm64-v8a.apk
           body_path: /tmp/notas.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
