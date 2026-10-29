@@ -189,16 +189,17 @@ class EletroSemanaActivity : AppCompatActivity() {
         et.filters = arrayOf(android.text.InputFilter.LengthFilter(10))
         et.addTextChangedListener(object : TextWatcher {
             private var formatando = false
-            private var apagando = false
+            private var tamanhoAnterior = 0
 
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                apagando = count < before
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                tamanhoAnterior = s?.length ?: 0
             }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: Editable?) {
                 if (s == null || formatando) return
+                val apagando = s.length < tamanhoAnterior
                 val digits = s.toString().filter { it.isDigit() }.take(8)
                 val formatted = buildString {
                     for (i in digits.indices) {
@@ -210,8 +211,7 @@ class EletroSemanaActivity : AppCompatActivity() {
                     }
                 }
                 formatando = true
-                s.clear()
-                s.append(formatted)
+                s.replace(0, s.length, formatted)
                 android.text.Selection.setSelection(s, s.length)
                 formatando = false
             }
