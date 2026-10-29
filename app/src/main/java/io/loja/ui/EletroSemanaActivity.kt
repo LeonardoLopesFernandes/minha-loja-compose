@@ -342,12 +342,13 @@ class EletroSemanaActivity : AppCompatActivity() {
         val contentW = w * 0.80f
         val dark = Color.rgb(38, 39, 41)
         val titleColor = Color.rgb(49, 51, 53)
+        val yTop = top + h * 0.02f
 
         desenharTitulo(
             canvas,
             data.productName.ifBlank { "PRODUTO" }.uppercase(Locale.getDefault()),
             cx,
-            top + h * 0.335f,
+            yTop + h * 0.315f,
             contentW,
             h * 0.14f,
             w * 0.095f,
@@ -377,7 +378,7 @@ class EletroSemanaActivity : AppCompatActivity() {
         val groupW = qtdW + gap + precoW
         val qtdX = cx - groupW / 2f
         val precoX = qtdX + qtdW + gap
-        val instY = top + h * 0.51f
+        val instY = yTop + h * 0.49f
         desenharTextoY(canvas, qtdTexto, qtdX, instY, paintQtd)
         desenharTextoY(canvas, precoTexto, precoX, instY, paintPreco)
 
@@ -393,11 +394,11 @@ class EletroSemanaActivity : AppCompatActivity() {
             canvas,
             "sem juros",
             qtdX + (qtdW - paintSub.measureText("sem juros")) / 2f,
-            top + h * 0.565f,
+            yTop + h * 0.545f,
             paintSub,
         )
 
-        val dividerY = top + h * 0.61f
+        val dividerY = yTop + h * 0.61f
         canvas.drawLine(
             left + w * 0.13f,
             dividerY,
@@ -439,7 +440,7 @@ class EletroSemanaActivity : AppCompatActivity() {
         val deX = cx - cashGroupW / 2f
         val deValorX = deX + deLabelW
         val porX = deValorX + deValorW + gapCash
-        val cashY = top + h * 0.68f
+        val cashY = yTop + h * 0.68f
         desenharTextoY(canvas, deLabel, deX, cashY, paintCash)
         desenharTextoY(canvas, deValor, deValorX, cashY, paintCash)
         canvas.drawLine(
@@ -462,7 +463,7 @@ class EletroSemanaActivity : AppCompatActivity() {
         while (paintVal.measureText(validade) > contentW && paintVal.textSize > 6f) {
             paintVal.textSize -= 1f
         }
-        val validadeY = top + h * 0.84f
+        val validadeY = yTop + h * 0.84f
         val fm = paintVal.fontMetrics
         canvas.drawText(validade, cx, validadeY - (fm.ascent + fm.descent) / 2f, paintVal)
     }
