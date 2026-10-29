@@ -57,6 +57,12 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
+            android:name=".ui.EletroSemanaActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
             android:name=".ui.ModeloEditavelActivity"
             android:exported="false"
             android:theme="@style/AppTheme.NoActionBar"

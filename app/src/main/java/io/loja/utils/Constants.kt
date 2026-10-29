@@ -32,6 +32,7 @@ object Constants {
     const val SIGN_TEMPLATE_LEVE_GANHE_CADA = "leve_ganhe_cada"
     const val SIGN_TEMPLATE_LEVE_GANHE_TOTAL = "leve_ganhe_total"
     const val SIGN_TEMPLATE_NORMAL = "Normal"
+    const val SIGN_TEMPLATE_ELETRO_SEMANA = "eletro_semana"
     const val SIGN_TYPE_PAPELETA_COMUM_MODELO = "PAPELETA_COMUM_MODELO"
 
     /**

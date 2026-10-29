@@ -80,6 +80,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import io.loja.network.PriceSign
 import io.loja.ui.BarcodeScannerActivity
+import io.loja.ui.EletroSemanaActivity
 import io.loja.ui.ModeloEditavelActivity
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.GreenBadgeContainer
@@ -100,9 +101,10 @@ private val CINZA_LABEL = Color(0xFF8C9BA5)
 private val CINZA_TEXTO = Color(0xFF1E293B)
 
 private val TIPOS = listOf("Normal", "Promocional")
-private val MODELOS = listOf("Misto", "Promocional", "Promocional Editável", "Normal", "Normal Editável", "Vencimentos")
+private val MODELOS = listOf("Misto", "Promocional", "Promocional Editável", "Normal", "Normal Editável", "Vencimentos", "Eletro da semana")
 private val BUSCAS = listOf("EAN", "SAP", "Descrição do item")
 private val TAMANHOS = listOf("1×1", "2×1", "4×1", "6×1")
+private val ELETRO_TAMANHOS = listOf("1×1", "2×1", "4×1")
 
 @Composable
 fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modifier) {
@@ -115,6 +117,19 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
     var pendingAcao by remember { mutableStateOf<AcaoSucesso>(AcaoSucesso.Nenhuma) }
 
     val launcherModelo = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            when (val a = pendingAcao) {
+                is AcaoSucesso.RemoverEan -> vm.removerPorEan(a.ean)
+                AcaoSucesso.Limpar -> vm.limparSilencioso()
+                AcaoSucesso.Nenhuma -> {}
+            }
+        }
+        pendingAcao = AcaoSucesso.Nenhuma
+    }
+
+    val launcherEletro = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -183,6 +198,14 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
                     }
                     launcherModelo.launch(i)
                 }
+
+                is PapeletaEvento.AbrirEletro -> {
+                    pendingAcao = evento.acaoSucesso
+                    val i = Intent(context, EletroSemanaActivity::class.java).apply {
+                        putExtra(EletroSemanaActivity.EXTRA_SIZE, evento.size)
+                    }
+                    launcherEletro.launch(i)
+                }
             }
         }
     }
@@ -217,7 +240,7 @@ fun PapeletaAvulsaScreen(vm: PapeletaAvulsaViewModel, modifier: Modifier = Modif
                     { it }, { vm.alterarBuscaTipo(BUSCAS[it]) }, Modifier.weight(1f),
                 )
                 FiltroDivisorVertical()
-                SpinnerDropdown("TAMANHO", io.loja.R.drawable.ic_aspect_ratio_small, TAMANHOS, vm.tamanhoIdx, { it }, { vm.alterarTamanho(it) }, Modifier.weight(1f))
+                SpinnerDropdown("TAMANHO", io.loja.R.drawable.ic_aspect_ratio_small, if (vm.usarEletro) ELETRO_TAMANHOS else TAMANHOS, vm.tamanhoIdx, { it }, { vm.alterarTamanho(it) }, Modifier.weight(1f))
             }
             FiltroDivisorHorizontal()
             Box(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {

@@ -15,6 +15,7 @@ import io.loja.network.PapeletaPrintingData
 import io.loja.network.PriceSign
 import io.loja.network.SendPriceSignRequest
 import io.loja.network.SessionManager
+import io.loja.ui.EletroSemanaActivity
 import io.loja.ui.ListaViewModel
 import io.loja.ui.ModeloEditavelActivity
 import io.loja.utils.Constants
@@ -55,6 +56,12 @@ sealed interface PapeletaEvento {
         val config: ModeloConfig,
         val acaoSucesso: AcaoSucesso,
     ) : PapeletaEvento
+
+    data class AbrirEletro(
+        val list: List<PapeletaPrintingData>,
+        val size: String,
+        val acaoSucesso: AcaoSucesso,
+    ) : PapeletaEvento
 }
 
 class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
@@ -91,6 +98,7 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
     val usarModeloEditavel get() = modeloIdx == 1 || modeloIdx == 2
     val usarComumEditavel get() = modeloIdx == 4
     val usarVencimentos get() = modeloIdx == 5
+    val usarEletro get() = modeloIdx == 6
     val isModoEditavel get() = modeloIdx == 2 || modeloIdx == 4
     val tipoPapeleta: String
         get() = when {
@@ -113,7 +121,10 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun alterarTipo(i: Int) { tipoIdx = i }
-    fun alterarModelo(i: Int) { modeloIdx = i }
+    fun alterarModelo(i: Int) {
+        modeloIdx = i
+        if (i == 6 && tamanhoIdx == 3) tamanhoIdx = 2
+    }
     fun alterarBuscaTipo(t: String) { buscaTipo = t }
     fun alterarTamanho(i: Int) { tamanhoIdx = i }
 
@@ -254,6 +265,21 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
         }
         val tamanhoAtual = tamanhoSelecionado
 
+        if (usarEletro) {
+            val lista = (0 until quantidade.coerceAtLeast(1)).map {
+                signData.copy(
+                    template = Constants.SIGN_TEMPLATE_ELETRO_SEMANA,
+                    quantity = 1,
+                    size = tamanhoAtual,
+                    installmentQuantity =
+                        (signData.installmentQuantity ?: 0).takeIf { q -> q > 0 } ?: 10,
+                    installmentPrice = signData.installmentPrice ?: 0.0,
+                )
+            }
+            abrirEletro(lista, tamanhoAtual, AcaoSucesso.RemoverEan(item.ean))
+            return
+        }
+
         if (usarMisto || usarModeloEditavel || usarComumEditavel || usarVencimentos) {
             if (usarMisto) {
                 val lista = (0 until quantidade).map {
@@ -331,6 +357,28 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
 
     fun imprimirTodas() {
         if (items.isEmpty()) { emitir(PapeletaEvento.Toast("Nenhuma papeleta para imprimir")); return }
+
+        if (usarEletro) {
+            val lista = items.flatMap { item ->
+                val data = item.printingData ?: return@flatMap emptyList()
+                (0 until quantidadeDe(item.ean)).map {
+                    data.copy(
+                        template = Constants.SIGN_TEMPLATE_ELETRO_SEMANA,
+                        quantity = 1,
+                        size = tamanhoSelecionado,
+                        installmentQuantity =
+                            (data.installmentQuantity ?: 0).takeIf { q -> q > 0 } ?: 10,
+                        installmentPrice = data.installmentPrice ?: 0.0,
+                    )
+                }
+            }
+            if (lista.isEmpty()) {
+                emitir(PapeletaEvento.Toast("Dados de impressão não disponíveis"))
+                return
+            }
+            abrirEletro(lista, tamanhoSelecionado, AcaoSucesso.Limpar)
+            return
+        }
 
         if (usarMisto || usarModeloEditavel || usarComumEditavel || usarVencimentos) {
             if (usarMisto) {
@@ -462,6 +510,11 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
                 emitir(PapeletaEvento.Toast("Erro: ${e.message}"))
             }
         }
+    }
+
+    private fun abrirEletro(list: List<PapeletaPrintingData>, size: String, acao: AcaoSucesso) {
+        EletroSemanaActivity.dadosPendentesList = list.toMutableList()
+        emitir(PapeletaEvento.AbrirEletro(list, size, acao))
     }
 
     private fun abrirModelo(list: List<PapeletaPrintingData>, config: ModeloConfig, acao: AcaoSucesso) {
