@@ -250,8 +250,13 @@ class EletroSemanaActivity : AppCompatActivity() {
         return "R$ " + String.format(Locale("pt", "BR"), "%.2f", value)
     }
 
-    private fun dataOuPlaceholder(value: String): String =
-        value.trim().ifEmpty { "--/--/----" }
+    private fun dataOuPlaceholder(value: String): String {
+        val digits = value.filter { it.isDigit() }.take(8)
+        if (digits.length == 8) {
+            return "${digits.substring(0, 2)}/${digits.substring(2, 4)}/${digits.substring(4, 8)}"
+        }
+        return value.trim().ifEmpty { "--/--/----" }
+    }
 
     private fun gerarPreview() {
         val dados = coletarDados()
