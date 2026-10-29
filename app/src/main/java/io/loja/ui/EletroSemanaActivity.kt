@@ -189,6 +189,10 @@ class EletroSemanaActivity : AppCompatActivity() {
 
     private fun aplicarMascaraData(et: EditText) {
         et.inputType = InputType.TYPE_CLASS_NUMBER
+        // Precisa aceitar "/" para a máscara conseguir inserir as barras
+        // (com inputType=number puro o DigitsKeyListener filtra a barra).
+        et.keyListener =
+            android.text.method.DigitsKeyListener.getInstance("0123456789/")
         et.filters = arrayOf(android.text.InputFilter.LengthFilter(10))
         et.addTextChangedListener(object : TextWatcher {
             private var formatando = false
