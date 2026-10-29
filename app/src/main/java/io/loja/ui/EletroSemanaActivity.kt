@@ -91,6 +91,9 @@ class EletroSemanaActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.statusBarColor = android.graphics.Color.parseColor("#F7F8FA")
+        androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+            .isAppearanceLightStatusBars = true
         setContentView(R.layout.activity_eletro_semana)
         sessionManager = SessionManager(this)
         sessionManager.setCurrentActivity(this)
