@@ -163,11 +163,11 @@ class EletroSemanaActivity : AppCompatActivity() {
         parcelas.setText(((data.installmentQuantity ?: 0).takeIf { it > 0 } ?: 10).toString())
         parcelas.inputType = InputType.TYPE_CLASS_NUMBER
         valorParcela.setText(formatInput(data.installmentPrice))
-        valorParcela.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        permitirValor(valorParcela)
         de.setText(formatInput(data.price))
-        de.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        permitirValor(de)
         por.setText(formatInput(data.promotionPrice))
-        por.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        permitirValor(por)
         aplicarMascaraData(inicio)
         aplicarMascaraData(fim)
 
@@ -177,25 +177,42 @@ class EletroSemanaActivity : AppCompatActivity() {
         layoutForm.addView(view)
     }
 
+    private fun permitirValor(et: EditText) {
+        et.inputType =
+            InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+        et.keyListener =
+            android.text.method.DigitsKeyListener.getInstance("0123456789.,")
+    }
+
     private fun aplicarMascaraData(et: EditText) {
         et.inputType = InputType.TYPE_CLASS_NUMBER
         et.filters = arrayOf(android.text.InputFilter.LengthFilter(10))
         et.addTextChangedListener(object : TextWatcher {
             private var formatando = false
+            private var apagando = false
+
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                apagando = count < before
+            }
+
             override fun afterTextChanged(s: Editable?) {
                 if (s == null || formatando) return
                 val digits = s.toString().filter { it.isDigit() }.take(8)
+                val formatted = buildString {
+                    for (i in digits.indices) {
+                        if (i == 2 || i == 4) append('/')
+                        append(digits[i])
+                    }
+                    if (!apagando && (digits.length == 2 || digits.length == 4)) {
+                        append('/')
+                    }
+                }
                 formatando = true
                 s.clear()
-                when (digits.length) {
-                    in 1..2 -> s.append(digits)
-                    in 3..4 -> s.append(digits.substring(0, 2)).append("/").append(digits.substring(2))
-                    else -> s.append(digits.substring(0, 2)).append("/")
-                        .append(digits.substring(2, 4)).append("/")
-                        .append(digits.substring(4))
-                }
+                s.append(formatted)
+                android.text.Selection.setSelection(s, s.length)
                 formatando = false
             }
         })
@@ -384,30 +401,48 @@ class EletroSemanaActivity : AppCompatActivity() {
             },
         )
 
-        val deTexto = "De " + money(data.price)
-        val porTexto = "Por " + money(data.promotionPrice)
+        val deLabel = "De "
+        val deValor = money(data.price)
+        val porLabel = "Por "
+        val porValor = money(data.promotionPrice)
         val paintCash = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = dark
             typeface = typefaceBold
             textSize = w * 0.06f
         }
+        val gapCash = w * 0.04f
         var cashSize = w * 0.06f
-        while (paintCash.measureText(deTexto) + w * 0.04f + paintCash.measureText(porTexto) > contentW &&
-            cashSize > 6f
-        ) {
+        while (true) {
+            val total =
+                paintCash.measureText(deLabel) +
+                    paintCash.measureText(deValor) +
+                    gapCash +
+                    paintCash.measureText(porLabel) +
+                    paintCash.measureText(porValor)
+            if (total <= contentW || cashSize <= 6f) break
             cashSize -= 1f
             paintCash.textSize = cashSize
         }
-        val gapCash = w * 0.04f
-        val deW = paintCash.measureText(deTexto)
-        val porW = paintCash.measureText(porTexto)
-        val cashGroupW = deW + gapCash + porW
+        val deLabelW = paintCash.measureText(deLabel)
+        val deValorW = paintCash.measureText(deValor)
+        val porLabelW = paintCash.measureText(porLabel)
+        val porValorW = paintCash.measureText(porValor)
+        val cashGroupW = deLabelW + deValorW + gapCash + porLabelW + porValorW
         val deX = cx - cashGroupW / 2f
+        val deValorX = deX + deLabelW
+        val porX = deValorX + deValorW + gapCash
         val cashY = top + h * 0.68f
-        desenharTextoY(canvas, deTexto, deX, cashY, paintCash)
-        val strikeY = cashY + (paintCash.fontMetrics.ascent + paintCash.fontMetrics.descent) / 2f
-        canvas.drawLine(deX, strikeY, deX + deW, strikeY, Paint(paintCash).apply { strokeWidth = max(1f, cashSize * 0.08f) })
-        desenharTextoY(canvas, porTexto, deX + deW + gapCash, cashY, paintCash)
+        desenharTextoY(canvas, deLabel, deX, cashY, paintCash)
+        desenharTextoY(canvas, deValor, deValorX, cashY, paintCash)
+        canvas.drawLine(
+            deValorX,
+            cashY,
+            deValorX + deValorW,
+            cashY,
+            Paint(paintCash).apply { strokeWidth = max(1f, cashSize * 0.08f) },
+        )
+        desenharTextoY(canvas, porLabel, porX, cashY, paintCash)
+        desenharTextoY(canvas, porValor, porX + porLabelW, cashY, paintCash)
 
         val validade = "*Oferta válida de $inicio até $fim"
         val paintVal = Paint(Paint.ANTI_ALIAS_FLAG).apply {

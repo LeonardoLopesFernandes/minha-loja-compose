@@ -45,7 +45,8 @@
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:hint="Valor da parcela"
-            android:inputType="numberDecimal" />
+            android:inputType="numberDecimal"
+            android:digits="0123456789.," />
     </LinearLayout>
 
     <LinearLayout
@@ -60,7 +61,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="De (R$)"
-            android:inputType="numberDecimal" />
+            android:inputType="numberDecimal"
+            android:digits="0123456789.," />
 
         <EditText
             android:id="@+id/etPorEletro"
@@ -69,7 +71,8 @@
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:hint="Por (R$)"
-            android:inputType="numberDecimal" />
+            android:inputType="numberDecimal"
+            android:digits="0123456789.," />
     </LinearLayout>
 
     <LinearLayout
