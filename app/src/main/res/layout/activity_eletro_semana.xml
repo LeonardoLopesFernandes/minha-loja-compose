@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -10,7 +11,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="#FFFFFF"
+        android:background="#F7F8FA"
         android:paddingHorizontal="12dp"
         android:paddingVertical="10dp">
 
@@ -29,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="PAPELETA ELETRO DA SEMANA"
+            android:text="EDITAR ITENS"
             android:textColor="#D81B3A"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -89,28 +90,36 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#FFFFFF"
+        android:background="#F7F8FA"
         android:padding="12dp">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShareEletro"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:backgroundTint="#8E0000"
-            android:text="COMPARTILHAR PDF"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="ENVIAR PDF"
             android:textColor="#FFFFFF"
-            android:textStyle="bold" />
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:backgroundTint="#8E0000"
+            app:cornerRadius="12dp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnImprimirEletro"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:backgroundTint="#D81B3A"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
             android:text="IMPRIMIR PAPELETA"
             android:textColor="#FFFFFF"
-            android:textStyle="bold" />
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:backgroundTint="#D81B3A"
+            app:cornerRadius="12dp" />
     </LinearLayout>
 </LinearLayout>

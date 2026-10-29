@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -53,8 +54,9 @@ fun <T> SpinnerDropdown(
                 )
                 Spacer(Modifier.width(4.dp))
             }
-            Text(label, color = Color(0xFF8C9BA5), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(label, color = Color(0xFF8C9BA5), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         }
+        Spacer(Modifier.height(2.dp))
         Box {
             Row(
                 modifier = Modifier
@@ -67,6 +69,7 @@ fun <T> SpinnerDropdown(
                     options.getOrNull(selectedIndex)?.let(labelOf) ?: "-",
                     color = Color(0xFF1E293B),
                     fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),

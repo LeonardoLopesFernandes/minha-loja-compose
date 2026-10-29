@@ -150,7 +150,7 @@ class EletroSemanaActivity : AppCompatActivity() {
     private fun adicionarForm(index: Int, data: PapeletaPrintingData) {
         val view = layoutInflater.inflate(R.layout.item_eletro_semana, layoutForm, false)
         view.findViewById<TextView>(R.id.tvItemEletro).text =
-            "ITEM ${index + 1} - ELETRO DA SEMANA"
+            "ITEM ${index + 1} - Eletro da semana"
         val descricao = view.findViewById<EditText>(R.id.etDescricaoEletro)
         val parcelas = view.findViewById<EditText>(R.id.etParcelasEletro)
         val valorParcela = view.findViewById<EditText>(R.id.etValorParcelaEletro)
