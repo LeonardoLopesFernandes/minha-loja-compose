@@ -75,7 +75,9 @@ class EletroSemanaActivity : AppCompatActivity() {
 
     private val typefaceBold: Typeface by lazy {
         try {
-            Typeface.createFromAsset(assets, "fonts/SFProDisplay-Bold.otf")
+            androidx.core.content.res.ResourcesCompat.getFont(
+                this, R.font.helvetica_bold
+            ) ?: Typeface.DEFAULT_BOLD
         } catch (_: Exception) {
             Typeface.DEFAULT_BOLD
         }
@@ -83,7 +85,9 @@ class EletroSemanaActivity : AppCompatActivity() {
 
     private val typefaceRegular: Typeface by lazy {
         try {
-            Typeface.createFromAsset(assets, "fonts/SFProDisplay-Regular.otf")
+            androidx.core.content.res.ResourcesCompat.getFont(
+                this, R.font.helvetica
+            ) ?: Typeface.DEFAULT
         } catch (_: Exception) {
             Typeface.DEFAULT
         }
