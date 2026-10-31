@@ -10,6 +10,8 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
+import android.view.MotionEvent
+import android.view.ViewGroup
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -21,6 +23,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.ViewFlipper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
@@ -59,7 +62,8 @@ class EletroSemanaActivity : AppCompatActivity() {
     )
 
     private lateinit var sessionManager: SessionManager
-    private lateinit var ivPreview: ImageView
+    private lateinit var vfPreview: ViewFlipper
+    private lateinit var tvPage: TextView
     private lateinit var tvStatus: TextView
     private lateinit var layoutForm: LinearLayout
     private lateinit var btnPreview: Button
@@ -72,6 +76,7 @@ class EletroSemanaActivity : AppCompatActivity() {
     private var cols = 2
     private var rows = 2
     private var sizeLabel = "4X1"
+    private var swipeStartX = 0f
 
     private val typefaceBold: Typeface by lazy {
         try {
@@ -102,7 +107,8 @@ class EletroSemanaActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         sessionManager.setCurrentActivity(this)
 
-        ivPreview = findViewById(R.id.ivPreviewEletro)
+        vfPreview = findViewById(R.id.vfPreviewEletro)
+        tvPage = findViewById(R.id.tvPageEletro)
         tvStatus = findViewById(R.id.tvStatusEletro)
         layoutForm = findViewById(R.id.layoutEletroForm)
         btnPreview = findViewById(R.id.btnGerarPreviewEletro)
@@ -143,10 +149,60 @@ class EletroSemanaActivity : AppCompatActivity() {
         btnImprimir.setOnClickListener { imprimir() }
         btnShare.setOnClickListener { compartilhar() }
 
+        vfPreview.setOnTouchListener { _, e ->
+            when (e.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    swipeStartX = e.x
+                    false
+                }
+                MotionEvent.ACTION_UP -> {
+                    val dx = e.x - swipeStartX
+                    when {
+                        dx < -60 && vfPreview.displayedChild < paginas.size - 1 -> {
+                            vfPreview.showNext()
+                            atualizarContador()
+                            true
+                        }
+                        dx > 60 && vfPreview.displayedChild > 0 -> {
+                            vfPreview.showPrevious()
+                            atualizarContador()
+                            true
+                        }
+                        else -> false
+                    }
+                }
+                else -> false
+            }
+        }
+
         gerarPreview()
     }
 
+    private fun atualizarPreviewPaginas() {
+        vfPreview.removeAllViews()
+        paginas.forEach { bmp ->
+            val iv = ImageView(this).apply {
+                setImageBitmap(bmp)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+            vfPreview.addView(iv)
+        }
+        vfPreview.setInAnimation(this, android.R.anim.slide_in_left)
+        vfPreview.setOutAnimation(this, android.R.anim.slide_out_right)
+        vfPreview.displayedChild = 0
+        atualizarContador()
+    }
+
+    private fun atualizarContador() {
+        tvPage.text = "${vfPreview.displayedChild + 1} / ${paginas.size}"
+    }
+
     override fun onDestroy() {
+        if (::vfPreview.isInitialized) vfPreview.removeAllViews()
         paginas.forEach { if (!it.isRecycled) it.recycle() }
         paginas.clear()
         overlay?.recycle()
@@ -282,11 +338,12 @@ class EletroSemanaActivity : AppCompatActivity() {
                     tvStatus.text = "Não foi possível gerar a pré-visualização"
                     return@withContext
                 }
+                vfPreview.removeAllViews()
                 paginas.forEach { if (!it.isRecycled) it.recycle() }
                 paginas.clear()
                 paginas.addAll(novas)
-                ivPreview.setImageBitmap(paginas.first())
-                tvStatus.text = "Pré-visualização ${sizeLabel} · página 1/${paginas.size}"
+                atualizarPreviewPaginas()
+                tvStatus.text = "Pré-visualização ${sizeLabel}"
             }
         }
     }

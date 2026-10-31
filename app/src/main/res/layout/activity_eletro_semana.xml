@@ -51,13 +51,30 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <ImageView
-                android:id="@+id/ivPreviewEletro"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="420dp"
-                android:background="#E5E7EB"
-                android:adjustViewBounds="false"
-                android:scaleType="fitCenter" />
+                android:background="#E5E7EB">
+
+                <ViewFlipper
+                    android:id="@+id/vfPreviewEletro"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <TextView
+                    android:id="@+id/tvPageEletro"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|center_horizontal"
+                    android:layout_marginTop="8dp"
+                    android:background="#59000000"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:text="1 / 1"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
 
             <Button
                 android:id="@+id/btnGerarPreviewEletro"
