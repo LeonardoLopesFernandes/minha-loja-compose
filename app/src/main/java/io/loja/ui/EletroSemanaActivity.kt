@@ -80,9 +80,7 @@ class EletroSemanaActivity : AppCompatActivity() {
 
     private val typefaceBold: Typeface by lazy {
         try {
-            androidx.core.content.res.ResourcesCompat.getFont(
-                this, R.font.helvetica_bold
-            ) ?: Typeface.DEFAULT_BOLD
+            Typeface.createFromAsset(assets, "fonts/helvetica_bold.ttf")
         } catch (_: Exception) {
             Typeface.DEFAULT_BOLD
         }
@@ -90,9 +88,7 @@ class EletroSemanaActivity : AppCompatActivity() {
 
     private val typefaceRegular: Typeface by lazy {
         try {
-            androidx.core.content.res.ResourcesCompat.getFont(
-                this, R.font.helvetica
-            ) ?: Typeface.DEFAULT
+            Typeface.createFromAsset(assets, "fonts/helvetica.ttf")
         } catch (_: Exception) {
             Typeface.DEFAULT
         }
@@ -153,25 +149,21 @@ class EletroSemanaActivity : AppCompatActivity() {
             when (e.action) {
                 MotionEvent.ACTION_DOWN -> {
                     swipeStartX = e.x
-                    false
+                    true
                 }
+                MotionEvent.ACTION_MOVE -> true
                 MotionEvent.ACTION_UP -> {
                     val dx = e.x - swipeStartX
                     when {
-                        dx < -60 && vfPreview.displayedChild < paginas.size - 1 -> {
+                        dx < -60 && vfPreview.displayedChild < paginas.size - 1 ->
                             vfPreview.showNext()
-                            atualizarContador()
-                            true
-                        }
-                        dx > 60 && vfPreview.displayedChild > 0 -> {
+                        dx > 60 && vfPreview.displayedChild > 0 ->
                             vfPreview.showPrevious()
-                            atualizarContador()
-                            true
-                        }
-                        else -> false
                     }
+                    atualizarContador()
+                    true
                 }
-                else -> false
+                else -> true
             }
         }
 
