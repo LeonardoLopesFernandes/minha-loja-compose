@@ -305,6 +305,7 @@ class GondolaPreviewView @JvmOverloads constructor(
             val baseline = if (modo == MODO_COMUM) 240f
             else if (ehDepor) BOX_CY + 38f
             else if (leve) 256f
+            else if (ehParc) 248f
             else 230f
             val centroX = if (modo == MODO_COMUM) TW / 2f - 80f else LEFT_CX
 
@@ -332,8 +333,8 @@ class GondolaPreviewView @JvmOverloads constructor(
                     larguraValorPx = drawValor(
                         valor, tx(345f), ty(baseline), 110f,
                         Paint.Align.RIGHT, 0xFF000000.toInt(),
-                        px(if (ehParc) 260f else 243f),
-                        sy = if (ehParc) 1.2f else 1f
+                        px(if (ehParc) 270f else 243f),
+                        sy = if (ehParc) 1.6f else 1f
                     )
                     if (ehDepor) {
                         drawTexto("De", tx(20f), ty(baseline - 45f), 45f,
