@@ -334,7 +334,8 @@ class GondolaPreviewView @JvmOverloads constructor(
                         valor, tx(345f), ty(baseline), 110f,
                         Paint.Align.RIGHT, 0xFF000000.toInt(),
                         px(if (ehParc) 260f else 243f),
-                        sy = if (ehParc) 1.4f else 1f
+                        sy = if (ehParc) 1.4f else 1f,
+                        commaScale = if (ehParc) 0.55f else 1f
                     )
                     if (ehDepor) {
                         drawTexto("De", tx(20f), ty(baseline - 45f), 45f,
