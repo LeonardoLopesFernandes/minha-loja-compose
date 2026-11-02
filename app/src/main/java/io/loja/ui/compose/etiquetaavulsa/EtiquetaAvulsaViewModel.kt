@@ -332,18 +332,18 @@ class EtiquetaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Scanner contínuo: traz o que foi salvo e soma as quantidades sem dobrar. */
+    /** Scanner contínuo: traz o que foi salvo e reflete as quantidades. */
     fun sincronizarDoScanner() {
         try {
             val fresh = listaStore.getEtiquetas()
             fresh.forEach { f ->
-                val delta = (f.quantity - 1).coerceAtLeast(0)
+                val qtd = f.quantity.coerceIn(1, 999)
                 val idx = items.indexOfFirst { it.ean == f.ean }
                 if (idx >= 0) {
-                    if (delta > 0) quantidades[f.ean] = quantidadeDe(f.ean) + delta
+                    quantidades[f.ean] = qtd
                 } else {
                     items.add(f)
-                    quantidades[f.ean] = if (f.quantity > 1) f.quantity else 1
+                    quantidades[f.ean] = qtd
                 }
                 f.quantity = 1
             }

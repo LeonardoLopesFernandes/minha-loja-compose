@@ -261,6 +261,7 @@ class GondolaPreviewView @JvmOverloads constructor(
         var larguraValorPx = 0f
         val ehDepor = cifrao.startsWith("De R$")
         val leve = promoLinha1.contains(" por R$")
+        val ehParc = promoLinha0 == "EM ATÉ"
 
         // Código lateral (SAP) na vertical (promocional: mais ao topo)
         if (codigo.isNotEmpty()) {
@@ -326,9 +327,13 @@ class GondolaPreviewView @JvmOverloads constructor(
                         sy = 1.5f
                     )
                 } else {
+                    // Parcelado: estica o valor da parte amarela para ficar
+                    // proporcional à caixa preta lateral.
                     larguraValorPx = drawValor(
                         valor, tx(345f), ty(baseline), 110f,
-                        Paint.Align.RIGHT, 0xFF000000.toInt(), px(243f)
+                        Paint.Align.RIGHT, 0xFF000000.toInt(),
+                        px(if (ehParc) 260f else 243f),
+                        sy = if (ehParc) 1.2f else 1f
                     )
                     if (ehDepor) {
                         drawTexto("De", tx(20f), ty(baseline - 45f), 45f,
@@ -387,7 +392,6 @@ class GondolaPreviewView @JvmOverloads constructor(
 
         // Caixa preta (promocional)
         if (modo == MODO_PROMOCIONAL) {
-            val ehParc = promoLinha0 == "EM ATÉ"
             var larguraPromo1 = 0f
             if (promoLinha0.isNotEmpty()) {
                 val tam = ajustarTexto(promoLinha0, 17f, 10f, BOX_MAX)

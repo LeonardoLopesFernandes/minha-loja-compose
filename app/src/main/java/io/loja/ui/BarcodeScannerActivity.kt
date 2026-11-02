@@ -1254,6 +1254,20 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     )
                     return@setOnClickListener
                 }
+                // Reflete as quantidades editadas no diálogo na lista
+                // principal de etiquetas avulsas.
+                val atuais = listaViewModel.getEtiquetas()
+                val atualizadas = atuais.map { item ->
+                    val idx = itens.indexOfFirst { it.ean == item.ean }
+                    if (idx >= 0) {
+                        item.copy(
+                            quantity = qtds[idx].coerceIn(1, 999)
+                        )
+                    } else {
+                        item
+                    }
+                }
+                listaViewModel.saveEtiquetas(atualizadas)
                 sheet.dismiss()
                 escolherImpressora(selItens, selQtds)
             }
