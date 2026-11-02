@@ -391,15 +391,18 @@ class GondolaPreviewView @JvmOverloads constructor(
                 val cifraoW = paint.measureText(cifraoDraw) / scale
                 val valorWpx = drawEscalado(
                     valor, tx(TW - 30f), ty(baseline), tam,
-                    Paint.Align.RIGHT, 0xFF000000.toInt(), px(240f)
+                    Paint.Align.RIGHT, 0xFF000000.toInt(), px(240f),
+                    sy = 1.5f
                 )
                 val valorW = valorWpx / scale
                 val valorLeft = (TW - 30f) - valorW
                 val cifraoCenterMax = valorLeft - 10f - cifraoW / 2f
                 val cifraoX = min(cifraoCenterMax, centroX)
-                paint.textSize = px(tam)
-                paint.textAlign = Paint.Align.CENTER
-                canvas.drawText(cifraoDraw, tx(cifraoX), ty(baseline), paint)
+                drawEscalado(
+                    cifraoDraw, tx(cifraoX), ty(baseline), tam,
+                    Paint.Align.CENTER, 0xFF000000.toInt(), px(cifraoW),
+                    sy = 1.5f
+                )
                 comumValorW = valorW
                 comumCifraoX = cifraoX
             }
