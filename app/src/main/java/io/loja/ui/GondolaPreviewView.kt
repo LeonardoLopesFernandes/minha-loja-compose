@@ -365,16 +365,16 @@ class GondolaPreviewView @JvmOverloads constructor(
             paint.color = 0xFF000000.toInt()
             if (modo == MODO_PROMOCIONAL) {
                 paint.textAlign = Paint.Align.LEFT
-                canvas.drawText("R$/PCE", tx(20f), ty(290f), paint)
+                canvas.drawText("R$/PCE", tx(20f), ty(298f), paint)
                 paint.textAlign = Paint.Align.CENTER
                 canvas.drawText(
-                    "R$" + numero, tx(345f) - larguraValorPx / 2f, ty(290f), paint
+                    "R$" + numero, tx(345f) - larguraValorPx / 2f, ty(298f), paint
                 )
             } else {
                 paint.textAlign = Paint.Align.CENTER
-                canvas.drawText("R$/PCE", tx(comumCifraoX), ty(290f), paint)
+                canvas.drawText("R$/PCE", tx(comumCifraoX), ty(298f), paint)
                 canvas.drawText(
-                    "R$" + numero, tx(TW - 30f) - comumValorW / 2f, ty(290f), paint
+                    "R$" + numero, tx(TW - 30f) - comumValorW / 2f, ty(298f), paint
                 )
             }
         }
@@ -402,15 +402,30 @@ class GondolaPreviewView @JvmOverloads constructor(
                         Paint.Align.LEFT, 0xFFFFFFFF.toInt())
                 }
             } else if (promoLinha1.isNotEmpty()) {
-                larguraPromo1 = drawEscalado(
-                    promoLinha1,
-                    tx(BOX_CX),
-                    ty(if (ehParc) BOX_CY + 22f else BOX_CY + 12f),
-                    75f,
-                    Paint.Align.CENTER,
-                    0xFFFFFFFF.toInt(),
-                    px(310f)
-                )
+                if (ehParc) {
+                    // Parcelado: estica o valor promocional para a largura da
+                    // caixa preta (parte lateral).
+                    val larguraBox = BOX_RIGHT - BOX_LEFT - 16f
+                    drawLarguraFixa(
+                        promoLinha1,
+                        tx(BOX_CX),
+                        ty(BOX_CY + 22f),
+                        75f,
+                        Paint.Align.CENTER,
+                        0xFFFFFFFF.toInt(),
+                        px(larguraBox)
+                    )
+                } else {
+                    larguraPromo1 = drawEscalado(
+                        promoLinha1,
+                        tx(BOX_CX),
+                        ty(BOX_CY + 12f),
+                        75f,
+                        Paint.Align.CENTER,
+                        0xFFFFFFFF.toInt(),
+                        px(310f)
+                    )
+                }
             }
             if (promoLinha2.isNotEmpty()) {
                 val tam = ajustarTexto(promoLinha2, 17f, 10f, BOX_MAX)
