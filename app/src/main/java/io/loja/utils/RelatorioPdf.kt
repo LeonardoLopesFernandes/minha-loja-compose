@@ -32,13 +32,10 @@ object RelatorioPdf {
     private const val PAGE_W = 595
     private const val PAGE_H = 842
     private const val M = 24f
-    private const val ROW_H = 64f
-    private const val EAN_ALTURA_TEXTO = 14f
+    private const val ROW_H = 100f
 
-    // Larguras das colunas (Quantidade, EAN, Descrição-flextível, Código de Barras)
-    private const val COL_QTD = 44f
-    private const val COL_EAN = 120f
-    private const val COL_BAR = 190f
+    // Larguras das colunas (Quantidade, Código de Barras)
+    private const val COL_QTD = 70f
 
     private const val HEADER_COLOR = 0xFFD32F2F.toInt()
     private const val BORDER_COLOR = 0xFFE0E0E0.toInt()
@@ -72,7 +69,11 @@ object RelatorioPdf {
             textAlign = Paint.Align.CENTER
         }
         val paintEan = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.BLACK; textSize = 9f
+            color = Color.BLACK; textSize = 14f; isFakeBoldText = true
+            textAlign = Paint.Align.CENTER
+        }
+        val paintDesc = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK; textSize = 12f; isFakeBoldText = true
             textAlign = Paint.Align.CENTER
         }
         val paintTotal = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -93,19 +94,10 @@ object RelatorioPdf {
             y = M
         }
 
-        val larguraFlex = (PAGE_W - 2 * M) - COL_QTD - COL_EAN - COL_BAR
-        fun colX(i: Int): Float = when (i) {
-            0 -> M
-            1 -> M + COL_QTD
-            2 -> M + COL_QTD + COL_EAN
-            else -> M + COL_QTD + COL_EAN + larguraFlex
-        }
-        fun colW(i: Int): Float = when (i) {
-            0 -> COL_QTD
-            1 -> COL_EAN
-            2 -> larguraFlex
-            else -> COL_BAR
-        }
+        val larguraTabela = PAGE_W - 2 * M
+        val larguraBarcode = larguraTabela - COL_QTD
+        fun colX(i: Int): Float = if (i == 0) M else M + COL_QTD
+        fun colW(i: Int): Float = if (i == 0) COL_QTD else larguraBarcode
 
         // Título
         val logoDrawable = ContextCompat.getDrawable(context, R.drawable.americanas_logo)
@@ -134,7 +126,7 @@ object RelatorioPdf {
         // Cabeçalho da tabela
         val HEADER_H = 28f
         canvas.drawRect(M, y, M + (PAGE_W - 2 * M), y + HEADER_H, paintHeaderBg)
-        val headers = arrayOf("Qtd", "COD EAN", "DESCRIÇÃO", "CÓDIGO DE BARRAS")
+        val headers = arrayOf("Quantidade", "CÓDIGO DE BARRAS")
         for (i in headers.indices) {
             canvas.drawText(headers[i], colX(i) + colW(i) / 2f, y + HEADER_H - 9f, paintHeader)
         }
@@ -143,37 +135,36 @@ object RelatorioPdf {
         // Linhas
         for (i in itens.indices) {
             if (y + ROW_H > contentBottom) novaPagina()
-            val valores = arrayOf(
-                getQtd(i).toString(),
-                itens[i].ean,
-                itens[i].description
-            )
             val baselineCelula =
                 y + ROW_H / 2f - (paintCell.ascent() + paintCell.descent()) / 2f
-            for (c in 0 until 3) {
-                if (c == 2) {
-                    desenharDescricaoDuasLinhas(
-                        canvas, valores[c], colX(c) + 6f, y, colW(c) - 12f, paintCell
-                    )
-                } else {
-                    val text = truncar(valores[c], colW(c) - 12f, paintCell)
-                    canvas.drawText(text, colX(c) + colW(c) / 2f, baselineCelula, paintCell)
-                }
-                canvas.drawRect(colX(c), y, colX(c) + colW(c), y + ROW_H, paintBorder)
-            }
-            // Código de barras do EAN com o número logo abaixo
-            val bx = colX(3)
-            val bw = colW(3)
+
+            // Quantidade centralizada na coluna
+            val textQtd = getQtd(i).toString()
+            canvas.drawText(
+                textQtd, colX(0) + colW(0) / 2f, baselineCelula, paintCell
+            )
+            canvas.drawRect(colX(0), y, colX(0) + colW(0), y + ROW_H, paintBorder)
+
+            // Coluna do código de barras: descrição acima, barras e EAN abaixo
+            val bx = colX(1)
+            val bw = colW(1)
             canvas.drawRect(bx, y, bx + bw, y + ROW_H, paintBorder)
-            val barLeft = bx + 6f
-            val barRight = bx + bw - 6f
-            val barBottom = y + ROW_H - EAN_ALTURA_TEXTO
-            val eanBaseline = y + ROW_H - 4f
+            val barLeft = bx + 8f
+            val barRight = bx + bw - 8f
+            val descTop = y + 4f
+            val descH = 34f
+            desenharDescricao(
+                canvas, itens[i].description, barLeft, descTop, barRight - barLeft,
+                descH, paintDesc
+            )
+            val barTop = descTop + descH
+            val barBottom = y + ROW_H - 22f
+            val eanBaseline = y + ROW_H - 6f
             val barras = criarCodigoBarras(itens[i].ean)
             if (barras != null) {
                 val dst = Rect(
                     barLeft.toInt(),
-                    (y + 4f).toInt(),
+                    barTop.toInt(),
                     barRight.toInt(),
                     barBottom.toInt()
                 )
@@ -183,10 +174,10 @@ object RelatorioPdf {
                 )
             } else {
                 canvas.drawText(
-                    truncar(itens[i].ean, bw - 12f, paintCell),
+                    truncar(itens[i].ean, bw - 16f, paintEan),
                     bx + bw / 2f,
-                    baselineCelula,
-                    paintCell
+                    eanBaseline,
+                    paintEan
                 )
             }
             y += ROW_H
@@ -240,13 +231,14 @@ object RelatorioPdf {
         return null
     }
 
-    /** Desenha a descrição centralizada em até duas linhas dentro da coluna. */
-    private fun desenharDescricaoDuasLinhas(
+    /** Desenha a descrição centralizada em até duas linhas na altura informada. */
+    private fun desenharDescricao(
         canvas: Canvas,
         texto: String,
         left: Float,
         top: Float,
         width: Float,
+        height: Float,
         paint: Paint
     ) {
         if (texto.isEmpty()) return
@@ -260,8 +252,8 @@ object RelatorioPdf {
             .setEllipsize(TextUtils.TruncateAt.END)
             .build()
         canvas.save()
-        canvas.clipRect(left, top, left + width, top + ROW_H)
-        canvas.translate(left, top + (ROW_H - layout.height) / 2f)
+        canvas.clipRect(left, top, left + width, top + height)
+        canvas.translate(left, top + (height - layout.height) / 2f)
         layout.draw(canvas)
         canvas.restore()
     }

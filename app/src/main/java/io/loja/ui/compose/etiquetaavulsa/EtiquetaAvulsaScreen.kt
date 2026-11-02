@@ -199,10 +199,18 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
                 SpinnerDropdown(
                     label = "MODO",
                     icone = io.loja.R.drawable.ic_tune_small,
-                    options = listOf("Normal", "Edição"),
-                    selectedIndex = if (vm.modoEdicao) 1 else 0,
+                    options = listOf("Normal", "Edição", "Código de barras"),
+                    selectedIndex = when {
+                        vm.modoBarcode -> 2
+                        vm.modoEdicao -> 1
+                        else -> 0
+                    },
                     labelOf = { it },
-                    onSelect = { vm.alterarModoEdicao(it == 1) },
+                    onSelect = {
+                        val modo = listOf("Normal", "Edição", "Código de barras")[it]
+                        vm.alterarModoEdicao(modo == "Edição")
+                        vm.alterarModoBarcode(modo == "Código de barras")
+                    },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -269,7 +277,15 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
                     Text("LIMPAR LISTA", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
                 Button(
-                    onClick = { vm.imprimirTodas() },
+                    onClick = {
+                        if (vm.modoBarcode) {
+                            RelatorioPdf.gerarRelatorioEtiquetas(context, vm.items.toList()) { i ->
+                                vm.quantidadeDe(vm.items[i].ean)
+                            }
+                        } else {
+                            vm.imprimirTodas()
+                        }
+                    },
                     enabled = !vm.processando,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp),
@@ -337,7 +353,15 @@ fun EtiquetaAvulsaScreen(vm: EtiquetaAvulsaViewModel, modifier: Modifier = Modif
                             saldo = vm.saldos[item.ean],
                             qtd = vm.quantidadeDe(item.ean),
                             onQtdChange = { vm.setQuantidade(item.ean, it); vm.persistir() },
-                            onImprimir = { vm.imprimir(item, vm.quantidadeDe(item.ean)) },
+                            onImprimir = {
+                                if (vm.modoBarcode) {
+                                    RelatorioPdf.gerarRelatorioEtiquetas(
+                                        context, listOf(item)
+                                    ) { vm.quantidadeDe(item.ean) }
+                                } else {
+                                    vm.imprimir(item, vm.quantidadeDe(item.ean))
+                                }
+                            },
                             onRemover = { vm.remover(item) },
                         )
                     }

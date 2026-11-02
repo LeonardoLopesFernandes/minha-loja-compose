@@ -54,6 +54,8 @@ class EtiquetaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var modoEdicao by mutableStateOf(false)
         private set
+    var modoBarcode by mutableStateOf(false)
+        private set
     var printers by mutableStateOf(
         listOf(
             PrinterOpcao(Constants.PRINTER_ZEBRA_1, "Zebra 1"),
@@ -88,7 +90,15 @@ class EtiquetaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun alterarBuscaTipo(t: String) { buscaTipo = t }
-    fun alterarModoEdicao(v: Boolean) { modoEdicao = v }
+    fun alterarModoEdicao(v: Boolean) {
+        modoEdicao = v
+        if (v) modoBarcode = false
+    }
+
+    fun alterarModoBarcode(v: Boolean) {
+        modoBarcode = v
+        if (v) modoEdicao = false
+    }
     fun setPrinter(i: Int) { printerSelecionado = i }
 
     fun printerId(): String =
