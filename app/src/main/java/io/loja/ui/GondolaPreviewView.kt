@@ -329,13 +329,28 @@ class GondolaPreviewView @JvmOverloads constructor(
                     )
                 } else {
                     // Parcelado: estica o valor da parte amarela para ficar
-                    // proporcional à caixa preta lateral.
+                    // proporcional à caixa preta lateral. No De/Por replica
+                    // o mesmo esticamento horizontal no valor "De".
+                    val alvoDepor = if (ehDepor) {
+                        paint.typeface = fonte
+                        paint.textSize = px(45f)
+                        val rotuloW = paint.measureText("R$") / scale
+                        (345f - (20f + rotuloW + 8f) - 20f)
+                            .coerceAtLeast(180f)
+                    } else {
+                        0f
+                    }
                     larguraValorPx = drawValor(
                         valor, tx(345f), ty(baseline), 110f,
                         Paint.Align.RIGHT, 0xFF000000.toInt(),
-                        px(if (ehParc) 260f else 243f),
+                        px(
+                            if (ehParc) 260f
+                            else if (ehDepor) alvoDepor
+                            else 243f
+                        ),
                         sy = if (ehParc) 1.4f else 1f,
-                        commaScale = if (ehParc) 0.55f else 1f
+                        commaScale = if (ehParc) 0.55f else 1f,
+                        larguraAlvo = if (ehDepor) px(alvoDepor) else 0f
                     )
                     if (ehDepor) {
                         drawTexto("De", tx(20f), ty(baseline - 45f), 45f,
@@ -411,7 +426,8 @@ class GondolaPreviewView @JvmOverloads constructor(
                     paint.typeface = fonte
                     paint.textSize = px(45f)
                     val rotuloW = paint.measureText("R$") / scale
-                    val maxValor = direita - (esquerda + rotuloW + 8f)
+                    val maxValor = (direita - (esquerda + rotuloW + 8f) - 20f)
+                        .coerceAtLeast(180f)
                     drawValor(
                         por, tx(direita), ty(baseBox), 110f,
                         Paint.Align.RIGHT, 0xFFFFFFFF.toInt(), px(maxValor),
