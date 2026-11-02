@@ -133,26 +133,47 @@ class GondolaPreviewView @JvmOverloads constructor(
             alinhamento: Paint.Align,
             cor: Int,
             larguraMax: Float,
-            sy: Float = 1f
+            sy: Float = 1f,
+            commaScale: Float = 0.5f
         ): Float {
             paint.typeface = fonte
             paint.isFakeBoldText = true
-            paint.textSize = px(tamanho)
             paint.color = cor
             paint.textAlign = Paint.Align.LEFT
-            val largura = paint.measureText(texto)
-            val sx = if (largura > larguraMax) larguraMax / largura else 1f
+            val partes = texto.split(",")
+            fun medida(s: String, size: Float): Float {
+                paint.textSize = px(size)
+                return paint.measureText(s)
+            }
+            val wAntes = medida(if (partes.size == 2) partes[0] else texto, tamanho)
+            val wVirgula = if (partes.size == 2) medida(",", tamanho * commaScale) else 0f
+            val wDepois = if (partes.size == 2) medida(partes[1], tamanho) else 0f
+            val total = wAntes + wVirgula + wDepois
+            val sx = if (larguraMax > 0f && total > larguraMax) larguraMax / total else 1f
             val left = when (alinhamento) {
-                Paint.Align.RIGHT -> -largura
-                Paint.Align.CENTER -> -largura / 2f
+                Paint.Align.RIGHT -> -total
+                Paint.Align.CENTER -> -total / 2f
                 else -> 0f
             }
             canvas.save()
             canvas.translate(x, y)
             canvas.scale(sx, sy)
-            canvas.drawText(texto, left, 0f, paint)
+            var cx = left
+            if (partes.size == 2) {
+                paint.textSize = px(tamanho)
+                canvas.drawText(partes[0], cx, 0f, paint)
+                cx += wAntes
+                paint.textSize = px(tamanho * commaScale)
+                canvas.drawText(",", cx, 0f, paint)
+                cx += wVirgula
+                paint.textSize = px(tamanho)
+                canvas.drawText(partes[1], cx, 0f, paint)
+            } else {
+                paint.textSize = px(tamanho)
+                canvas.drawText(texto, cx, 0f, paint)
+            }
             canvas.restore()
-            return largura * sx
+            return total * sx
         }
 
         fun drawTexto(
@@ -181,7 +202,7 @@ class GondolaPreviewView @JvmOverloads constructor(
             cor: Int,
             larguraMax: Float,
             sy: Float = 1f,
-            commaScale: Float = 1f,
+            commaScale: Float = 0.5f,
             larguraAlvo: Float = 0f
         ): Float {
             paint.typeface = fonte
@@ -320,7 +341,7 @@ class GondolaPreviewView @JvmOverloads constructor(
                     larguraValorPx = drawValor(
                         valor, tx(345f), ty(baseline), 110f,
                         Paint.Align.RIGHT, 0xFF000000.toInt(), px(maxValor),
-                        sy = 1.5f, commaScale = 0.6f
+                        sy = 1.5f
                     )
                     drawEscalado(
                         cifraoDraw, tx(20f), ty(baseline), 110f,
@@ -349,7 +370,7 @@ class GondolaPreviewView @JvmOverloads constructor(
                             else 243f
                         ),
                         sy = if (ehParc) 1.4f else 1f,
-                        commaScale = if (ehParc) 0.55f else 1f,
+                        
                         larguraAlvo = if (ehDepor) px(alvoDepor) else 0f
                     )
                     if (ehDepor) {
