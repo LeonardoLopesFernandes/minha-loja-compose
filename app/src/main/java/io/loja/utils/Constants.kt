@@ -114,4 +114,5 @@ object Constants {
     
     const val BASE_URL_SL = "https://sl-bff.americanas.io/"
     const val BASE_URL_MINHALOJA = "https://minhaloja-bff.americanas.io/"
+    const val SI5_TOKEN = "367|yrBhfTTRoFVIXtXkekXzeIxAgyfsY6FKZ8H0ft6Y7b4ca508"
 }

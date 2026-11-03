@@ -13,7 +13,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,6 +83,7 @@ import androidx.core.content.ContextCompat
 import io.loja.network.PriceTag
 import io.loja.ui.BarcodeScannerActivity
 import io.loja.ui.GondolaEditavelActivity
+import io.loja.ui.mostrarImagemProduto
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.GreenBadgeContainer
 import io.loja.ui.compose.components.TrashDrawIcon
@@ -471,7 +474,7 @@ private fun FabScanner(modifier: Modifier = Modifier, onAbrir: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun EtiquetaCard(
     item: PriceTag,
@@ -589,10 +592,21 @@ private fun EtiquetaCard(
                             }
                         },
                         fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.clickable {
-                            clipboard.setText(AnnotatedString(item.ean))
-                            Toast.makeText(context, "EAN copiado: ${item.ean}", Toast.LENGTH_SHORT).show()
-                        },
+                        modifier = Modifier.combinedClickable(
+                            onClick = {
+                                mostrarImagemProduto(
+                                    context, item.ean, item.description
+                                )
+                            },
+                            onLongClick = {
+                                clipboard.setText(AnnotatedString(item.ean))
+                                Toast.makeText(
+                                    context,
+                                    "EAN copiado: ${item.ean}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                        ),
                     )
                     Spacer(Modifier.height(4.dp))
                     if (leve != null) {
