@@ -237,6 +237,13 @@ class ModeloEditavelActivity : AppCompatActivity() {
         }
         sizeLabel = sizeExtra?.lowercase() ?: "4x1"
 
+        // Garante que o tamanho selecionado vá no payload de impressão.
+        if (sizeExtra != null) {
+            for (i in multiDataList.indices) {
+                multiDataList[i] = multiDataList[i].copy(size = sizeExtra)
+            }
+        }
+
         findViewById<TextView>(R.id.tvTituloModelo).text =
             if (modoVencimentos) "PAPELETA DE VENCIMENTOS" else "PAPELETA ${sizeLabel.uppercase()}"
 

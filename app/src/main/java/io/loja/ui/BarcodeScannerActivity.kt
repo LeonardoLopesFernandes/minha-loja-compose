@@ -1832,7 +1832,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                             lista.add(
                                 Constants.ajustarDadosLeveGanhe(pd).copy(
                                     quantity = 1,
-                                    size = Constants.SIGN_SIZE_1X1
+                                    size = size
                                 )
                             )
                             quantidades.add(
