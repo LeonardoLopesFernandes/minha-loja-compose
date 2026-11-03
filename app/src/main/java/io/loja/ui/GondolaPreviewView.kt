@@ -323,7 +323,7 @@ class GondolaPreviewView @JvmOverloads constructor(
             val cifraoDraw = cifrao
             val tam = if (modo == MODO_COMUM) 110f else 54f
             // De/Por: alinha na mesma linha da caixa preta (Por R$)
-            val baseline = if (modo == MODO_COMUM) 240f
+            val baseline = if (modo == MODO_COMUM) 252f
             else if (ehDepor) BOX_CY + 38f
             else if (leve) 256f
             else if (ehParc) 254f
