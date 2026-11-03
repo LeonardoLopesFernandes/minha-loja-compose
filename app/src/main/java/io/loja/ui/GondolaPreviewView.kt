@@ -324,7 +324,7 @@ class GondolaPreviewView @JvmOverloads constructor(
             val tam = if (modo == MODO_COMUM) 110f else 54f
             // De/Por: alinha na mesma linha da caixa preta (Por R$)
             val baseline = if (modo == MODO_COMUM) 252f
-            else if (ehDepor) BOX_CY + 38f
+            else if (ehDepor) BOX_CY + 44f
             else if (leve) 256f
             else if (ehParc) 254f
             else 230f
@@ -356,7 +356,7 @@ class GondolaPreviewView @JvmOverloads constructor(
                         paint.typeface = fonte
                         paint.textSize = px(45f)
                         val rotuloW = paint.measureText("R$") / scale
-                        (345f - (20f + rotuloW + 8f) - 20f)
+                        (345f - (20f + rotuloW + 8f))
                             .coerceAtLeast(180f)
                     } else {
                         0f
@@ -370,7 +370,6 @@ class GondolaPreviewView @JvmOverloads constructor(
                             else 243f
                         ),
                         sy = if (ehParc) 1.4f else 1f,
-                        
                         larguraAlvo = if (ehDepor) px(alvoDepor) else 0f
                     )
                     if (ehDepor) {

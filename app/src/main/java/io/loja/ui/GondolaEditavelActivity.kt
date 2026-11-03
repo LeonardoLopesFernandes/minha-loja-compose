@@ -154,6 +154,41 @@ class GondolaEditavelActivity : AppCompatActivity() {
         etParcelas.addTextChangedListener(watcher)
         etValorParcela.addTextChangedListener(watcher)
 
+        // Leve e Ganhe: recalcula automaticamente o "Quanto fica"
+        // (valor total dividido pela quantidade).
+        val calcQuantoFica = object : android.text.TextWatcher {
+            override fun beforeTextChanged(
+                s: CharSequence?,
+                start: Int,
+                count: Int,
+                after: Int,
+            ) {
+            }
+
+            override fun onTextChanged(
+                s: CharSequence?,
+                start: Int,
+                before: Int,
+                count: Int,
+            ) {
+            }
+
+            override fun afterTextChanged(s: android.text.Editable?) {
+                if (index !in items.indices) return
+                if (!ehLeveGanhe(items[index])) return
+                val qtd = etQtd.text.toString().toIntOrNull() ?: return
+                if (qtd <= 0) return
+                val total = parseDouble(etPrecoPromo.text) ?: return
+                val unit = total / qtd
+                val atual = parseDouble(etQuantoFica.text)
+                if (atual == null || Math.abs(atual - unit) > 0.001) {
+                    etQuantoFica.setText(df.format(unit))
+                }
+            }
+        }
+        etQtd.addTextChangedListener(calcQuantoFica)
+        etPrecoPromo.addTextChangedListener(calcQuantoFica)
+
         val decimalListener = android.text.method.DigitsKeyListener.getInstance("0123456789,.")
         etPreco.keyListener = decimalListener
         etPrecoDe.keyListener = decimalListener
