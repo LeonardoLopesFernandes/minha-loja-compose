@@ -115,4 +115,7 @@ object Constants {
     const val BASE_URL_SL = "https://sl-bff.americanas.io/"
     const val BASE_URL_MINHALOJA = "https://minhaloja-bff.americanas.io/"
     const val SI5_TOKEN = "367|yrBhfTTRoFVIXtXkekXzeIxAgyfsY6FKZ8H0ft6Y7b4ca508"
+    const val SERP_API_KEY = "f6b852abd4c78277772ea524da2574e68f0623e1179937cbcd76f1117bc942a9"
+    const val SERP_API_KEY_TEXT_SEARCH = "67902270082286b2ab5ed9467bf3a255afa627572ff5acc1110beeb766802c7d"
+    const val BLUESOFT_API_KEY = "LFHnNIwZnn7atj61QgyzBA"
 }

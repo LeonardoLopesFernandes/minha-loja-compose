@@ -13,9 +13,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -474,7 +472,7 @@ private fun FabScanner(modifier: Modifier = Modifier, onAbrir: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EtiquetaCard(
     item: PriceTag,
@@ -567,7 +565,14 @@ private fun EtiquetaCard(
                     fontSize = 14.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp)
+                        .clickable {
+                            mostrarImagemProduto(
+                                context, item.ean, item.description
+                            )
+                        },
                 )
                 IconButton(onClick = onImprimir, modifier = Modifier.size(28.dp)) {
                     Icon(painterResource(io.loja.R.drawable.printer), contentDescription = "Imprimir", tint = Color(0xFF4CAF50), modifier = Modifier.size(20.dp))
@@ -592,21 +597,14 @@ private fun EtiquetaCard(
                             }
                         },
                         fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.combinedClickable(
-                            onClick = {
-                                mostrarImagemProduto(
-                                    context, item.ean, item.description
-                                )
-                            },
-                            onLongClick = {
-                                clipboard.setText(AnnotatedString(item.ean))
-                                Toast.makeText(
-                                    context,
-                                    "EAN copiado: ${item.ean}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            },
-                        ),
+                        modifier = Modifier.clickable {
+                            clipboard.setText(AnnotatedString(item.ean))
+                            Toast.makeText(
+                                context,
+                                "EAN copiado: ${item.ean}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
                     )
                     Spacer(Modifier.height(4.dp))
                     if (leve != null) {

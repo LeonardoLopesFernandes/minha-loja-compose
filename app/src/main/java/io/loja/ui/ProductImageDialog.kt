@@ -24,6 +24,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
 private val imagemHttp by lazy {
@@ -118,7 +119,7 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
     val store = SessionManager(context).getUserStore() ?: Constants.DEFAULT_STORE
     CoroutineScope(Dispatchers.Main).launch {
         val resultado = withContext(Dispatchers.IO) {
-            buscarImagemProduto(ean, store)
+            buscarImagemProduto(ean, descricao, store)
         }
         progress.visibility = View.GONE
         if (resultado == null) {
@@ -141,48 +142,143 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
     }
 }
 
-private fun buscarImagemProduto(ean: String, store: String): Pair<String, String>? {
+private fun buscarImagemProduto(
+    ean: String,
+    descricao: String,
+    store: String,
+): Pair<String, String>? {
     buscarImagemAmericanas(ean, store)?.let { return it to "Americanas" }
     buscarImagemSi5(ean)?.let { return it to "SI5 Global" }
+    buscarImagemBluesoftEan(ean)?.let { return it to "Bluesoft" }
+    if (descricao.isNotBlank()) {
+        buscarImagemBluesoftDescricao(descricao)?.let {
+            return it to "Bluesoft"
+        }
+    }
+    buscarImagemGoogleImages(ean, descricao)?.let {
+        return it to "Google Imagens"
+    }
+    buscarImagemGoogleShopping(ean, descricao)?.let {
+        return it to "Google Shopping"
+    }
+    return null
+}
+
+private fun getJson(
+    url: String,
+    headers: Map<String, String> = emptyMap(),
+): JSONObject? {
+    return try {
+        val builder = Request.Builder().url(url)
+        headers.forEach { (k, v) -> builder.header(k, v) }
+        imagemHttp.newCall(builder.build()).execute().use { response ->
+            if (!response.isSuccessful) return null
+            val body = response.body?.string().orEmpty()
+            if (body.isBlank()) null else JSONObject(body)
+        }
+    } catch (_: Exception) {
+        null
+    }
+}
+
+private fun primeiraImagem(json: JSONObject?): String? {
+    val images = json?.optJSONArray("images") ?: return null
+    for (i in 0 until images.length()) {
+        val s = images.optString(i).trim()
+        if (s.startsWith("http")) {
+            return s.replace("http://", "https://")
+        }
+    }
     return null
 }
 
 private fun buscarImagemAmericanas(ean: String, store: String): String? {
-    return try {
-        val url =
-            "https://sl-bff-report.americanas.io/web/price-scanner/store/$store/ean/$ean"
-        val request = Request.Builder().url(url).build()
-        imagemHttp.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return null
-            val body = response.body?.string().orEmpty()
-            if (body.isBlank()) return null
-            val json = JSONObject(body)
-            json.optString("imageUrl").trim().takeIf { it.startsWith("http") }
-        }
-    } catch (_: Exception) {
-        null
-    }
+    val url =
+        "https://sl-bff-report.americanas.io/web/price-scanner/store/$store/ean/$ean"
+    val json = getJson(url)
+    val img = json?.optString("imageUrl").orEmpty().trim()
+    return img.takeIf { it.startsWith("http") }
 }
 
 private fun buscarImagemSi5(ean: String): String? {
-    return try {
-        val codigo = ean.filter { it.isDigit() }
-        if (codigo.isEmpty()) return null
-        val request = Request.Builder()
-            .url("https://global.si5.com.br/api/produtos/$codigo")
-            .header("Authorization", "Bearer ${Constants.SI5_TOKEN}")
-            .header("Accept", "application/json")
-            .build()
-        imagemHttp.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return null
-            val body = response.body?.string().orEmpty()
-            if (body.isBlank()) return null
-            val json = JSONObject(body)
-            json.optString("imagem_url").trim().takeIf { it.startsWith("http") }
+    val codigo = ean.filter { it.isDigit() }
+    if (codigo.isEmpty()) return null
+    val json = getJson(
+        "https://global.si5.com.br/api/produtos/$codigo",
+        mapOf(
+            "Authorization" to "Bearer ${Constants.SI5_TOKEN}",
+            "Accept" to "application/json",
+        ),
+    )
+    val img = json?.optString("imagem_url").orEmpty().trim()
+    return img.takeIf { it.startsWith("http") }
+}
+
+private fun buscarImagemBluesoftEan(ean: String): String? {
+    if (ean.isBlank()) return null
+    val json = getJson(
+        "https://api.cosmos.bluesoft.com.br/gtins/$ean",
+        mapOf("X-API-KEY" to Constants.BLUESOFT_API_KEY),
+    )
+    return primeiraImagem(json)
+}
+
+private fun buscarImagemBluesoftDescricao(descricao: String): String? {
+    val query = URLEncoder.encode(descricao, "UTF-8")
+    val json = getJson(
+        "https://api.cosmos.bluesoft.com.br/products?query=$query",
+        mapOf("X-API-KEY" to Constants.BLUESOFT_API_KEY),
+    )
+    val produtos = json?.optJSONArray("products") ?: return null
+    val primeiro = produtos.optJSONObject(0) ?: return null
+    return primeiraImagem(primeiro)
+}
+
+private fun buscarImagemGoogleImages(
+    ean: String,
+    descricao: String,
+): String? {
+    val termo = listOf(descricao.trim(), ean).filter { it.isNotEmpty() }
+        .joinToString(" ")
+    if (termo.isEmpty()) return null
+    val query = URLEncoder.encode("$termo produto", "UTF-8")
+    val json = getJson(
+        "https://serpapi.com/search?engine=google&q=$query&tbm=isch&api_key=${Constants.SERP_API_KEY}&ijn=0",
+    )
+    val images = json?.optJSONArray("images_results") ?: return null
+    for (i in 0 until minOf(3, images.length())) {
+        val item = images.optJSONObject(i) ?: continue
+        var url = item.optString("original").trim()
+        if (url.isEmpty()) url = item.optString("thumbnail").trim()
+        if (url.startsWith("http") &&
+            !url.contains("placeholder") &&
+            !url.contains("default") &&
+            !url.contains("no-image")
+        ) {
+            return url
         }
-    } catch (_: Exception) {
-        null
     }
+    return null
+}
+
+private fun buscarImagemGoogleShopping(
+    ean: String,
+    descricao: String,
+): String? {
+    val termo = descricao.trim().ifEmpty { ean }
+    if (termo.isEmpty()) return null
+    val query = URLEncoder.encode(termo, "UTF-8")
+    val json = getJson(
+        "https://serpapi.com/search.json?engine=google&q=$query&tbm=shop&api_key=${Constants.SERP_API_KEY}&gl=br&hl=pt",
+    )
+    val shopping = json?.optJSONArray("shopping_results") ?: return null
+    for (i in 0 until minOf(5, shopping.length())) {
+        val item = shopping.optJSONObject(i) ?: continue
+        val url = item.optString("thumbnail").trim()
+            .replace("http://", "https://")
+        if (url.startsWith("http")) return url
+    }
+    return null
 }
 
 private fun baixarBitmap(url: String): Bitmap? {
