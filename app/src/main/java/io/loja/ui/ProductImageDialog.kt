@@ -1,12 +1,16 @@
 package io.loja.ui
 
 import android.app.Dialog
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
@@ -15,6 +19,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import io.loja.network.SessionManager
 import io.loja.utils.Constants
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +29,8 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
@@ -106,6 +113,14 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
         setPadding(0, dp(8), 0, 0)
         visibility = View.GONE
     }
+    val dica = TextView(context).apply {
+        text = "Toque na imagem para salvar em Download/Imagem do produto"
+        textSize = 10f
+        setTextColor(0xFF94A3B8.toInt())
+        gravity = Gravity.CENTER_HORIZONTAL
+        setPadding(0, dp(6), 0, 0)
+        visibility = View.GONE
+    }
     val fechar = TextView(context).apply {
         text = "FECHAR"
         textSize = 13f
@@ -128,6 +143,7 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
     container.addView(eanView)
     container.addView(progress)
     container.addView(imagem)
+    container.addView(dica)
     container.addView(fonte)
     container.addView(fechar)
     dialog.setContentView(container)
@@ -154,6 +170,10 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
         if (bitmap != null) {
             imagem.setImageBitmap(bitmap)
             imagem.visibility = View.VISIBLE
+            dica.visibility = View.VISIBLE
+            imagem.setOnClickListener {
+                salvarImagem(context, ean, bitmap)
+            }
             fonte.text = "Fonte: ${resultado.second}"
             fonte.visibility = View.VISIBLE
         } else {
@@ -300,6 +320,56 @@ private fun buscarImagemGoogleShopping(
         if (url.startsWith("http")) return url
     }
     return null
+}
+
+private fun salvarImagem(context: Context, ean: String, bitmap: Bitmap) {
+    val nome = "${ean.ifBlank { "produto" }}.png"
+    try {
+        val resolver = context.contentResolver
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, nome)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+                put(
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    Environment.DIRECTORY_DOWNLOADS + "/Imagem do produto"
+                )
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            val uri = resolver.insert(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                values
+            ) ?: throw IllegalStateException("insert")
+            resolver.openOutputStream(uri)?.use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            } ?: throw IllegalStateException("open")
+            values.clear()
+            values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+        } else {
+            @Suppress("DEPRECATION")
+            val downloads = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
+            )
+            val dir = File(downloads, "Imagem do produto")
+            dir.mkdirs()
+            val file = File(dir, nome)
+            FileOutputStream(file).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            }
+        }
+        Toast.makeText(
+            context,
+            "Imagem salva em Download/Imagem do produto",
+            Toast.LENGTH_LONG
+        ).show()
+    } catch (_: Exception) {
+        Toast.makeText(
+            context,
+            "Não foi possível salvar a imagem",
+            Toast.LENGTH_LONG
+        ).show()
+    }
 }
 
 private fun baixarBitmap(url: String): Bitmap? {
