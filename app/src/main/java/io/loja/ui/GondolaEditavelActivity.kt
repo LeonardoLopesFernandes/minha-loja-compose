@@ -133,7 +133,10 @@ class GondolaEditavelActivity : AppCompatActivity() {
                 ToastUtils.show(this, "Última etiqueta")
             }
         }
-        btnEnviar.setOnClickListener { salvarItem(); enviarSelecionados() }
+        btnEnviar.setOnClickListener {
+            salvarItem()
+            escolherImpressoraEEnviar()
+        }
 
         val watcher = object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -480,6 +483,21 @@ class GondolaEditavelActivity : AppCompatActivity() {
         }
 
         items[index] = novo
+    }
+
+    private fun escolherImpressoraEEnviar() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Escolher impressora")
+            .setItems(arrayOf("Zebra 1", "Zebra 2")) { _, which ->
+                printerId = if (which == 0) {
+                    Constants.PRINTER_ZEBRA_1
+                } else {
+                    Constants.PRINTER_ZEBRA_2
+                }
+                enviarSelecionados()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun enviarSelecionados() {
