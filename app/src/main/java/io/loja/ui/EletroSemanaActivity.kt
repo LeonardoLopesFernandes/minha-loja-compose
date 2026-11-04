@@ -496,7 +496,7 @@ class EletroSemanaActivity : AppCompatActivity() {
         canvas.drawText(
             precoTexto,
             cx,
-            yTop + h * 0.715f - (precoFm.ascent + precoFm.descent) / 2f,
+            yTop + h * 0.735f - (precoFm.ascent + precoFm.descent) / 2f,
             paintPreco,
         )
 
