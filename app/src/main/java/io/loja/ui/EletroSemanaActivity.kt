@@ -453,13 +453,13 @@ class EletroSemanaActivity : AppCompatActivity() {
 
         val dividerY = yTop + h * 0.585f
         canvas.drawLine(
-            left + w * 0.13f,
+            porX,
             dividerY,
-            left + w * 0.87f,
+            porX + porLabelW + porValorW,
             dividerY,
             Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = Color.rgb(91, 92, 94)
-                strokeWidth = w * 0.002f
+                strokeWidth = w * 0.0032f
             },
         )
 
