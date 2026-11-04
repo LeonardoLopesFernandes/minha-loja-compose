@@ -149,16 +149,20 @@ object RelatorioPdf {
             val bx = colX(1)
             val bw = colW(1)
             canvas.drawRect(bx, y, bx + bw, y + ROW_H, paintBorder)
-            val barLeft = bx + 8f
-            val barRight = bx + bw - 8f
+            val descLeft = bx + 8f
+            val descRight = bx + bw - 8f
+            val barW = 220f
+            val barCenter = bx + bw / 2f
+            val barLeft = (barCenter - barW / 2f).coerceAtLeast(descLeft)
+            val barRight = (barCenter + barW / 2f).coerceAtMost(descRight)
             val descTop = y + 4f
             val descH = 34f
             desenharDescricao(
-                canvas, itens[i].description, barLeft, descTop, barRight - barLeft,
-                descH, paintDesc
+                canvas, itens[i].description, descLeft, descTop,
+                descRight - descLeft, descH, paintDesc
             )
             val barTop = descTop + descH
-            val barBottom = y + ROW_H - 22f
+            val barBottom = barTop + 30f
             val eanBaseline = y + ROW_H - 6f
             val barras = criarCodigoBarras(itens[i].ean)
             if (barras != null) {
