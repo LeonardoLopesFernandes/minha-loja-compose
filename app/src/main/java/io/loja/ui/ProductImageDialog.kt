@@ -58,12 +58,32 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
     }
     val subtitulo = TextView(context).apply {
         text = if (descricao.isBlank()) ean else descricao
-        textSize = 11f
-        setTextColor(0xFF64748B.toInt())
+        textSize = 13f
+        typeface = Typeface.DEFAULT_BOLD
+        setTextColor(0xFFD32F2F.toInt())
         gravity = Gravity.CENTER_HORIZONTAL
         maxLines = 2
         ellipsize = TextUtils.TruncateAt.END
-        setPadding(0, dp(4), 0, dp(10))
+        setPadding(0, dp(4), 0, dp(2))
+    }
+    val eanView = TextView(context).apply {
+        text = "EAN: $ean (toque para copiar)"
+        textSize = 11f
+        setTextColor(0xFF64748B.toInt())
+        gravity = Gravity.CENTER_HORIZONTAL
+        setPadding(0, dp(2), 0, dp(10))
+        setOnClickListener {
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE)
+                as android.content.ClipboardManager
+            clipboard.setPrimaryClip(
+                android.content.ClipData.newPlainText("EAN", ean)
+            )
+            android.widget.Toast.makeText(
+                context,
+                "EAN copiado: $ean",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
     }
     val progress = ProgressBar(context).apply {
         isIndeterminate = true
@@ -105,6 +125,7 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
     }
     container.addView(titulo)
     container.addView(subtitulo)
+    container.addView(eanView)
     container.addView(progress)
     container.addView(imagem)
     container.addView(fonte)
