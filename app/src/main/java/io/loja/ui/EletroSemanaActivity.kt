@@ -408,57 +408,50 @@ class EletroSemanaActivity : AppCompatActivity() {
             canvas,
             data.productName.ifBlank { "PRODUTO" }.uppercase(Locale.getDefault()),
             cx,
-            yTop + h * 0.315f,
+            yTop + h * 0.32f,
             contentW,
             h * 0.14f,
             w * 0.095f,
             titleColor,
         )
 
-        val qtd = (data.installmentQuantity ?: 0).takeIf { it > 0 } ?: 10
-        val paintQtd = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        val deLabel = "de: "
+        val deValor = money(data.price)
+        val paintDe = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = dark
             typeface = typefaceBold
-            textSize = w * 0.15f
+            textSize = w * 0.06f
         }
-        val paintPreco = Paint(paintQtd)
-        val gap = w * 0.035f
-        val qtdTexto = "${qtd}x"
-        val precoTexto = money(data.installmentPrice)
-        var instSize = w * 0.15f
-        while (true) {
-            paintQtd.textSize = instSize
-            paintPreco.textSize = instSize
-            val total = paintQtd.measureText(qtdTexto) + gap + paintPreco.measureText(precoTexto)
-            if (total <= contentW * 0.95f || instSize <= 8f) break
-            instSize -= 1f
-        }
-        val qtdW = paintQtd.measureText(qtdTexto)
-        val precoW = paintPreco.measureText(precoTexto)
-        val groupW = qtdW + gap + precoW
-        val qtdX = cx - groupW / 2f
-        val precoX = qtdX + qtdW + gap
-        val instY = yTop + h * 0.49f
-        desenharTextoY(canvas, qtdTexto, qtdX, instY, paintQtd)
-        desenharTextoY(canvas, precoTexto, precoX, instY, paintPreco)
-
-        val paintSub = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = dark
-            typeface = typefaceBold
-            textSize = max(8f, instSize * 0.35f)
-        }
-        while (paintSub.measureText("sem juros") > qtdW && paintSub.textSize > 6f) {
-            paintSub.textSize -= 1f
-        }
-        desenharTextoY(
-            canvas,
-            "sem juros",
-            qtdX + (qtdW - paintSub.measureText("sem juros")) / 2f,
-            yTop + h * 0.545f,
-            paintSub,
+        val deLabelW = paintDe.measureText(deLabel)
+        val deValorW = paintDe.measureText(deValor)
+        val deX = cx - (deLabelW + deValorW) / 2f
+        val deY = yTop + h * 0.46f
+        desenharTextoY(canvas, deLabel, deX, deY, paintDe)
+        val deValorX = deX + deLabelW
+        desenharTextoY(canvas, deValor, deValorX, deY, paintDe)
+        canvas.drawLine(
+            deValorX,
+            deY,
+            deValorX + deValorW,
+            deY,
+            Paint(paintDe).apply { strokeWidth = max(1f, paintDe.textSize * 0.08f) },
         )
 
-        val dividerY = yTop + h * 0.61f
+        val porLabel = "por: "
+        val porValor = money(data.promotionPrice)
+        val paintPor = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = dark
+            typeface = typefaceBold
+            textSize = w * 0.075f
+        }
+        val porLabelW = paintPor.measureText(porLabel)
+        val porValorW = paintPor.measureText(porValor)
+        val porX = cx - (porLabelW + porValorW) / 2f
+        val porY = yTop + h * 0.535f
+        desenharTextoY(canvas, porLabel, porX, porY, paintPor)
+        desenharTextoY(canvas, porValor, porX + porLabelW, porY, paintPor)
+
+        val dividerY = yTop + h * 0.585f
         canvas.drawLine(
             left + w * 0.13f,
             dividerY,
@@ -470,48 +463,42 @@ class EletroSemanaActivity : AppCompatActivity() {
             },
         )
 
-        val deLabel = "De "
-        val deValor = money(data.price)
-        val porLabel = "Por "
-        val porValor = money(data.promotionPrice)
-        val paintCash = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        val qtd = (data.installmentQuantity ?: 0).takeIf { it > 0 } ?: 10
+        val paintQtd = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = dark
             typeface = typefaceBold
-            textSize = w * 0.06f
+            textAlign = Paint.Align.CENTER
+            textSize = w * 0.075f
         }
-        val gapCash = w * 0.04f
-        var cashSize = w * 0.06f
-        while (true) {
-            val total =
-                paintCash.measureText(deLabel) +
-                    paintCash.measureText(deValor) +
-                    gapCash +
-                    paintCash.measureText(porLabel) +
-                    paintCash.measureText(porValor)
-            if (total <= contentW || cashSize <= 6f) break
-            cashSize -= 1f
-            paintCash.textSize = cashSize
+        val qtdTexto = "${qtd}x sem juros"
+        while (paintQtd.measureText(qtdTexto) > contentW && paintQtd.textSize > 6f) {
+            paintQtd.textSize -= 1f
         }
-        val deLabelW = paintCash.measureText(deLabel)
-        val deValorW = paintCash.measureText(deValor)
-        val porLabelW = paintCash.measureText(porLabel)
-        val porValorW = paintCash.measureText(porValor)
-        val cashGroupW = deLabelW + deValorW + gapCash + porLabelW + porValorW
-        val deX = cx - cashGroupW / 2f
-        val deValorX = deX + deLabelW
-        val porX = deValorX + deValorW + gapCash
-        val cashY = yTop + h * 0.68f
-        desenharTextoY(canvas, deLabel, deX, cashY, paintCash)
-        desenharTextoY(canvas, deValor, deValorX, cashY, paintCash)
-        canvas.drawLine(
-            deValorX,
-            cashY,
-            deValorX + deValorW,
-            cashY,
-            Paint(paintCash).apply { strokeWidth = max(1f, cashSize * 0.08f) },
+        val qtdFm = paintQtd.fontMetrics
+        canvas.drawText(
+            qtdTexto,
+            cx,
+            yTop + h * 0.64f - (qtdFm.ascent + qtdFm.descent) / 2f,
+            paintQtd,
         )
-        desenharTextoY(canvas, porLabel, porX, cashY, paintCash)
-        desenharTextoY(canvas, porValor, porX + porLabelW, cashY, paintCash)
+
+        val precoTexto = money(data.installmentPrice)
+        val paintPreco = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = dark
+            typeface = typefaceBold
+            textAlign = Paint.Align.CENTER
+            textSize = w * 0.17f
+        }
+        while (paintPreco.measureText(precoTexto) > contentW && paintPreco.textSize > 6f) {
+            paintPreco.textSize -= 1f
+        }
+        val precoFm = paintPreco.fontMetrics
+        canvas.drawText(
+            precoTexto,
+            cx,
+            yTop + h * 0.715f - (precoFm.ascent + precoFm.descent) / 2f,
+            paintPreco,
+        )
 
         val validade = "*Oferta válida de $inicio até $fim"
         val paintVal = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -523,9 +510,10 @@ class EletroSemanaActivity : AppCompatActivity() {
         while (paintVal.measureText(validade) > contentW && paintVal.textSize > 6f) {
             paintVal.textSize -= 1f
         }
-        val validadeY = yTop + h * 0.84f
+        val validadeY = yTop + h * 0.855f
         val fm = paintVal.fontMetrics
         canvas.drawText(validade, cx, validadeY - (fm.ascent + fm.descent) / 2f, paintVal)
+
     }
 
     private fun desenharTitulo(
