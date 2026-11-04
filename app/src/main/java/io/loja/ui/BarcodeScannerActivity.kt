@@ -1445,6 +1445,11 @@ class BarcodeScannerActivity : AppCompatActivity() {
             "6×1" to Constants.SIGN_SIZE_6X1,
         )
         var sizeIdx = 0
+        val modalidades = listOf(
+            "Misto Editável", "Promocional", "Normal",
+            "Vencimentos", "Eletro da Semana"
+        )
+        var modalidadeSel = modalidades[0]
 
         val sheet = BottomSheetDialog(this)
         val container = LinearLayout(this).apply {
@@ -1700,6 +1705,38 @@ class BarcodeScannerActivity : AppCompatActivity() {
         container.addView(scroll)
 
         container.addView(TextView(this).apply {
+            text = "Modalidade"
+            textSize = 12f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(0xFF1E293B.toInt())
+            setPadding(0, dp(8), 0, 0)
+        })
+        val spinnerModalidade = android.widget.Spinner(this).apply {
+            adapter = android.widget.ArrayAdapter(
+                this@BarcodeScannerActivity,
+                android.R.layout.simple_spinner_dropdown_item,
+                modalidades
+            )
+            onItemSelectedListener =
+                object : android.widget.AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(
+                        parent: android.widget.AdapterView<*>?,
+                        view: View?,
+                        position: Int,
+                        id: Long,
+                    ) {
+                        modalidadeSel = modalidades[position]
+                    }
+
+                    override fun onNothingSelected(
+                        parent: android.widget.AdapterView<*>?,
+                    ) {
+                    }
+                }
+        }
+        container.addView(spinnerModalidade)
+
+        container.addView(TextView(this).apply {
             text = "Tamanho"
             textSize = 12f
             setTypeface(null, android.graphics.Typeface.BOLD)
@@ -1764,7 +1801,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     return@setOnClickListener
                 }
                 sheet.dismiss()
-                buscarPapeletasEAbrirPreview(selItens, selQtds, size)
+                buscarPapeletasEAbrirPreview(selItens, selQtds, size, modalidadeSel)
             }
         }
         container.addView(
@@ -1788,6 +1825,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         itens: List<ItemScanner>,
         qtds: List<Int>,
         size: String,
+        modalidade: String,
     ) {
         val progress = android.app.ProgressDialog(this).apply {
             setMessage("Buscando papeletas...")
@@ -1798,24 +1836,33 @@ class BarcodeScannerActivity : AppCompatActivity() {
             try {
                 val data = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     .format(Date())
+                val tipos = when (modalidade) {
+                    "Promocional" -> listOf(Constants.TIPO_PROMOCIONAL)
+                    "Normal" -> listOf(Constants.TIPO_COMUM)
+                    else -> listOf(
+                        Constants.TIPO_COMUM,
+                        Constants.TIPO_PROMOCIONAL
+                    )
+                }
+                val pares = mutableListOf<Triple<Int, String, ItemScanner>>()
+                for ((idx, item) in itens.withIndex()) {
+                    for (type in tipos) {
+                        pares.add(Triple(idx, type, item))
+                    }
+                }
                 val respostas = withContext(Dispatchers.IO) {
-                    itens.flatMap { item ->
-                        listOf(
-                            Constants.TIPO_COMUM,
-                            Constants.TIPO_PROMOCIONAL
-                        ).map { type ->
-                            async {
-                                try {
-                                    apiService.getPriceSignStandalone(
-                                        storeId = sessionManager.getUserStore()
-                                            ?: Constants.DEFAULT_STORE,
-                                        type = type,
-                                        ean = item.ean,
-                                        startDate = data,
-                                    )
-                                } catch (e: Exception) {
-                                    null
-                                }
+                    pares.map { (_, type, item) ->
+                        async {
+                            try {
+                                apiService.getPriceSignStandalone(
+                                    storeId = sessionManager.getUserStore()
+                                        ?: Constants.DEFAULT_STORE,
+                                    type = type,
+                                    ean = item.ean,
+                                    startDate = data,
+                                )
+                            } catch (e: Exception) {
+                                null
                             }
                         }
                     }.awaitAll()
@@ -1825,18 +1872,32 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     mutableListOf<io.loja.network.PapeletaPrintingData>()
                 val quantidades = mutableListOf<Int>()
                 respostas.forEachIndexed { idx, response ->
+                    val (itemIdx, tipo, _) = pares.getOrNull(idx)
+                        ?: Triple(0, Constants.TIPO_COMUM, itens.first())
                     if (response != null && response.isSuccessful) {
                         response.body()?.items?.forEach { item ->
                             val pd = item.printingData ?: return@forEach
-                            if (!vistos.add(item.ean)) return@forEach
-                            lista.add(
-                                Constants.ajustarDadosLeveGanhe(pd).copy(
-                                    quantity = 1,
-                                    size = size
+                            if (!vistos.add("${item.ean}_$tipo")) return@forEach
+                            var dados =
+                                Constants.ajustarDadosLeveGanhe(pd)
+                            if (modalidade == "Eletro da Semana") {
+                                val qtdE = (dados.installmentQuantity ?: 0)
+                                    .takeIf { it > 0 } ?: 10
+                                dados = dados.copy(
+                                    template = Constants.SIGN_TEMPLATE_ELETRO_SEMANA,
+                                    quantity = qtds.getOrElse(itemIdx) { 1 }
+                                        .coerceIn(1, 999),
+                                    size = size,
+                                    installmentQuantity = qtdE,
+                                    installmentPrice =
+                                        dados.installmentPrice ?: 0.0,
                                 )
-                            )
+                            } else {
+                                dados = dados.copy(quantity = 1, size = size)
+                            }
+                            lista.add(dados)
                             quantidades.add(
-                                qtds[(idx / 2).coerceIn(0, qtds.size - 1)]
+                                qtds.getOrElse(itemIdx) { 1 }.coerceIn(1, 999)
                             )
                         }
                     }
@@ -1849,35 +1910,63 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     )
                     return@launch
                 }
-                ModeloEditavelActivity.dadosPendentesList =
-                    lista.toMutableList()
-                val i = Intent(
-                    this@BarcodeScannerActivity,
-                    ModeloEditavelActivity::class.java
-                ).apply {
-                    putExtra(ModeloEditavelActivity.EXTRA_SEM_OVERLAY, false)
-                    putExtra(ModeloEditavelActivity.EXTRA_SIZE, size)
-                    putExtra(ModeloEditavelActivity.EXTRA_ENVIAR_API, false)
-                    putExtra(ModeloEditavelActivity.EXTRA_API_SEM_OVERLAY, true)
-                    putExtra(ModeloEditavelActivity.EXTRA_MODO_EDITAVEL, false)
-                    putExtra(
-                        ModeloEditavelActivity.EXTRA_MODO_VENCIMENTOS,
-                        false
+                if (modalidade == "Eletro da Semana") {
+                    EletroSemanaActivity.dadosPendentesList =
+                        lista.toMutableList()
+                    startActivity(
+                        Intent(
+                            this@BarcodeScannerActivity,
+                            EletroSemanaActivity::class.java
+                        ).apply {
+                            putExtra(EletroSemanaActivity.EXTRA_SIZE, size)
+                        }
                     )
-                    putExtra(
-                        ModeloEditavelActivity.EXTRA_HIDE_GERAR_PREVIEW,
-                        false
-                    )
-                    putExtra(
-                        ModeloEditavelActivity.EXTRA_MOSTRAR_CHECKBOX_OVERLAY,
-                        true
-                    )
-                    putExtra(
-                        ModeloEditavelActivity.EXTRA_QUANTIDADES,
-                        quantidades.joinToString(",")
-                    )
+                } else {
+                    val editavel = modalidade == "Misto Editável" ||
+                        modalidade == "Vencimentos"
+                    val vencimentos = modalidade == "Vencimentos"
+                    ModeloEditavelActivity.dadosPendentesList =
+                        lista.toMutableList()
+                    val i = Intent(
+                        this@BarcodeScannerActivity,
+                        ModeloEditavelActivity::class.java
+                    ).apply {
+                        putExtra(
+                            ModeloEditavelActivity.EXTRA_SEM_OVERLAY,
+                            false
+                        )
+                        putExtra(ModeloEditavelActivity.EXTRA_SIZE, size)
+                        putExtra(
+                            ModeloEditavelActivity.EXTRA_ENVIAR_API,
+                            false
+                        )
+                        putExtra(
+                            ModeloEditavelActivity.EXTRA_API_SEM_OVERLAY,
+                            true
+                        )
+                        putExtra(
+                            ModeloEditavelActivity.EXTRA_MODO_EDITAVEL,
+                            editavel
+                        )
+                        putExtra(
+                            ModeloEditavelActivity.EXTRA_MODO_VENCIMENTOS,
+                            vencimentos
+                        )
+                        putExtra(
+                            ModeloEditavelActivity.EXTRA_HIDE_GERAR_PREVIEW,
+                            false
+                        )
+                        putExtra(
+                            ModeloEditavelActivity.EXTRA_MOSTRAR_CHECKBOX_OVERLAY,
+                            true
+                        )
+                        putExtra(
+                            ModeloEditavelActivity.EXTRA_QUANTIDADES,
+                            quantidades.joinToString(",")
+                        )
+                    }
+                    startActivity(i)
                 }
-                startActivity(i)
             } catch (e: Exception) {
                 progress.dismiss()
                 ToastUtils.show(
@@ -1887,7 +1976,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
             }
         }
     }
-}
+
 private class DimOverlayView(context: android.content.Context) : View(context) {
     private val dimPaint = android.graphics.Paint().apply {
         color = 0xB3000000.toInt()
