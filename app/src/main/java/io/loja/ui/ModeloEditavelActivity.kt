@@ -227,7 +227,10 @@ class ModeloEditavelActivity : AppCompatActivity() {
         }
 
         carregarOverlayAssets()
-        val sizeExtra = intent.getStringExtra(EXTRA_SIZE)?.uppercase()
+        val sizeExtra = intent.getStringExtra(EXTRA_SIZE)
+            ?.replace('×', 'X')
+            ?.trim()
+            ?.uppercase()
         when (sizeExtra) {
             "1X1" -> { colsQuadrantes = 1; rowsQuadrantes = 1 }
             "2X1" -> { colsQuadrantes = 2; rowsQuadrantes = 1 }
@@ -290,7 +293,10 @@ class ModeloEditavelActivity : AppCompatActivity() {
 
     private fun carregarOverlayAssets() {
         if (semOverlay && !modoVencimentos) return
-        val size = intent.getStringExtra(EXTRA_SIZE) ?: "4X1"
+        val size = (intent.getStringExtra(EXTRA_SIZE) ?: "4X1")
+            .replace('×', 'X')
+            .trim()
+            .uppercase()
         val nome = size.lowercase().replace("x", "x")
         var inputStream: java.io.InputStream? = null
         try { inputStream = assets.open("overlays/$nome.png") } catch (_: Exception) {}

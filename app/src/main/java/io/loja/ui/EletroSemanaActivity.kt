@@ -113,7 +113,10 @@ class EletroSemanaActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.btnVoltarEletro).setOnClickListener { finish() }
 
-        sizeLabel = intent.getStringExtra(EXTRA_SIZE)?.uppercase(Locale.getDefault()) ?: "4X1"
+        sizeLabel = (intent.getStringExtra(EXTRA_SIZE) ?: "4X1")
+            .replace('×', 'X')
+            .trim()
+            .uppercase(Locale.getDefault())
         when (sizeLabel) {
             "1X1" -> { cols = 1; rows = 1 }
             "2X1" -> { cols = 2; rows = 1 }
