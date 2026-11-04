@@ -1976,6 +1976,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
             }
         }
     }
+}
 
 private class DimOverlayView(context: android.content.Context) : View(context) {
     private val dimPaint = android.graphics.Paint().apply {
