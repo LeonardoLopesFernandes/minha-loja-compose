@@ -369,7 +369,7 @@ class GondolaPreviewView @JvmOverloads constructor(
                             else if (ehDepor) alvoDepor
                             else 243f
                         ),
-                        sy = if (ehParc) 1.4f else 1f,
+                        sy = if (ehParc) 1.4f else if (ehDepor) 1.1f else 1f,
                         larguraAlvo = if (ehDepor) px(alvoDepor) else 0f
                     )
                     if (ehDepor) {
