@@ -284,7 +284,7 @@ class PapeletasDiariasViewModel(app: Application) : AndroidViewModel(app) {
             ) {
                 Constants.ajustarDadosLeveGanhe(
                     pd.copy(size = selectedSize, quantity = 1)
-                ).copy(template = Constants.SIGN_TEMPLATE_MODELO)
+                )
             } else {
                 pd.copy(template = template, size = selectedSize, quantity = 1)
             }
