@@ -83,14 +83,14 @@ object Constants {
     fun ajustarDadosLeveGanhe(data: PapeletaPrintingData): PapeletaPrintingData {
         if (data.template != SIGN_TEMPLATE_LEVE_GANHE_CADA) return data
         val qty = (data.takeAndWinQuantity ?: 0).takeIf { it > 0 } ?: 1
-        val unitario = (data.promotionPrice ?: 0.0).takeIf { it > 0 }
-            ?: ((data.takeAndWinPrice ?: 0.0) / qty)
-        val total = (data.takeAndWinPrice ?: 0.0).takeIf { it > 0 }
-            ?: (unitario * qty)
+        val unitario = (data.takeAndWinPrice ?: 0.0).takeIf { it > 0 }
+            ?: (data.promotionPrice ?: 0.0).takeIf { it > 0 }
+            ?: 0.0
+        val total = unitario * qty
         return data.copy(
             template = SIGN_TEMPLATE_LEVE_GANHE_TOTAL,
-            promotionPrice = unitario,
-            takeAndWinPrice = total,
+            promotionPrice = total,
+            takeAndWinPrice = unitario,
             installmentPrice = null,
             installmentQuantity = null,
         )
