@@ -279,15 +279,11 @@ class PapeletasDiariasViewModel(app: Application) : AndroidViewModel(app) {
                 movement == "parcelado" -> Constants.SIGN_TEMPLATE_DEPOR_PARCELADO
                 else -> Constants.SIGN_TEMPLATE_MODELO
             }
-            val base = if (temLeve &&
-                pd.template == Constants.SIGN_TEMPLATE_LEVE_GANHE_CADA
-            ) {
-                Constants.ajustarDadosLeveGanhe(
-                    pd.copy(size = selectedSize, quantity = 1)
-                )
-            } else {
-                pd.copy(template = template, size = selectedSize, quantity = 1)
-            }
+            val base = pd.copy(
+                template = template,
+                size = selectedSize,
+                quantity = 1,
+            )
             repeat(quantidadeDe(item)) { lista.add(base) }
         }
         if (lista.isEmpty()) { emitir(PapeletaDiariaEvento.Toast("Nenhum item para imprimir")); return }
