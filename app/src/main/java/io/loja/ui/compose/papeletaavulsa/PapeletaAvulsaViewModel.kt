@@ -336,7 +336,7 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
-                    api.sendPriceSigns(Constants.DEFAULT_STORE, SendPriceSignRequest(printingList))
+                    api.sendPriceSigns(Constants.DEFAULT_STORE, SendPriceSignRequest(printingList.map { it.copy(size = it.size?.lowercase()) }))
                 }
                 processando = false
                 if (response.isSuccessful) {
@@ -493,7 +493,7 @@ class PapeletaAvulsaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
-                    api.sendPriceSigns(Constants.DEFAULT_STORE, SendPriceSignRequest(printingDataList))
+                    api.sendPriceSigns(Constants.DEFAULT_STORE, SendPriceSignRequest(printingDataList.map { it.copy(size = it.size?.lowercase()) }))
                 }
                 processando = false
                 if (response.isSuccessful) {

@@ -741,7 +741,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                                     return@async idx to cachedCard
                                 }
                                 val pdfBytes = previewPdfCache[idx] ?: run {
-                                    val response = apiService.previewPriceSign(Constants.prepararPreviewLeve(data).copy(size = Constants.SIGN_SIZE_1X1))
+                                    val response = apiService.previewPriceSign(Constants.prepararPreviewLeve(data).copy(size = Constants.SIGN_SIZE_1X1.lowercase()))
                                     if (!response.isSuccessful) {
                                         LogHelper.e("PreviewMulti: HTTP ${response.code()} item $idx")
                                         return@async null
@@ -884,7 +884,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                         async {
                             try {
                                 val pdfBytes = previewPdfCache[idx] ?: run {
-                                    val response = apiService.previewPriceSign(Constants.prepararPreviewLeve(data).copy(size = Constants.SIGN_SIZE_1X1))
+                                    val response = apiService.previewPriceSign(Constants.prepararPreviewLeve(data).copy(size = Constants.SIGN_SIZE_1X1.lowercase()))
                                     if (!response.isSuccessful) {
                                         LogHelper.e("PreviewVenc: falha item $idx")
                                         return@async null
@@ -1561,7 +1561,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                     toFetch.map { idx ->
                         async(Dispatchers.IO) {
                             try {
-                                val resp = apiService.previewPriceSign(Constants.prepararPreviewLeve(allItems[idx]).copy(size = Constants.SIGN_SIZE_1X1))
+                                val resp = apiService.previewPriceSign(Constants.prepararPreviewLeve(allItems[idx]).copy(size = Constants.SIGN_SIZE_1X1.lowercase()))
                                 if (resp.isSuccessful) {
                                     resp.body()?.bytes()?.let { previewPdfCache[idx] = it }
                                 } else {
@@ -1716,7 +1716,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
             try {
                 if (!shareMode) {
                     val response = try {
-                        ApiClient.getSlApiService(sessionManager).sendPriceSigns(Constants.DEFAULT_STORE, SendPriceSignRequest(multiDataList))
+                        ApiClient.getSlApiService(sessionManager).sendPriceSigns(Constants.DEFAULT_STORE, SendPriceSignRequest(multiDataList.map { it.copy(size = it.size?.lowercase()) }))
                     } catch (e: Exception) {
                         LogHelper.e("ModeloEditavel: erro enviar API", e)
                         null

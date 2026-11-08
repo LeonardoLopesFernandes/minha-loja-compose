@@ -312,7 +312,7 @@ class PapeletasDiariasViewModel(app: Application) : AndroidViewModel(app) {
                     emitir(PapeletaDiariaEvento.Toast("Dados de impressão não disponíveis"))
                     return@launch
                 }
-                val response = withContext(Dispatchers.IO) { api.sendPriceSigns(loja, SendPriceSignRequest(printingDataList)) }
+                val response = withContext(Dispatchers.IO) { api.sendPriceSigns(loja, SendPriceSignRequest(printingDataList.map { it.copy(size = it.size?.lowercase()) })) }
                 imprimindo = false
                 if (response.isSuccessful) {
                     emitir(PapeletaDiariaEvento.Toast("${printingDataList.sumOf { it.quantity ?: 1 }} papeletas enviadas para impressão!"))
