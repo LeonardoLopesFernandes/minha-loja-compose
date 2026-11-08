@@ -85,6 +85,20 @@ object Constants {
         return data
     }
 
+    /** Ajuste apenas para preview do Leve e Ganhe Cada. */
+    fun prepararPreviewLeve(data: PapeletaPrintingData): PapeletaPrintingData {
+        val qty = (data.takeAndWinQuantity ?: 0).takeIf { it > 0 } ?: return data
+        val total = (data.promotionPrice ?: 0.0).takeIf { it > 0 }
+            ?: ((data.takeAndWinPrice ?: 0.0) * qty)
+        val cada = (data.takeAndWinPrice ?: 0.0).takeIf { it > 0 }
+            ?: (total / qty)
+        return data.copy(
+            template = SIGN_TEMPLATE_LEVE_GANHE_TOTAL,
+            promotionPrice = cada,
+            takeAndWinPrice = total,
+        )
+    }
+
     const val MOVEMENT_ALL = ""
     const val MOVEMENT_DEPOR = "De/Por"
     const val MOVEMENT_LEVE = "Leve e Ganhe"
