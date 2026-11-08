@@ -1714,8 +1714,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val todosComuns = multiDataList.all { ehPapeletaComum(it) }
-                if (!shareMode && (semOverlay || enviarApi || todosComuns)) {
+                if (!shareMode) {
                     val response = try {
                         ApiClient.getSlApiService(sessionManager).sendPriceSigns(Constants.DEFAULT_STORE, SendPriceSignRequest(multiDataList))
                     } catch (e: Exception) {
