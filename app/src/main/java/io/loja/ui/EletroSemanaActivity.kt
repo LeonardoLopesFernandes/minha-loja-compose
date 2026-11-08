@@ -566,7 +566,7 @@ class EletroSemanaActivity : AppCompatActivity() {
         pages.forEachIndexed { index, bitmap ->
             val info = PdfDocument.PageInfo.Builder(pageW, pageH, index + 1).create()
             val page = doc.startPage(info)
-            val m = 0f
+            val m = 4f
             page.canvas.drawBitmap(
                 bitmap,
                 null,

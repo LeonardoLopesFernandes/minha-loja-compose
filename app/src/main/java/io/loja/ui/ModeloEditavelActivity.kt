@@ -1540,7 +1540,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
             val isLandscape = colsQuadrantes > rowsQuadrantes
             val pageW = if (isLandscape) a4H else a4W
             val pageH = if (isLandscape) a4W else a4H
-            val MARGIN = 0f
+            val MARGIN = 4f
             val TARGET_DPI = dpi.toFloat()
             val dpiScale = TARGET_DPI / 72f
             val usableW = pageW - 2 * MARGIN; val usableH = pageH - 2 * MARGIN
@@ -1714,7 +1714,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                if (!shareMode && semOverlay) {
+                if (!shareMode && (semOverlay || enviarApi)) {
                     val response = try {
                         ApiClient.getSlApiService(sessionManager).sendPriceSigns(Constants.DEFAULT_STORE, SendPriceSignRequest(multiDataList))
                     } catch (e: Exception) {
