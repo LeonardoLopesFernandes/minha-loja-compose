@@ -1714,7 +1714,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                if (!shareMode) {
+                if (!shareMode && semOverlay && apiSemOverlay) {
                     val response = try {
                         ApiClient.getSlApiService(sessionManager).sendPriceSigns(Constants.DEFAULT_STORE, SendPriceSignRequest(multiDataList.map { it.copy(size = it.size?.lowercase()) }))
                     } catch (e: Exception) {

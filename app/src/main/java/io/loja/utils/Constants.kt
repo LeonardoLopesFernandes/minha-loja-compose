@@ -62,9 +62,8 @@ object Constants {
     }
 
     /**
-     * Total do leve e ganhe conforme o template:
-     * - leve_ganhe_total: takeAndWinPrice já é o total (não multiplica).
-     * - leve_ganhe_cada (ou outro): promotionPrice quando existe, senão takeAndWinPrice x quantidade.
+     * Total do leve e ganhe: promotionPrice quando existe, senão
+     * takeAndWinPrice x quantidade.
      */
     fun totalLeveGanhePorTemplate(
         template: String?,
@@ -72,7 +71,6 @@ object Constants {
         takeAndWinPrice: Double?,
         takeAndWinQuantity: Int?
     ): Double {
-        if (template == SIGN_TEMPLATE_MODELO) return takeAndWinPrice ?: 0.0
         return totalLeveGanhe(promotionPrice, takeAndWinPrice, takeAndWinQuantity)
     }
 
@@ -94,8 +92,8 @@ object Constants {
             ?: (total / qty)
         return data.copy(
             template = SIGN_TEMPLATE_LEVE_GANHE_TOTAL,
-            promotionPrice = cada,
-            takeAndWinPrice = total,
+            promotionPrice = total,
+            takeAndWinPrice = cada,
         )
     }
 

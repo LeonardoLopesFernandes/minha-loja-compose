@@ -446,7 +446,7 @@ class GondolaEditavelActivity : AppCompatActivity() {
                 price = original.price?.copy(value = unitario),
                 takeAndWin = original.takeAndWin?.copy(qty = qty, totalValue = total),
                 promotionalPrice = original.promotionalPrice?.copy(value = unit),
-                promotionPrice = unit,
+                promotionPrice = total,
                 takeAndWinQuantity = qty,
                 takeAndWinPrice = unit
             )
