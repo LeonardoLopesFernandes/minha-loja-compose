@@ -57,37 +57,64 @@ jobs:
           KEY_PASSWORD: minhaloja123
           MICROSOFT_CLIENT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
 
+      - name: Definir nome e link do APK
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            APK_NAME="minhaloja-compose-${GITHUB_REF_NAME}.apk"
+            RELEASE_TAG="${GITHUB_REF_NAME}"
+          else
+            APK_NAME="minhaloja-compose-dev.apk"
+            RELEASE_TAG="latest"
+          fi
+          echo "APK_NAME=$APK_NAME" >> "$GITHUB_ENV"
+          echo "APK_URL=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/${APK_NAME}" >> "$GITHUB_ENV"
+
       - name: Rename APK
         run: |
-          cp app/build/outputs/apk/release/*arm64-v8a*.apk minhaloja-compose-arm64-v8a.apk
-          ls -la minhaloja-compose-arm64-v8a.apk
+          cp app/build/outputs/apk/release/*arm64-v8a*.apk "$APK_NAME"
+          ls -la "$APK_NAME"
 
-      - name: Notas da release
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}
+          path: ${{ env.APK_NAME }}
+          if-no-files-found: error
+
+      - name: Preparar notas da release
         run: |
-          git fetch --tags --force
-          atual="${GITHUB_REF#refs/tags/}"
-          anterior=$(git tag --sort=-v:refname | grep '^v' | sed -n 2p)
           {
-            echo 'O que melhorou:';
-            echo '';
-            if [ -n "$anterior" ]; then
-              git log "$anterior..$atual" --pretty=format:'- %s'
-              echo '';
-              echo '';
-              echo "**Full Changelog**: $anterior...$atual";
-            else
-              git log -10 --pretty=format:'- %s';
-            fi
+            echo "[**Baixar APK**]($APK_URL)"
+            echo ""
           } > /tmp/notas.txt
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            git fetch --tags --force
+            atual="${GITHUB_REF_NAME}"
+            anterior=$(git tag --sort=-v:refname | grep '^v' | sed -n 2p)
+            echo 'O que melhorou:' >> /tmp/notas.txt
+            echo '' >> /tmp/notas.txt
+            if [ -n "$anterior" ]; then
+              git log "$anterior..$atual" --pretty=format:'- %s' >> /tmp/notas.txt
+              echo '' >> /tmp/notas.txt
+              echo '' >> /tmp/notas.txt
+              echo "**Full Changelog**: $anterior...$atual" >> /tmp/notas.txt
+            else
+              git log -10 --pretty=format:'- %s' >> /tmp/notas.txt
+            fi
+          else
+            echo "Build manual a partir do commit ${GITHUB_SHA}." >> /tmp/notas.txt
+          fi
           cat /tmp/notas.txt
 
-      - name: Create GitHub Release with APK
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Create or update release
         uses: softprops/action-gh-release@v2
         with:
-          files: minhaloja-compose-arm64-v8a.apk
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}
+          name: Minha Loja Compose (${{ github.ref_type == 'tag' && github.ref_name || 'latest' }})
           body_path: /tmp/notas.txt
+          files: ${{ env.APK_NAME }}
+          overwrite: true
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
