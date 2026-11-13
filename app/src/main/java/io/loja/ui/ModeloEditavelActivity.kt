@@ -1147,14 +1147,14 @@ class ModeloEditavelActivity : AppCompatActivity() {
             val fmVal = paint.fontMetrics
             var yVal = topoDesc + 4f * s - fmVal.bottom
             val alturaTexto = (fmVal.bottom - fmVal.top) * 1.2f
-            yVal = yVal.coerceIn(h * 0.28f, h * 0.45f)
+            yVal = yVal.coerceIn(h * 0.25f, h * 0.45f)
             canvas.drawText("VAL.: $validadeTexto".uppercase(), centroX, yVal, paint)
         } else {
             LogHelper.d("desenharValidadeCard: validade vazia para item ${data.productName}")
         }
 
         // Rodapé: mesma posição em todos os tamanhos (onde a validade ficava antes)
-        paint.textSize = 9f * s
+        paint.textSize = 10f * s
         val fmFooter = paint.fontMetrics
         val fmValRef = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             typeface = helveticaBold
@@ -1540,7 +1540,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
             val isLandscape = colsQuadrantes > rowsQuadrantes
             val pageW = if (isLandscape) a4H else a4W
             val pageH = if (isLandscape) a4W else a4H
-            val MARGIN = 18f
+            val MARGIN = 12f
             val TARGET_DPI = dpi.toFloat()
             val dpiScale = TARGET_DPI / 72f
             val usableW = pageW - 2 * MARGIN; val usableH = pageH - 2 * MARGIN
