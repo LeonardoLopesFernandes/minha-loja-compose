@@ -77,6 +77,12 @@ class LogoAnimadoView @JvmOverloads constructor(
         if (animator.isStarted) animator.cancel()
     }
 
+    fun setLogoColor(cor: Int) {
+        fillPaint.color = cor
+        strokePaint.color = cor
+        invalidate()
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         iniciar()

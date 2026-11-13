@@ -1827,11 +1827,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         size: String,
         modalidade: String,
     ) {
-        val progress = android.app.ProgressDialog(this).apply {
-            setMessage("Buscando papeletas...")
-            setCancelable(false)
-            show()
-        }
+        LoadingLogoDialog.show(this, "Buscando papeletas...")
         lifecycleScope.launch {
             try {
                 val data = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -1902,7 +1898,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                         }
                     }
                 }
-                progress.dismiss()
+                LoadingLogoDialog.dismiss()
                 if (lista.isEmpty()) {
                     ToastUtils.show(
                         this@BarcodeScannerActivity,
@@ -1968,7 +1964,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     startActivity(i)
                 }
             } catch (e: Exception) {
-                progress.dismiss()
+                LoadingLogoDialog.dismiss()
                 ToastUtils.show(
                     this@BarcodeScannerActivity,
                     "Erro: ${e.message}"

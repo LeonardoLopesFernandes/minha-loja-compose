@@ -719,6 +719,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
         tvPreviewStatus.apply { text = "Buscando preview..."; visibility = View.VISIBLE }
         btnCompartilhar.isEnabled = false
 
+        LoadingLogoDialog.show(this, "Gerando pré-visualização...")
         val apiService = ApiClient.getSlApiService(sessionManager)
         val isLandscapePreview = colsQuadrantes > rowsQuadrantes
         val defaultW = if (isLandscapePreview) 1200 else 850
@@ -849,6 +850,8 @@ class ModeloEditavelActivity : AppCompatActivity() {
                     ToastUtils.show(this@ModeloEditavelActivity, "Erro: ${e.message}")
                 }
                 LogHelper.e("ModeloEditavel: erro preview multi", e)
+            } finally {
+                runOnUiThread { LoadingLogoDialog.dismiss() }
             }
         }
     }
@@ -869,6 +872,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
         tvPreviewStatus.apply { text = "Buscando preview..."; visibility = View.VISIBLE }
         btnCompartilhar.isEnabled = false
 
+        LoadingLogoDialog.show(this, "Gerando pré-visualização...")
         val apiService = ApiClient.getSlApiService(sessionManager)
         val isLandscapePreview = colsQuadrantes > rowsQuadrantes
         val defaultW = if (isLandscapePreview) 1200 else 850
@@ -990,6 +994,8 @@ class ModeloEditavelActivity : AppCompatActivity() {
                     ToastUtils.show(this@ModeloEditavelActivity, "Erro: ${e.message}")
                 }
                 LogHelper.e("ModeloEditavel: erro preview vencimentos", e)
+            } finally {
+                runOnUiThread { LoadingLogoDialog.dismiss() }
             }
         }
     }
