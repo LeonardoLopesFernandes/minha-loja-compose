@@ -47,6 +47,7 @@ fun mostrarImagemProduto(
     ean: String,
     descricao: String,
     estoque: Double? = null,
+    sap: String = "",
 ) {
     if (ean.isBlank()) return
     val density = context.resources.displayMetrics.density
@@ -61,12 +62,14 @@ fun mostrarImagemProduto(
             cornerRadius = dp(16).toFloat()
         }
     }
-    val titulo = TextView(context).apply {
-        text = "Imagem do produto"
-        textSize = 16f
+    val fecharTopo = TextView(context).apply {
+        text = "×   FECHAR"
+        textSize = 13f
         typeface = Typeface.DEFAULT_BOLD
-        setTextColor(0xFF1E293B.toInt())
-        gravity = Gravity.CENTER_HORIZONTAL
+        setTextColor(0xFF6B7280.toInt())
+        gravity = Gravity.CENTER_VERTICAL or Gravity.START
+        setPadding(0, dp(8), 0, dp(12))
+        setOnClickListener { dialog.dismiss() }
     }
     val subtitulo = TextView(context).apply {
         text = if (descricao.isBlank()) ean else descricao
@@ -103,6 +106,19 @@ fun mostrarImagemProduto(
         gravity = Gravity.CENTER_HORIZONTAL
         setPadding(0, dp(2), 0, dp(4))
         visibility = View.GONE
+    }
+    val sapTitulo = TextView(context).apply {
+        text = "Informações do produto no SAP"
+        textSize = 14f
+        typeface = Typeface.DEFAULT_BOLD
+        setTextColor(0xFF1A1A1A.toInt())
+        setPadding(0, dp(18), 0, dp(6))
+    }
+    val sapCode = TextView(context).apply {
+        text = "Código SAP: " + if (sap.isBlank()) "-" else sap
+        textSize = 13f
+        setTextColor(0xFF666666.toInt())
+        setPadding(0, 0, 0, dp(4))
     }
     val progress = ProgressBar(context).apply {
         isIndeterminate = true
@@ -150,19 +166,18 @@ fun mostrarImagemProduto(
         ).apply { topMargin = dp(12) }
         setOnClickListener { dialog.dismiss() }
     }
-    container.addView(titulo)
+    container.addView(fecharTopo)
     container.addView(subtitulo)
-    container.addView(eanView)
-    container.addView(estoqueView)
     container.addView(progress)
     container.addView(imagem)
-    container.addView(dica)
-    container.addView(fonte)
-    container.addView(fechar)
+    container.addView(estoqueView)
+    container.addView(sapTitulo)
+    container.addView(sapCode)
+    container.addView(eanView)
     dialog.setContentView(container)
     dialog.window?.setLayout(
-        (context.resources.displayMetrics.widthPixels * 0.9).toInt(),
-        ViewGroup.LayoutParams.WRAP_CONTENT
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT
     )
     dialog.show()
 
@@ -172,10 +187,16 @@ fun mostrarImagemProduto(
             buscarEstoqueAmericanas(ean, store)
         }
         if (saldo != null) {
-            estoqueView.text = "Estoque: ${saldo.toInt()}"
-            estoqueView.setTextColor(
-                if (saldo < 0) 0xFFD81B3A.toInt() else 0xFF2E7D32.toInt()
-            )
+            estoqueView.text = "Estoque estimado: ${saldo.toInt()}"
+            val cor = if (saldo < 0) 0xFFD81B3A.toInt() else 0xFF2E7D32.toInt()
+            estoqueView.setTextColor(cor)
+            estoqueView.background = GradientDrawable().apply {
+                setColor(
+                    if (saldo < 0) 0xFFFDECEC.toInt() else 0xFFE7F4E8.toInt()
+                )
+                cornerRadius = dp(16).toFloat()
+            }
+            estoqueView.setPadding(dp(12), dp(6), dp(12), dp(6))
             estoqueView.visibility = View.VISIBLE
         }
 
@@ -184,8 +205,7 @@ fun mostrarImagemProduto(
         }
         progress.visibility = View.GONE
         if (resultado == null) {
-            fonte.text = "Imagem não encontrada"
-            fonte.visibility = View.VISIBLE
+            Toast.makeText(context, "Imagem não encontrada", Toast.LENGTH_LONG).show()
             return@launch
         }
         val bitmap = withContext(Dispatchers.IO) {
@@ -194,15 +214,23 @@ fun mostrarImagemProduto(
         if (bitmap != null) {
             imagem.setImageBitmap(bitmap)
             imagem.visibility = View.VISIBLE
-            dica.visibility = View.VISIBLE
-            imagem.setOnClickListener {
-                salvarImagem(context, ean, bitmap)
+            imagem.setOnLongClickListener {
+                android.app.AlertDialog.Builder(context)
+                    .setTitle("Salvar imagem")
+                    .setMessage("Deseja salvar a imagem em Download/Imagem do produto?")
+                    .setPositiveButton("SALVAR") { _, _ ->
+                        salvarImagem(context, ean, bitmap)
+                    }
+                    .setNegativeButton("CANCELAR", null)
+                    .show()
+                true
             }
-            fonte.text = "Fonte: ${resultado.second}"
-            fonte.visibility = View.VISIBLE
         } else {
-            fonte.text = "Não foi possível carregar a imagem"
-            fonte.visibility = View.VISIBLE
+            Toast.makeText(
+                context,
+                "Não foi possível carregar a imagem",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 }

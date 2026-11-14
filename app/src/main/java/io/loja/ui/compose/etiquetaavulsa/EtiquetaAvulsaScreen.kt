@@ -570,7 +570,7 @@ private fun EtiquetaCard(
                         .padding(horizontal = 12.dp)
                         .clickable {
                             mostrarImagemProduto(
-                                context, item.ean, item.description
+                                context, item.ean, item.description, sap = item.sap
                             )
                         },
                 )

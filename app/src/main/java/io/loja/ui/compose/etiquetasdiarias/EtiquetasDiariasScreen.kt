@@ -493,7 +493,7 @@ private fun PriceTagItemCard(
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
-                            mostrarImagemProduto(context, item.ean, item.description)
+                            mostrarImagemProduto(context, item.ean, item.description, sap = item.sap)
                         },
                 )
                 Spacer(Modifier.width(8.dp))
