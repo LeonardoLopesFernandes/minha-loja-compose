@@ -359,7 +359,7 @@ class GondolaEditavelActivity : AppCompatActivity() {
             preview.setTemplate(carregarTemplate(true), GondolaPreviewView.MODO_PROMOCIONAL)
             preview.setData(
                 codigo, ean, desc,
-                "R$", df.format(unitario), unidade,
+                "R$", df.format(total), unidade,
                 "${qty} por R$ ${df.format(total)}",
                 "NA PROMOCAO A UND SAIRA POR R$ ${df.format(unit)}"
             )
