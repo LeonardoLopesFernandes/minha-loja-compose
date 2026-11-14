@@ -51,14 +51,18 @@ object Constants {
 
     /**
      * Total do leve e ganhe:
-     * - Se promotionPrice existe, ele é o total (ex.: CX BOMBOM 23,98 = 2 x 11,99).
-     * - Senão o total é takeAndWinPrice x quantidade (ex.: KIT KAT 10,99 direto).
+     * - Se ambos preenchidos, o maior valor eh o total da promocao.
+     * - Se apenas promotionPrice, ele ja vem como total.
+     * - Se apenas takeAndWinPrice, eh o unitario e deve ser multiplicado pela qtd.
      */
     fun totalLeveGanhe(promotionPrice: Double?, takeAndWinPrice: Double?, takeAndWinQuantity: Int?): Double {
-        if (promotionPrice != null && promotionPrice > 0) return promotionPrice
-        val preco = takeAndWinPrice ?: return 0.0
         val qtd = takeAndWinQuantity ?: 1
-        return preco * qtd
+        val pp = promotionPrice ?: 0.0
+        val tp = takeAndWinPrice ?: 0.0
+        if (pp > 0 && tp > 0) return if (pp > tp) pp else tp
+        if (pp > 0) return pp
+        if (tp > 0) return tp * qtd
+        return 0.0
     }
 
     /**
@@ -86,10 +90,14 @@ object Constants {
     /** Ajuste apenas para preview do Leve e Ganhe Cada. */
     fun prepararPreviewLeve(data: PapeletaPrintingData): PapeletaPrintingData {
         val qty = (data.takeAndWinQuantity ?: 0).takeIf { it > 0 } ?: return data
-        val total = (data.promotionPrice ?: 0.0).takeIf { it > 0 }
-            ?: ((data.takeAndWinPrice ?: 0.0) * qty)
-        val cada = (data.takeAndWinPrice ?: 0.0).takeIf { it > 0 }
-            ?: (total / qty)
+        val pp = data.promotionPrice ?: 0.0
+        val tp = data.takeAndWinPrice ?: 0.0
+        val (total, cada) = when {
+            pp > 0 && tp > 0 -> if (pp > tp) pp to tp else tp to pp
+            pp > 0 -> pp to (pp / qty)
+            tp > 0 -> tp to (tp / qty)
+            else -> return data
+        }
         return data.copy(
             template = SIGN_TEMPLATE_LEVE_GANHE_TOTAL,
             promotionPrice = cada,
