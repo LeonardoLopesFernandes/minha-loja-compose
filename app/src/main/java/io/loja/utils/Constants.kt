@@ -92,8 +92,8 @@ object Constants {
             ?: (total / qty)
         return data.copy(
             template = SIGN_TEMPLATE_LEVE_GANHE_TOTAL,
-            promotionPrice = total,
-            takeAndWinPrice = cada,
+            promotionPrice = cada,
+            takeAndWinPrice = total,
         )
     }
 

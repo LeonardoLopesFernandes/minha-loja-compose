@@ -42,7 +42,12 @@ private val imagemHttp by lazy {
 }
 
 /** Abre o diálogo de imagem do produto pelo EAN (Americanas + SI5 Global). */
-fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
+fun mostrarImagemProduto(
+    context: Context,
+    ean: String,
+    descricao: String,
+    estoque: Double? = null,
+) {
     if (ean.isBlank()) return
     val density = context.resources.displayMetrics.density
     fun dp(v: Int) = (v * density).toInt()
@@ -91,6 +96,13 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
                 android.widget.Toast.LENGTH_SHORT
             ).show()
         }
+    }
+    val estoqueView = TextView(context).apply {
+        textSize = 12f
+        typeface = Typeface.DEFAULT_BOLD
+        gravity = Gravity.CENTER_HORIZONTAL
+        setPadding(0, dp(2), 0, dp(4))
+        visibility = View.GONE
     }
     val progress = ProgressBar(context).apply {
         isIndeterminate = true
@@ -141,6 +153,7 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
     container.addView(titulo)
     container.addView(subtitulo)
     container.addView(eanView)
+    container.addView(estoqueView)
     container.addView(progress)
     container.addView(imagem)
     container.addView(dica)
@@ -155,6 +168,17 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
 
     val store = SessionManager(context).getUserStore() ?: Constants.DEFAULT_STORE
     CoroutineScope(Dispatchers.Main).launch {
+        val saldo = estoque ?: withContext(Dispatchers.IO) {
+            buscarEstoqueAmericanas(ean, store)
+        }
+        if (saldo != null) {
+            estoqueView.text = "Estoque: ${saldo.toInt()}"
+            estoqueView.setTextColor(
+                if (saldo < 0) 0xFFD81B3A.toInt() else 0xFF2E7D32.toInt()
+            )
+            estoqueView.visibility = View.VISIBLE
+        }
+
         val resultado = withContext(Dispatchers.IO) {
             buscarImagemProduto(ean, descricao, store)
         }
@@ -180,6 +204,18 @@ fun mostrarImagemProduto(context: Context, ean: String, descricao: String) {
             fonte.text = "Não foi possível carregar a imagem"
             fonte.visibility = View.VISIBLE
         }
+    }
+}
+
+private fun buscarEstoqueAmericanas(ean: String, store: String): Double? {
+    val json = getJson(
+        "https://sl-bff-report.americanas.io/web/price-scanner/store/$store/ean/$ean"
+    ) ?: return null
+    return when {
+        json.has("stock") -> json.optDouble("stock", Double.NaN).takeIf { !it.isNaN() }
+        json.has("saldo") -> json.optDouble("saldo", Double.NaN).takeIf { !it.isNaN() }
+        json.has("quantidade") -> json.optDouble("quantidade", Double.NaN).takeIf { !it.isNaN() }
+        else -> null
     }
 }
 

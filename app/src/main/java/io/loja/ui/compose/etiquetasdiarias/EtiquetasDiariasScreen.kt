@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import io.loja.network.models.PriceTagItem
 import io.loja.ui.GondolaEditavelActivity
+import io.loja.ui.mostrarImagemProduto
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.DepartamentoSelector
 import io.loja.ui.compose.components.SpinnerDropdown
@@ -488,7 +489,12 @@ private fun PriceTagItemCard(
                 )
                 Text(
                     item.description, color = Color(0xFF1A1A1A), fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
+                    fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable {
+                            mostrarImagemProduto(context, item.ean, item.description)
+                        },
                 )
                 Spacer(Modifier.width(8.dp))
                 QtyBoxDiaria(valor = qtd, onChange = onQtdChange)

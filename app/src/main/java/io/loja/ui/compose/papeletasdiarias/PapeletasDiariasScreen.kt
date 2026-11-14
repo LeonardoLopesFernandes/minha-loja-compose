@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import io.loja.network.PriceSign
 import io.loja.ui.ModeloEditavelActivity
+import io.loja.ui.mostrarImagemProduto
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.DepartamentoSelector
 import io.loja.ui.compose.components.SpinnerDropdown
@@ -468,7 +469,19 @@ private fun PapeletaDiariaCard(
                     colors = CheckboxDefaults.colors(checkedColor = Color(0xFF1B5E20)),
                     modifier = Modifier.padding(end = 8.dp),
                 )
-                Text(item.description, color = Color(0xFF1A1A1A), fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Text(
+                    item.description,
+                    color = Color(0xFF1A1A1A),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable {
+                            mostrarImagemProduto(context, item.ean, item.description)
+                        },
+                )
                 Spacer(Modifier.width(8.dp))
                 QtyBoxDiaria(valor = qtd, onChange = onQtdChange)
             }
