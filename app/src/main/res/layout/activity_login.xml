@@ -19,14 +19,14 @@
         android:textSize="310sp"
         android:alpha="0.15"
         android:includeFontPadding="false"
-        android:scaleX="8.0"
-        android:scaleY="8.0"
-        android:translationX="200dp"
+        android:scaleX="6.0"
+        android:scaleY="6.0"
+        android:translationX="240dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.55" />
+        app:layout_constraintVertical_bias="0.35" />
 
     <!-- 1. Área do Logo e Título -->
     <LinearLayout

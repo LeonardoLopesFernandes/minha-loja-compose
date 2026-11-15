@@ -26,6 +26,7 @@ import io.loja.network.models.PriceTagPrinter
 import io.loja.network.models.PriceTagPrintingData
 import io.loja.network.models.PriceTagPromotionalPrice
 import io.loja.network.models.PriceTagTakeAndWin
+import io.loja.utils.Constants
 import io.loja.utils.LogHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -56,6 +57,7 @@ class EtiquetasDiariasViewModel(app: Application) : AndroidViewModel(app) {
     val items: SnapshotStateList<PriceTagItem> = mutableStateListOf()
     val selecionados: SnapshotStateMap<String, Boolean> = mutableStateMapOf()
     val quantidades: SnapshotStateMap<String, Int> = mutableStateMapOf()
+    val saldos: SnapshotStateMap<String, Double> = mutableStateMapOf()
     val departamentosSelecionados: SnapshotStateList<String> = mutableStateListOf()
 
     var currentDate by mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale("pt", "BR")).format(Date()))
@@ -227,6 +229,21 @@ class EtiquetasDiariasViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         return pendente to impressas
+    }
+
+    fun carregarSaldos() {
+        viewModelScope.launch {
+            val loja = session.getUserStore() ?: Constants.DEFAULT_STORE
+            items.toList().forEach { item ->
+                try {
+                    val resp = withContext(Dispatchers.IO) {
+                        api.getProductStore(loja, ean = item.ean, sapCode = item.sap)
+                    }
+                    resp.body()?.let { saldos[item.ean] = it.stock }
+                } catch (_: Exception) {
+                }
+            }
+        }
     }
 
     fun carregarEtiquetas() {

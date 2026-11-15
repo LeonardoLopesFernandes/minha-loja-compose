@@ -108,6 +108,8 @@ fun EtiquetasDiariasScreen(
         onTitulo(if (vm.isTomorrow) "Etiquetas de amanhã" else "Etiquetas de hoje")
     }
 
+    LaunchedEffect(vm.items.size) { vm.carregarSaldos() }
+
     val fmtDia = SimpleDateFormat("dd/MM", Locale("pt", "BR"))
     val hojeStr = fmtDia.format(Date())
     val amanhaStr = fmtDia.format(Date(System.currentTimeMillis() + 86_400_000L))
@@ -268,6 +270,7 @@ fun EtiquetasDiariasScreen(
                     item = item,
                     selecionado = vm.isSelecionado(item),
                     qtd = vm.quantidadeDe(item),
+                    saldo = vm.saldos[item.ean],
                     onCheck = { vm.toggleSelecionado(item, it) },
                     onQtdChange = { vm.setQuantidade(item, it) },
                 )
@@ -405,6 +408,7 @@ private fun PriceTagItemCard(
     item: PriceTagItem,
     selecionado: Boolean,
     qtd: Int,
+    saldo: Double?,
     onCheck: (Boolean) -> Unit,
     onQtdChange: (Int) -> Unit,
 ) {
@@ -493,17 +497,32 @@ private fun PriceTagItemCard(
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
-                            mostrarImagemProduto(context, item.ean, item.description, sap = item.sap)
+                            mostrarImagemProduto(context, item.ean, item.description, estoque = saldo, sap = item.sap)
                         },
                 )
                 Spacer(Modifier.width(8.dp))
                 QtyBoxDiaria(valor = qtd, onChange = onQtdChange)
             }
             Row(modifier = Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("EAN: ${item.ean}", color = Color(0xFF666666), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).clickable {
-                    clipboard.setText(AnnotatedString(item.ean))
-                    Toast.makeText(context, "EAN copiado: ${item.ean}", Toast.LENGTH_SHORT).show()
-                })
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("EAN: ${item.ean}", color = Color(0xFF666666), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.clickable {
+                        clipboard.setText(AnnotatedString(item.ean))
+                        Toast.makeText(context, "EAN copiado: ${item.ean}", Toast.LENGTH_SHORT).show()
+                    })
+                    if (saldo != null) {
+                        Text(
+                            " | SALDO: ${saldo.toInt()}",
+                            color = if (saldo < 0) Color(0xFFD81B3A) else Color(0xFF2E7D32),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
                 if (item.status.equals("Impressa", true)) {
                     Spacer(Modifier.width(8.dp)); StatusBadge("IMPRESSA", Color(0xFF4CAF50))
                 } else if (item.status.equals("Não impressa", true)) {

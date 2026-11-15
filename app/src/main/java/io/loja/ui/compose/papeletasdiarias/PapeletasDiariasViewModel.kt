@@ -56,6 +56,7 @@ class PapeletasDiariasViewModel(app: Application) : AndroidViewModel(app) {
     val items: SnapshotStateList<PriceSign> = mutableStateListOf()
     val selecionados: SnapshotStateMap<String, Boolean> = mutableStateMapOf()
     val quantidades: SnapshotStateMap<String, Int> = mutableStateMapOf()
+    val saldos: SnapshotStateMap<String, Double> = mutableStateMapOf()
     val departamentosSelecionados: SnapshotStateList<String> = mutableStateListOf()
 
     var currentDate by mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale("pt", "BR")).format(Date()))
@@ -204,6 +205,21 @@ class PapeletasDiariasViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: Exception) {
                 LogHelper.e("PapeletasDiariasVM: erro carregarDados", e)
                 carregarPapeletas()
+            }
+        }
+    }
+
+    fun carregarSaldos() {
+        viewModelScope.launch {
+            val loja = session.getUserStore() ?: Constants.DEFAULT_STORE
+            items.toList().forEach { item ->
+                try {
+                    val resp = withContext(Dispatchers.IO) {
+                        api.getProductStore(loja, ean = item.ean, sapCode = item.sap)
+                    }
+                    resp.body()?.let { saldos[item.ean] = it.stock }
+                } catch (_: Exception) {
+                }
             }
         }
     }
