@@ -82,9 +82,10 @@ fun mostrarImagemProduto(
         setPadding(0, dp(4), 0, dp(2))
     }
     val eanView = TextView(context).apply {
-        text = "EAN: $ean (toque para copiar)"
+        text = "EAN: $ean"
         textSize = 11f
-        setTextColor(0xFF64748B.toInt())
+        typeface = Typeface.DEFAULT_BOLD
+        setTextColor(0xFFC61033.toInt())
         gravity = Gravity.CENTER_HORIZONTAL
         setPadding(0, dp(2), 0, dp(10))
         setOnClickListener {
@@ -253,19 +254,8 @@ private fun buscarImagemProduto(
     store: String,
 ): Pair<String, String>? {
     buscarImagemAmericanas(ean, store)?.let { return it to "Americanas" }
-    buscarImagemSi5(ean)?.let { return it to "SI5 Global" }
     buscarImagemBluesoftEan(ean)?.let { return it to "Bluesoft" }
-    if (descricao.isNotBlank()) {
-        buscarImagemBluesoftDescricao(descricao)?.let {
-            return it to "Bluesoft"
-        }
-    }
-    buscarImagemGoogleImages(ean, descricao)?.let {
-        return it to "Google Imagens"
-    }
-    buscarImagemGoogleShopping(ean, descricao)?.let {
-        return it to "Google Shopping"
-    }
+    buscarImagemSi5(ean)?.let { return it to "SI5 Global" }
     return null
 }
 
@@ -301,6 +291,11 @@ private fun buscarImagemAmericanas(ean: String, store: String): String? {
     val url =
         "https://sl-bff-report.americanas.io/web/price-scanner/store/$store/ean/$ean"
     val json = getJson(url)
+    val retorno = json?.optString("ean").orEmpty().filter { it.isDigit() }
+    val solicitado = ean.filter { it.isDigit() }
+    if (retorno.isNotEmpty() && solicitado.isNotEmpty() && retorno != solicitado) {
+        return null
+    }
     val img = json?.optString("imageUrl").orEmpty().trim()
     return img.takeIf { it.startsWith("http") }
 }
@@ -315,6 +310,8 @@ private fun buscarImagemSi5(ean: String): String? {
             "Accept" to "application/json",
         ),
     )
+    val retorno = json?.optString("codbar").orEmpty().filter { it.isDigit() }
+    if (retorno.isNotEmpty() && retorno != codigo) return null
     val img = json?.optString("imagem_url").orEmpty().trim()
     return img.takeIf { it.startsWith("http") }
 }

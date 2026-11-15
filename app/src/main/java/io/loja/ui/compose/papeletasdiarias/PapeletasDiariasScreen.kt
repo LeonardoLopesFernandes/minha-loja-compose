@@ -490,24 +490,16 @@ private fun PapeletaDiariaCard(
                 QtyBoxDiaria(valor = qtd, onChange = onQtdChange)
             }
             Row(modifier = Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text("Dep: ${item.department} • EAN: ${item.ean}", color = Color(0xFF666666), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.clickable {
-                        clipboard.setText(AnnotatedString(item.ean))
-                        Toast.makeText(context, "EAN copiado: ${item.ean}", Toast.LENGTH_SHORT).show()
-                    })
-                    if (saldo != null) {
-                        Text(
-                            " | SALDO: ${saldo.toInt()}",
-                            color = if (saldo < 0) Color(0xFFD81B3A) else Color(0xFF2E7D32),
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
+                Text("Dep: ${item.department} • EAN: ${item.ean}", color = Color(0xFF666666), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).clickable {
+                    clipboard.setText(AnnotatedString(item.ean))
+                    Toast.makeText(context, "EAN copiado: ${item.ean}", Toast.LENGTH_SHORT).show()
+                })
+                if (saldo != null) {
+                    Spacer(Modifier.width(6.dp))
+                    StatusBadge(
+                        "SALDO: ${saldo.toInt()}",
+                        if (saldo < 0) Color(0xFFD81B3A) else Color(0xFF2E7D32),
+                    )
                 }
                 if (item.status.equals("Impressa", true)) { Spacer(Modifier.width(8.dp)); StatusBadge("IMPRESSA", Color(0xFF4CAF50)) }
                 else if (item.status.equals("Não impressa", true)) { Spacer(Modifier.width(8.dp)); StatusBadge("NÃO IMPRESSA", Color(0xFFD81B3A)) }
