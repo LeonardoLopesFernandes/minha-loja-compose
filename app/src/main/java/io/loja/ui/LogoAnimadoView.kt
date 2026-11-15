@@ -26,8 +26,8 @@ class LogoAnimadoView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     private val partes: List<Path>
-    private val medidas: List<PathMeasure>
-    private val comprimentos: List<Float>
+    private val medidas: List<List<PathMeasure>>
+    private val comprimentos: List<List<Float>>
     private val total: Float
     private var progresso = 0f
 
@@ -55,9 +55,9 @@ class LogoAnimadoView @JvmOverloads constructor(
                 fillType = Path.FillType.EVEN_ODD
             }
         }
-        medidas = partes.map { PathMeasure(it, false) }
-        comprimentos = medidas.map { it.length }
-        total = comprimentos.sum()
+        medidas = partes.map { medidasDoPath(it) }
+        comprimentos = medidas.map { lista -> lista.map { it.length } }
+        total = comprimentos.flatten().sum()
         animator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 3200L
             repeatCount = ValueAnimator.INFINITE
@@ -120,18 +120,42 @@ class LogoAnimadoView @JvmOverloads constructor(
         val drawP = (progresso / 0.85f).coerceIn(0f, 1f)
         var restante = total * drawP
         for (i in partes.indices) {
-            val len = comprimentos[i]
-            if (restante >= len) {
+            val lenParte = comprimentos[i].sum()
+            if (restante >= lenParte) {
                 canvas.drawPath(partes[i], fillPaint)
             }
             if (restante > 0f) {
-                val destino = Path()
-                medidas[i].getSegment(0f, min(restante, len), destino, true)
-                canvas.drawPath(destino, strokePaint)
+                var r = min(restante, lenParte)
+                for (j in medidas[i].indices) {
+                    if (r <= 0f) break
+                    val lenContorno = comprimentos[i][j]
+                    val destino = Path()
+                    medidas[i][j].getSegment(
+                        0f,
+                        min(r, lenContorno),
+                        destino,
+                        true,
+                    )
+                    canvas.drawPath(destino, strokePaint)
+                    r -= lenContorno
+                }
             }
-            restante -= len
+            restante -= lenParte
         }
         canvas.restore()
+    }
+
+    private fun medidasDoPath(path: Path): List<PathMeasure> {
+        val lista = mutableListOf<PathMeasure>()
+        val base = PathMeasure(path, false)
+        var indice = 0
+        do {
+            val medida = PathMeasure(path, false)
+            repeat(indice) { medida.nextContour() }
+            lista.add(medida)
+            indice++
+        } while (base.nextContour())
+        return lista
     }
 
     companion object {

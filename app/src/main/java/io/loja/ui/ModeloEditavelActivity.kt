@@ -719,7 +719,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
         tvPreviewStatus.apply { text = "Buscando preview..."; visibility = View.VISIBLE }
         btnCompartilhar.isEnabled = false
 
-        LoadingLogoDialog.show(this, "Gerando pré-visualização...")
+        LoadingLogoDialog.show(this, "Compondo pré-visualização...")
         val apiService = ApiClient.getSlApiService(sessionManager)
         val isLandscapePreview = colsQuadrantes > rowsQuadrantes
         val defaultW = if (isLandscapePreview) 1200 else 850
@@ -872,7 +872,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
         tvPreviewStatus.apply { text = "Buscando preview..."; visibility = View.VISIBLE }
         btnCompartilhar.isEnabled = false
 
-        LoadingLogoDialog.show(this, "Gerando pré-visualização...")
+        LoadingLogoDialog.show(this, "Compondo pré-visualização...")
         val apiService = ApiClient.getSlApiService(sessionManager)
         val isLandscapePreview = colsQuadrantes > rowsQuadrantes
         val defaultW = if (isLandscapePreview) 1200 else 850

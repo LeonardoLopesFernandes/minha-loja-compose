@@ -25,8 +25,8 @@ object LoadingLogoDialog {
             setBackgroundColor(Color.WHITE)
         }
         val logo = LogoAnimadoView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(100), dp(100))
-            setLogoColor(Color.parseColor("#C61033"))
+            layoutParams = LinearLayout.LayoutParams(dp(90), dp(90))
+            setLogoColor(Color.parseColor("#D7193F"))
         }
         val text = TextView(context).apply {
             text = message
