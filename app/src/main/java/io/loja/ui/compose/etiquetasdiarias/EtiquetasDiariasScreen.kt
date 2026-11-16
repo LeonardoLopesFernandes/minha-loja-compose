@@ -554,7 +554,7 @@ private fun PriceTagItemCard(
                     if (separador) Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont, modifier = Modifier.padding(horizontal = 4.dp))
                     if (precoTexto.isNotEmpty()) Text(precoTexto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
                     WhiteTypeBadge(
-                        tipo, tipoCor,
+                        tipo.uppercase(), tipoCor,
                         modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
                         shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
                     )
