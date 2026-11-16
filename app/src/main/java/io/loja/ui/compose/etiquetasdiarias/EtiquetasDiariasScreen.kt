@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +18,8 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -60,20 +61,17 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.sp
@@ -429,69 +427,26 @@ private fun DialogDepartamentos(vm: EtiquetasDiariasViewModel, onFechar: (Boolea
     )
 }
 
-private fun linhaPreco(vararg partes: Pair<String, TextUnit>): AnnotatedString =
-    buildAnnotatedString {
-        partes.forEach { (texto, tamanho) ->
-            withStyle(SpanStyle(fontSize = tamanho, fontWeight = FontWeight.Bold)) {
-                append(texto)
-            }
-        }
-    }
-
 @Composable
 private fun PriceGreenBadge(
-    linhas: List<AnnotatedString>,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxHeight()
-            .background(Color(0xFF4CAF50), RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp))
-            .padding(start = 10.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
-        verticalArrangement = Arrangement.Center,
-    ) {
-        linhas.forEach { linha ->
-            Text(
-                text = linha,
-                color = Color.White,
-                style = TextStyle(
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 16.sp,
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
-@Composable
-private fun BadgeColuna(
     linhas: List<String>,
-    corFundo: Color,
     modifier: Modifier = Modifier,
-    shape: RoundedCornerShape = RoundedCornerShape(0.dp),
-    corTexto: Color = Color.White,
-    borda: Color? = null,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxHeight()
-            .background(corFundo, shape)
-            .then(if (borda != null) Modifier.border(1.dp, borda, shape) else Modifier)
-            .padding(horizontal = 8.dp),
+        modifier = modifier.padding(horizontal = 14.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         linhas.forEach { linha ->
             Text(
-                linha.uppercase(),
-                color = corTexto,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 12.sp,
+                linha,
+                color = Color.White,
+                fontSize = 19.sp,
+                fontWeight = FontWeight.ExtraBold,
+                lineHeight = 22.sp,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -582,11 +537,11 @@ private fun PriceTagItemCard(
         item.status.equals("Não impressa", true) -> "não impressa"
         else -> null
     }
-    val statusFundo = if (item.status.equals("Não impressa", true)) Color(0xFFD81B3A) else Color(0xFF4CAF50)
+    val statusFundo = if (item.status.equals("Não impressa", true)) Color(0xFFD71936) else Color(0xFF278D43)
     val linhasPreco = when {
         tipo == "parcelado" -> buildList {
-            add(linhaPreco(("De: ${if (precoNormal > 0) f.format(precoNormal) else item.price}") to 11.sp))
-            add(linhaPreco((buildString {
+            add("De: ${if (precoNormal > 0) f.format(precoNormal) else item.price}")
+            add(buildString {
                 append("Por: ")
                 append(if (porValor != null && porValor > 0) f.format(porValor) else if (precoNormal > 0) f.format(precoNormal) else item.price)
                 if (parcelasQtd > 0 && valorParcelaCalc > 0) {
@@ -594,35 +549,23 @@ private fun PriceTagItemCard(
                     append("${parcelasQtd}x de ")
                     append(f.format(valorParcelaCalc))
                 }
-            }) to 11.sp))
+            })
         }
         tipo == "de por" && precoPromo != null && precoPromo > 0 -> listOf(
-            linhaPreco("De: " to 11.sp, f.format(precoNormal) to 14.sp),
-            linhaPreco("Por: " to 11.sp, f.format(precoPromo) to 14.sp),
+            "De: ${f.format(precoNormal)}",
+            "Por: ${f.format(precoPromo)}",
         )
         tipo == "leve e ganhe" -> buildList {
-            if (promoText != null) add(linhaPreco(promoText to 13.sp))
-            if (precoTexto.isNotEmpty()) add(linhaPreco("valor unitário " to 11.sp, precoTexto to 14.sp))
+            if (promoText != null) add(promoText)
+            if (precoTexto.isNotEmpty()) add("valor unitário $precoTexto")
         }
-        else -> listOf(linhaPreco(((if (precoNormal > 0) f.format(precoNormal) else item.price)) to 14.sp))
+        else -> listOf(if (precoNormal > 0) f.format(precoNormal) else item.price)
     }
-    val linhasTipo = when (tipo) {
-        "de por" -> listOf("DE", "POR")
-        else -> listOf(tipo.uppercase())
+    val tipoFundo = when (tipo) {
+        "normal" -> Color(0xFF858B91)
+        "leve e ganhe" -> Color.White
+        else -> tipoCor
     }
-    val linhasStatus = when {
-        statusTexto == null -> emptyList()
-        statusTexto == "não impressa" && (tipo == "de por" || tipo == "parcelado") ->
-            listOf("NÃO", "IMPRESSA")
-        else -> listOf(statusTexto.uppercase())
-    }
-    val maxLinhas = maxOf(linhasPreco.size, linhasTipo.size, linhasStatus.size)
-    val alturaBadge = when {
-        maxLinhas >= 3 -> 52.dp
-        maxLinhas == 2 -> 40.dp
-        else -> 28.dp
-    }
-    val tipoFundo = if (tipo == "leve e ganhe") Color.White else tipoCor
     val tipoTexto = if (tipo == "leve e ganhe") tipoCor else Color.White
 
     Card(
@@ -665,29 +608,59 @@ private fun PriceTagItemCard(
                 }
             }
             Row(
-                modifier = Modifier.padding(top = 4.dp).fillMaxWidth().height(alturaBadge),
+                modifier = Modifier
+                    .padding(top = 6.dp)
+                    .wrapContentWidth(Alignment.Start)
+                    .height(68.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF4CAF50)),
             ) {
                 PriceGreenBadge(
                     linhasPreco,
-                    modifier = if (tipo == "parcelado") Modifier.weight(1f) else Modifier.weight(1f, fill = false),
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .widthIn(min = 100.dp)
+                        .fillMaxHeight(),
                 )
-                BadgeColuna(
-                    linhasTipo,
-                    tipoFundo,
-                    shape = if (linhasStatus.isEmpty()) {
-                        RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp)
-                    } else {
-                        RoundedCornerShape(0.dp)
-                    },
-                    corTexto = tipoTexto,
-                    borda = Color(0xFF4CAF50),
-                )
-                if (linhasStatus.isNotEmpty()) {
-                    BadgeColuna(
-                        linhasStatus,
-                        statusFundo,
-                        shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
-                    )
+                Column(
+                    modifier = Modifier
+                        .width(130.dp)
+                        .fillMaxHeight(),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .background(tipoFundo)
+                            .padding(4.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            tipo.uppercase(),
+                            color = tipoTexto,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .background(statusFundo)
+                            .padding(4.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            statusTexto?.uppercase() ?: "",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                        )
+                    }
                 }
             }
         }
