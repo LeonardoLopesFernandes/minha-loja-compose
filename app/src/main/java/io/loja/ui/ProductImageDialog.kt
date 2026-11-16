@@ -169,10 +169,61 @@ fun mostrarImagemProduto(
         ).apply { topMargin = dp(12) }
         setOnClickListener { dialog.dismiss() }
     }
+    val store = SessionManager(context).getUserStore() ?: Constants.DEFAULT_STORE
+    var alternativas: List<Pair<String, String>> = emptyList()
+    var indiceAlternativa = 0
+    var urlAtual = ""
+    val alternativasView = TextView(context).apply {
+        text = "Não é essa? Buscar outras imagens"
+        textSize = 13f
+        typeface = Typeface.DEFAULT_BOLD
+        setTextColor(0xFFC61033.toInt())
+        setPadding(0, dp(10), 0, dp(6))
+        isClickable = true
+    }
+    alternativasView.setOnClickListener {
+        if (!alternativasView.isEnabled) return@setOnClickListener
+        alternativasView.isEnabled = false
+        alternativasView.text = "Buscando outras imagens..."
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                if (alternativas.isEmpty()) {
+                    val lista = withContext(Dispatchers.IO) {
+                        buscarImagensAlternativas(ean, descricao, store)
+                    }
+                    alternativas = lista.filter { it.first != urlAtual }
+                    if (alternativas.isEmpty()) {
+                        alternativasView.text = "Nenhuma outra imagem encontrada"
+                        return@launch
+                    }
+                }
+                val alt = alternativas[indiceAlternativa % alternativas.size]
+                indiceAlternativa++
+                val bmp = withContext(Dispatchers.IO) {
+                    baixarBitmap(alt.first)
+                }
+                if (bmp == null) {
+                    alternativasView.text = "Falha ao carregar a imagem"
+                } else {
+                    imagem.setImageBitmap(bmp)
+                    imagem.visibility = View.VISIBLE
+                    urlAtual = alt.first
+                    alternativasView.text =
+                        "Buscar outra imagem (${indiceAlternativa}/${alternativas.size}) • ${alt.second}"
+                }
+            } catch (_: Exception) {
+                alternativasView.text = "Erro ao buscar imagens"
+            } finally {
+                alternativasView.isEnabled = true
+            }
+        }
+    }
+
     container.addView(fecharTopo)
     container.addView(subtitulo)
     container.addView(progress)
     container.addView(imagem)
+    container.addView(alternativasView)
     container.addView(estoqueView)
     container.addView(sapTitulo)
     container.addView(sapCode)
@@ -183,8 +234,6 @@ fun mostrarImagemProduto(
         ViewGroup.LayoutParams.MATCH_PARENT
     )
     dialog.show()
-
-    val store = SessionManager(context).getUserStore() ?: Constants.DEFAULT_STORE
     CoroutineScope(Dispatchers.Main).launch {
         val saldo = estoque ?: withContext(Dispatchers.IO) {
             buscarEstoqueApi(context, ean, sap, store)
@@ -212,6 +261,7 @@ fun mostrarImagemProduto(
             Toast.makeText(context, "Imagem não encontrada", Toast.LENGTH_LONG).show()
             return@launch
         }
+        urlAtual = resultado.first
         val bitmap = withContext(Dispatchers.IO) {
             baixarBitmap(resultado.first)
         }
@@ -269,6 +319,30 @@ private fun buscarEstoqueAmericanas(ean: String, store: String): Double? {
         json.has("quantidade") -> json.optDouble("quantidade", Double.NaN).takeIf { !it.isNaN() }
         else -> null
     }
+}
+
+private fun buscarImagensAlternativas(
+    ean: String,
+    descricao: String,
+    store: String,
+): List<Pair<String, String>> {
+    val vistos = mutableSetOf<String>()
+    val resultados = mutableListOf<Pair<String, String>>()
+    fun adicionar(fonte: String, url: String?) {
+        val valor = url?.trim().orEmpty()
+        if (valor.startsWith("http") && vistos.add(valor)) {
+            resultados.add(valor to fonte)
+        }
+    }
+    adicionar("Americanas", buscarImagemAmericanas(ean, store))
+    adicionar("SI5 Global", buscarImagemSi5(ean))
+    adicionar("Bluesoft", buscarImagemBluesoftEan(ean))
+    if (descricao.isNotBlank()) {
+        adicionar("Bluesoft", buscarImagemBluesoftDescricao(descricao))
+    }
+    adicionar("Google Imagens", buscarImagemGoogleImages(ean, descricao))
+    adicionar("Google Shopping", buscarImagemGoogleShopping(ean, descricao))
+    return resultados
 }
 
 private fun buscarImagemProduto(

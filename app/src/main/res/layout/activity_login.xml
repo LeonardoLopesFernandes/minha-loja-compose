@@ -21,7 +21,7 @@
         android:includeFontPadding="false"
         android:scaleX="6.0"
         android:scaleY="6.0"
-        android:translationX="300dp"
+        android:translationX="260dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

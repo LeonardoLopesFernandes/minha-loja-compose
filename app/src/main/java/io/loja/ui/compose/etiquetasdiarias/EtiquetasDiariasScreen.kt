@@ -501,6 +501,13 @@ private fun PriceTagItemCard(
         }
     }
 
+    val porValor = when {
+        precoPromo != null && precoPromo > 0 -> precoPromo
+        takeAndWin != null && takeAndWin.totalValue > 0 -> takeAndWin.totalValue
+        tipo == "parcelado" && precoNormal > 0 -> precoNormal
+        else -> null
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -528,38 +535,65 @@ private fun PriceTagItemCard(
                 QtyBoxDiaria(valor = qtd, onChange = onQtdChange)
             }
             Row(modifier = Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("EAN: ${item.ean}", color = Color(0xFF666666), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).clickable {
+                Text("Dep: ${item.department} • EAN: ${item.ean}", color = Color(0xFF666666), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).clickable {
                     clipboard.setText(AnnotatedString(item.ean))
                     Toast.makeText(context, "EAN copiado: ${item.ean}", Toast.LENGTH_SHORT).show()
                 })
-                if (saldo != null) {
+            }
+            Row(
+                modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "De: ${if (precoNormal > 0) f.format(precoNormal) else item.price}",
+                    color = Color(0xFF555555),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                if (tipo != "normal") {
                     Spacer(Modifier.width(6.dp))
+                    WhiteTypeBadge(
+                        tipo,
+                        tipoCor,
+                        modifier = Modifier.height(18.dp),
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+            }
+            Row(
+                modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (porValor != null && porValor > 0) {
+                    Text(
+                        "Por: ${f.format(porValor)}",
+                        color = Color(0xFF1A1A1A),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                if (parcelasQtd > 0 && valorParcelaCalc > 0) {
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "(${parcelasQtd}x de ${f.format(valorParcelaCalc)})",
+                        color = Color(0xFF1A1A1A),
+                        fontSize = 10.sp,
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                if (saldo != null) {
                     StatusBadge(
                         "SALDO: ${saldo.toInt()}",
                         if (saldo < 0) Color(0xFFD81B3A) else Color(0xFF2E7D32),
                     )
+                    Spacer(Modifier.width(6.dp))
                 }
                 if (item.status.equals("Impressa", true)) {
-                    Spacer(Modifier.width(8.dp)); StatusBadge("IMPRESSA", Color(0xFF4CAF50))
+                    StatusBadge("IMPRESSA", Color(0xFF4CAF50))
                 } else if (item.status.equals("Não impressa", true)) {
-                    Spacer(Modifier.width(8.dp)); StatusBadge("NÃO IMPRESSA", Color(0xFFD81B3A))
+                    StatusBadge("NÃO IMPRESSA", Color(0xFFD81B3A))
                 }
-            }
-            Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                GreenBadgeContainer(
-                    modifier = Modifier.height(28.dp),
-                    contentPadding = PaddingValues(start = 12.dp),
-                ) {
-                    val badgeFont = 12.sp
-                    if (promoText != null) Text(promoText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
-                    if (separador) Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont, modifier = Modifier.padding(horizontal = 4.dp))
-                    if (precoTexto.isNotEmpty()) Text(precoTexto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
-                    WhiteTypeBadge(
-                        tipo, tipoCor,
-                        modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
-                        shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
-                    )
-                }
+                Spacer(Modifier.weight(1f))
             }
         }
     }
