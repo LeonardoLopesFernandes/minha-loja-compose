@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -430,10 +431,19 @@ private fun DialogDepartamentos(vm: EtiquetasDiariasViewModel, onFechar: (Boolea
 @Composable
 private fun PriceGreenBadge(
     linhas: List<String>,
+    tipo: String,
     modifier: Modifier = Modifier,
 ) {
-    val tamanho = if (linhas.size == 1) 19.sp else 15.sp
-    val alturaLinha = if (linhas.size == 1) 23.sp else 18.sp
+    val tamanho = when {
+        tipo == "normal" -> 15.sp
+        tipo == "parcelado" -> 14.sp
+        else -> 11.sp
+    }
+    val alturaLinha = when {
+        tipo == "normal" -> 19.sp
+        tipo == "parcelado" -> 18.sp
+        else -> 14.sp
+    }
     Column(
         modifier = modifier.padding(horizontal = 14.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
@@ -621,6 +631,7 @@ private fun PriceTagItemCard(
             ) {
                 PriceGreenBadge(
                     linhasPreco,
+                    tipo,
                     modifier = Modifier
                         .weight(1f, fill = false)
                         .widthIn(min = 100.dp)
@@ -636,6 +647,7 @@ private fun PriceTagItemCard(
                             .fillMaxWidth()
                             .weight(1f)
                             .background(tipoFundo)
+                            .then(if (tipo != "normal") Modifier.border(1.dp, Color(0xFF4CAF50)) else Modifier)
                             .padding(4.dp),
                         contentAlignment = Alignment.Center,
                     ) {
