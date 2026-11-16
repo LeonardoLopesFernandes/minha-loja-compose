@@ -66,9 +66,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.sp
@@ -424,11 +429,19 @@ private fun DialogDepartamentos(vm: EtiquetasDiariasViewModel, onFechar: (Boolea
     )
 }
 
+private fun linhaPreco(vararg partes: Pair<String, TextUnit>): AnnotatedString =
+    buildAnnotatedString {
+        partes.forEach { (texto, tamanho) ->
+            withStyle(SpanStyle(fontSize = tamanho, fontWeight = FontWeight.Bold)) {
+                append(texto)
+            }
+        }
+    }
+
 @Composable
 private fun PriceGreenBadge(
-    linhas: List<String>,
+    linhas: List<AnnotatedString>,
     modifier: Modifier = Modifier,
-    compacto: Boolean = false,
 ) {
     Column(
         modifier = modifier
@@ -439,11 +452,13 @@ private fun PriceGreenBadge(
     ) {
         linhas.forEach { linha ->
             Text(
-                linha,
+                text = linha,
                 color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = if (compacto) 10.sp else 11.sp,
-                lineHeight = if (compacto) 12.sp else 13.sp,
+                style = TextStyle(
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 16.sp,
+                ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -570,8 +585,8 @@ private fun PriceTagItemCard(
     val statusFundo = if (item.status.equals("Não impressa", true)) Color(0xFFD81B3A) else Color(0xFF4CAF50)
     val linhasPreco = when {
         tipo == "parcelado" -> buildList {
-            add("De: ${if (precoNormal > 0) f.format(precoNormal) else item.price}")
-            add(buildString {
+            add(linhaPreco(("De: ${if (precoNormal > 0) f.format(precoNormal) else item.price}") to 11.sp))
+            add(linhaPreco((buildString {
                 append("Por: ")
                 append(if (porValor != null && porValor > 0) f.format(porValor) else if (precoNormal > 0) f.format(precoNormal) else item.price)
                 if (parcelasQtd > 0 && valorParcelaCalc > 0) {
@@ -579,17 +594,17 @@ private fun PriceTagItemCard(
                     append("${parcelasQtd}x de ")
                     append(f.format(valorParcelaCalc))
                 }
-            })
+            }) to 11.sp))
         }
         tipo == "de por" && precoPromo != null && precoPromo > 0 -> listOf(
-            "De: ${f.format(precoNormal)}",
-            "Por: ${f.format(precoPromo)}",
+            linhaPreco("De: " to 11.sp, f.format(precoNormal) to 14.sp),
+            linhaPreco("Por: " to 11.sp, f.format(precoPromo) to 14.sp),
         )
         tipo == "leve e ganhe" -> buildList {
-            if (promoText != null) add(promoText)
-            if (precoTexto.isNotEmpty()) add("valor unitário $precoTexto")
+            if (promoText != null) add(linhaPreco(promoText to 13.sp))
+            if (precoTexto.isNotEmpty()) add(linhaPreco("valor unitário " to 11.sp, precoTexto to 14.sp))
         }
-        else -> listOf(if (precoNormal > 0) f.format(precoNormal) else item.price)
+        else -> listOf(linhaPreco(((if (precoNormal > 0) f.format(precoNormal) else item.price)) to 14.sp))
     }
     val linhasTipo = when (tipo) {
         "de por" -> listOf("DE", "POR")
@@ -655,7 +670,6 @@ private fun PriceTagItemCard(
                 PriceGreenBadge(
                     linhasPreco,
                     modifier = if (tipo == "parcelado") Modifier.weight(1f) else Modifier.weight(1f, fill = false),
-                    compacto = tipo == "leve e ganhe",
                 )
                 BadgeColuna(
                     linhasTipo,
