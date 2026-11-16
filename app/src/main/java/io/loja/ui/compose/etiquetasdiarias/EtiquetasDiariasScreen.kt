@@ -428,6 +428,7 @@ private fun DialogDepartamentos(vm: EtiquetasDiariasViewModel, onFechar: (Boolea
 private fun PriceGreenBadge(
     linhas: List<String>,
     modifier: Modifier = Modifier,
+    compacto: Boolean = false,
 ) {
     Column(
         modifier = modifier
@@ -441,8 +442,8 @@ private fun PriceGreenBadge(
                 linha,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
-                fontSize = 11.sp,
-                lineHeight = 13.sp,
+                fontSize = if (compacto) 10.sp else 11.sp,
+                lineHeight = if (compacto) 12.sp else 13.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -654,6 +655,7 @@ private fun PriceTagItemCard(
                 PriceGreenBadge(
                     linhasPreco,
                     modifier = if (tipo == "parcelado") Modifier.weight(1f) else Modifier.weight(1f, fill = false),
+                    compacto = tipo == "leve e ganhe",
                 )
                 BadgeColuna(
                     linhasTipo,
