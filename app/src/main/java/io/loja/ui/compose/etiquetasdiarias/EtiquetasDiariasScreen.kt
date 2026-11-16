@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -427,6 +428,26 @@ private fun DialogDepartamentos(vm: EtiquetasDiariasViewModel, onFechar: (Boolea
 }
 
 @Composable
+private fun TypeBadge(
+    texto: String,
+    fundo: Color,
+    textoCor: Color,
+    borda: Color,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp)
+    Box(
+        modifier = modifier
+            .background(fundo, shape)
+            .border(1.dp, borda, shape)
+            .padding(horizontal = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(texto, color = textoCor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
 private fun PriceTagItemCard(
     item: PriceTagItem,
     selecionado: Boolean,
@@ -553,11 +574,27 @@ private fun PriceTagItemCard(
                     if (promoText != null) Text(promoText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
                     if (separador) Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont, modifier = Modifier.padding(horizontal = 4.dp))
                     if (precoTexto.isNotEmpty()) Text(precoTexto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
-                    WhiteTypeBadge(
-                        tipo.uppercase(), tipoCor,
-                        modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
-                        shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
-                    )
+                    when (tipo) {
+                        "parcelado", "de por" -> TypeBadge(
+                            tipo.uppercase(),
+                            Color(0xFFFF9800),
+                            Color.White,
+                            Color(0xFFB26B00),
+                            modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
+                        )
+                        "normal" -> TypeBadge(
+                            "NORMAL",
+                            Color(0xFFC7CDD1),
+                            Color.White,
+                            Color(0xFF6F777D),
+                            modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
+                        )
+                        else -> WhiteTypeBadge(
+                            tipo.uppercase(), tipoCor,
+                            modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
+                            shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
+                        )
+                    }
                 }
             }
         }
