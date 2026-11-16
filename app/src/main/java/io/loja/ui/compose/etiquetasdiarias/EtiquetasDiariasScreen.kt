@@ -436,16 +436,17 @@ private fun PriceGreenBadge(
 ) {
     val tamanho = when {
         tipo == "normal" -> 15.sp
-        tipo == "parcelado" -> 14.sp
+        tipo == "parcelado" -> 11.sp
         else -> 11.sp
     }
     val alturaLinha = when {
         tipo == "normal" -> 19.sp
-        tipo == "parcelado" -> 18.sp
+        tipo == "parcelado" -> 14.sp
         else -> 14.sp
     }
+    val paddingVertical = if (linhas.size >= 3) 6.dp else 10.dp
     Column(
-        modifier = modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+        modifier = modifier.padding(horizontal = 14.dp, vertical = paddingVertical),
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.Start,
     ) {
@@ -553,15 +554,10 @@ private fun PriceTagItemCard(
     val linhasPreco = when {
         tipo == "parcelado" -> buildList {
             add("De: ${if (precoNormal > 0) f.format(precoNormal) else item.price}")
-            add(buildString {
-                append("Por: ")
-                append(if (porValor != null && porValor > 0) f.format(porValor) else if (precoNormal > 0) f.format(precoNormal) else item.price)
-                if (parcelasQtd > 0 && valorParcelaCalc > 0) {
-                    append(" • ")
-                    append("${parcelasQtd}x de ")
-                    append(f.format(valorParcelaCalc))
-                }
-            })
+            add("Por: ${if (porValor != null && porValor > 0) f.format(porValor) else if (precoNormal > 0) f.format(precoNormal) else item.price}")
+            if (parcelasQtd > 0 && valorParcelaCalc > 0) {
+                add("${parcelasQtd}x de ${f.format(valorParcelaCalc)}")
+            }
         }
         tipo == "de por" && precoPromo != null && precoPromo > 0 -> listOf(
             "De: ${f.format(precoNormal)}",
@@ -642,36 +638,38 @@ private fun PriceTagItemCard(
                         .width(130.dp)
                         .fillMaxHeight(),
                 ) {
+                    val tipoShape = RoundedCornerShape(topEnd = 12.dp)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .background(tipoFundo)
-                            .then(if (tipo != "normal") Modifier.border(1.dp, Color(0xFF4CAF50)) else Modifier)
+                            .background(tipoFundo, tipoShape)
+                            .then(if (tipo != "normal") Modifier.border(1.dp, Color(0xFF4CAF50), tipoShape) else Modifier)
                             .padding(4.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             tipoLabel,
                             color = tipoTexto,
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.ExtraBold,
                             textAlign = TextAlign.Center,
                             maxLines = 1,
                         )
                     }
+                    val statusShape = RoundedCornerShape(bottomEnd = 12.dp)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .background(statusFundo)
+                            .background(statusFundo, statusShape)
                             .padding(4.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             statusTexto?.uppercase() ?: "",
                             color = Color.White,
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.ExtraBold,
                             textAlign = TextAlign.Center,
                             maxLines = 1,
