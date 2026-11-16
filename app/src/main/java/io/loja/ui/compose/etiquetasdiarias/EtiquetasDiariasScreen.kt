@@ -4,14 +4,10 @@ import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -86,10 +82,8 @@ import io.loja.ui.compose.components.SpinnerDropdown
 import io.loja.ui.compose.components.FiltroCard
 import io.loja.ui.compose.components.FiltroDivisorHorizontal
 import io.loja.ui.compose.components.FiltroDivisorVertical
-import io.loja.ui.compose.components.GreenBadgeContainer
 import io.loja.ui.compose.components.QtyBoxDiaria
 import io.loja.ui.compose.components.StatusBadge
-import io.loja.ui.compose.components.WhiteTypeBadge
 import io.loja.utils.Constants
 import io.loja.utils.SessionExpiredHandler
 import java.io.File
@@ -429,7 +423,60 @@ private fun DialogDepartamentos(vm: EtiquetasDiariasViewModel, onFechar: (Boolea
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PriceGreenBadge(
+    linhas: List<String>,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .background(Color(0xFF4CAF50), RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp))
+            .padding(start = 12.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+        verticalArrangement = Arrangement.Center,
+    ) {
+        linhas.forEach { linha ->
+            Text(
+                linha,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                lineHeight = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun BadgeColuna(
+    linhas: List<String>,
+    corFundo: Color,
+    modifier: Modifier = Modifier,
+    shape: RoundedCornerShape = RoundedCornerShape(0.dp),
+) {
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .background(corFundo, shape)
+            .padding(horizontal = 8.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        linhas.forEach { linha ->
+            Text(
+                linha.uppercase(),
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 12.sp,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
 @Composable
 private fun PriceTagItemCard(
     item: PriceTagItem,
@@ -510,6 +557,53 @@ private fun PriceTagItemCard(
         tipo == "parcelado" && precoNormal > 0 -> precoNormal
         else -> null
     }
+    val statusTexto = when {
+        item.status.equals("Impressa", true) -> "impressa"
+        item.status.equals("Não impressa", true) -> "não impressa"
+        else -> null
+    }
+    val statusFundo = if (item.status.equals("Não impressa", true)) Color(0xFFD81B3A) else Color(0xFF4CAF50)
+    val linhasPreco = when {
+        tipo == "parcelado" -> buildList {
+            add("De: ${if (precoNormal > 0) f.format(precoNormal) else item.price}")
+            add(buildString {
+                append("Por: ")
+                append(if (porValor != null && porValor > 0) f.format(porValor) else if (precoNormal > 0) f.format(precoNormal) else item.price)
+                if (parcelasQtd > 0 && valorParcelaCalc > 0) {
+                    append(" • ")
+                    append("${parcelasQtd}x de ")
+                    append(f.format(valorParcelaCalc))
+                }
+            })
+        }
+        tipo == "de por" && precoPromo != null && precoPromo > 0 -> listOf(
+            "De: ${f.format(precoNormal)}",
+            "Por: ${f.format(precoPromo)}",
+        )
+        tipo == "leve e ganhe" -> buildList {
+            if (promoText != null) add(promoText)
+            if (precoTexto.isNotEmpty()) {
+                add("valor unitário")
+                add(precoTexto)
+            }
+        }
+        else -> listOf(if (precoNormal > 0) f.format(precoNormal) else item.price)
+    }
+    val linhasTipo = when (tipo) {
+        "de por" -> listOf("DE", "POR")
+        else -> listOf(tipo.uppercase())
+    }
+    val linhasStatus = when (statusTexto) {
+        null -> emptyList()
+        "não impressa" -> listOf("NÃO", "IMPRESSA")
+        else -> listOf(statusTexto.uppercase())
+    }
+    val maxLinhas = maxOf(linhasPreco.size, linhasTipo.size, linhasStatus.size)
+    val alturaBadge = when {
+        maxLinhas >= 3 -> 52.dp
+        maxLinhas == 2 -> 40.dp
+        else -> 28.dp
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -550,89 +644,28 @@ private fun PriceTagItemCard(
                     )
                 }
             }
-            if (tipo == "parcelado") {
-                val statusTexto = when {
-                    item.status.equals("Impressa", true) -> "impressa"
-                    item.status.equals("Não impressa", true) -> "não impressa"
-                    else -> null
-                }
-                val statusCor = if (item.status.equals("Não impressa", true)) Color(0xFFD81B3A) else Color(0xFF2E7D32)
-                Row(
-                    modifier = Modifier.padding(top = 4.dp).height(40.dp),
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .background(Color(0xFF4CAF50), RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp))
-                            .padding(start = 12.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        Text(
-                            "De: ${if (precoNormal > 0) f.format(precoNormal) else item.price}",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            lineHeight = 13.sp,
-                        )
-                        Text(
-                            buildString {
-                                append("Por: ")
-                                append(if (porValor != null && porValor > 0) f.format(porValor) else if (precoNormal > 0) f.format(precoNormal) else item.price)
-                                if (parcelasQtd > 0 && valorParcelaCalc > 0) {
-                                    append(" • ")
-                                    append("${parcelasQtd}x de ")
-                                    append(f.format(valorParcelaCalc))
-                                }
-                            },
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            lineHeight = 13.sp,
-                        )
-                    }
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .background(Color.White, RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp))
-                            .border(1.dp, Color(0xFF4CAF50), RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        Text("parcelado", color = tipoCor, fontSize = 10.sp, fontWeight = FontWeight.Bold, lineHeight = 12.sp)
-                        if (statusTexto != null) {
-                            Text(statusTexto, color = statusCor, fontSize = 10.sp, fontWeight = FontWeight.Bold, lineHeight = 12.sp)
-                        }
-                    }
-                }
-            } else {
-                FlowRow(
-                    modifier = Modifier.padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    GreenBadgeContainer(
-                        modifier = Modifier.height(28.dp),
-                        contentPadding = PaddingValues(start = 12.dp),
-                    ) {
-                        val badgeFont = 12.sp
-                        if (promoText != null) Text(promoText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
-                        if (separador) Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont, modifier = Modifier.padding(horizontal = 4.dp))
-                        if (precoTexto.isNotEmpty()) Text(precoTexto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
-                        WhiteTypeBadge(
-                            tipo, tipoCor,
-                            modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
-                            shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
-                        )
-                    }
-                    if (item.status.equals("Impressa", true)) {
-                        Box(Modifier.height(28.dp), contentAlignment = Alignment.Center) {
-                            StatusBadge("IMPRESSA", Color(0xFF4CAF50))
-                        }
-                    } else if (item.status.equals("Não impressa", true)) {
-                        Box(Modifier.height(28.dp), contentAlignment = Alignment.Center) {
-                            StatusBadge("NÃO IMPRESSA", Color(0xFFD81B3A))
-                        }
-                    }
+            Row(
+                modifier = Modifier.padding(top = 4.dp).fillMaxWidth().height(alturaBadge),
+            ) {
+                PriceGreenBadge(
+                    linhasPreco,
+                    modifier = Modifier.weight(1f),
+                )
+                BadgeColuna(
+                    linhasTipo,
+                    tipoCor,
+                    shape = if (linhasStatus.isEmpty()) {
+                        RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp)
+                    } else {
+                        RoundedCornerShape(0.dp)
+                    },
+                )
+                if (linhasStatus.isNotEmpty()) {
+                    BadgeColuna(
+                        linhasStatus,
+                        statusFundo,
+                        shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
+                    )
                 }
             }
         }
