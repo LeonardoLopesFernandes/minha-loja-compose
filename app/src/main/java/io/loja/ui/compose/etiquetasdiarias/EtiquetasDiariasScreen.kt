@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -456,11 +457,13 @@ private fun BadgeColuna(
     modifier: Modifier = Modifier,
     shape: RoundedCornerShape = RoundedCornerShape(0.dp),
     corTexto: Color = Color.White,
+    borda: Color? = null,
 ) {
     Column(
         modifier = modifier
             .fillMaxHeight()
             .background(corFundo, shape)
+            .then(if (borda != null) Modifier.border(1.dp, borda, shape) else Modifier)
             .padding(horizontal = 8.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -661,6 +664,7 @@ private fun PriceTagItemCard(
                         RoundedCornerShape(0.dp)
                     },
                     corTexto = tipoTexto,
+                    borda = Color(0xFF4CAF50),
                 )
                 if (linhasStatus.isNotEmpty()) {
                     BadgeColuna(
