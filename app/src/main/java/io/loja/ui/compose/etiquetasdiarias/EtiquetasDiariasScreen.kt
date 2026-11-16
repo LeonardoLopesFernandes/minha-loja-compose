@@ -591,9 +591,10 @@ private fun PriceTagItemCard(
         "de por" -> listOf("DE", "POR")
         else -> listOf(tipo.uppercase())
     }
-    val linhasStatus = when (statusTexto) {
-        null -> emptyList()
-        "não impressa" -> listOf("NÃO", "IMPRESSA")
+    val linhasStatus = when {
+        statusTexto == null -> emptyList()
+        statusTexto == "não impressa" && (tipo == "de por" || tipo == "parcelado") ->
+            listOf("NÃO", "IMPRESSA")
         else -> listOf(statusTexto.uppercase())
     }
     val maxLinhas = maxOf(linhasPreco.size, linhasTipo.size, linhasStatus.size)
