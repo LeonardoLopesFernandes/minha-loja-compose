@@ -432,21 +432,23 @@ private fun PriceGreenBadge(
     linhas: List<String>,
     modifier: Modifier = Modifier,
 ) {
+    val tamanho = if (linhas.size == 1) 19.sp else 15.sp
+    val alturaLinha = if (linhas.size == 1) 23.sp else 18.sp
     Column(
         modifier = modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.Start,
     ) {
         linhas.forEach { linha ->
             Text(
                 linha,
                 color = Color.White,
-                fontSize = 19.sp,
+                fontSize = tamanho,
                 fontWeight = FontWeight.ExtraBold,
-                lineHeight = 22.sp,
+                lineHeight = alturaLinha,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Start,
             )
         }
     }
@@ -533,8 +535,8 @@ private fun PriceTagItemCard(
         else -> null
     }
     val statusTexto = when {
-        item.status.equals("Impressa", true) -> "impressa"
-        item.status.equals("Não impressa", true) -> "não impressa"
+        item.status.equals("Impressa", true) -> "impresso"
+        item.status.equals("Não impressa", true) -> "não impresso"
         else -> null
     }
     val statusFundo = if (item.status.equals("Não impressa", true)) Color(0xFFD71936) else Color(0xFF278D43)
@@ -557,16 +559,18 @@ private fun PriceTagItemCard(
         )
         tipo == "leve e ganhe" -> buildList {
             if (promoText != null) add(promoText)
-            if (precoTexto.isNotEmpty()) add("valor unitário $precoTexto")
+            if (precoTexto.isNotEmpty()) add("Valor unitário $precoTexto")
         }
         else -> listOf(if (precoNormal > 0) f.format(precoNormal) else item.price)
     }
-    val tipoFundo = when (tipo) {
-        "normal" -> Color(0xFF858B91)
-        "leve e ganhe" -> Color.White
-        else -> tipoCor
+    val tipoFundo = if (tipo == "normal") Color(0xFF858B91) else Color.White
+    val tipoTexto = when (tipo) {
+        "normal" -> Color.White
+        "leve e ganhe" -> Color(0xFF347B40)
+        "de por", "parcelado" -> Color(0xFFF28C00)
+        else -> Color.White
     }
-    val tipoTexto = if (tipo == "leve e ganhe") tipoCor else Color.White
+    val tipoLabel = if (tipo == "de por") "DE / POR" else tipo.uppercase()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -636,7 +640,7 @@ private fun PriceTagItemCard(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            tipo.uppercase(),
+                            tipoLabel,
                             color = tipoTexto,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.ExtraBold,
