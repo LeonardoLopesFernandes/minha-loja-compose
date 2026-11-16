@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,10 +68,12 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import io.loja.network.PriceSign
 import io.loja.ui.ModeloEditavelActivity
+import io.loja.ui.LogoAnimadoView
 import io.loja.ui.mostrarImagemProduto
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.DepartamentoSelector
@@ -95,6 +100,7 @@ private val MOVIMENTOS = listOf("Todos", "De/Por", "Leve e Ganhe", "Normal")
 private val TIPOS = listOf("Normal", "Promocional", "Promocional (Modelo)", "Normal (Modelo)")
 private val STATUSES = listOf("Todos os status", "Impressas", "Não impressas")
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun PapeletasDiariasScreen(
     vm: PapeletasDiariasViewModel,
@@ -150,6 +156,10 @@ fun PapeletasDiariasScreen(
 
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val refreshState = rememberPullRefreshState(
+        refreshing = vm.carregando,
+        onRefresh = { vm.carregarPapeletas() },
+    )
     val mostrarTopo by remember {
         derivedStateOf {
             listState.firstVisibleItemIndex > 0 ||
@@ -157,7 +167,7 @@ fun PapeletasDiariasScreen(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().pullRefresh(refreshState)) {
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize().background(Color(0xFFEDEFF2)).padding(12.dp),
@@ -270,6 +280,20 @@ fun PapeletasDiariasScreen(
                 )
             }
         }
+    }
+
+    if (refreshState.progress > 0f || vm.carregando) {
+        AndroidView(
+            factory = { ctx ->
+                LogoAnimadoView(ctx).apply {
+                    setLogoColor(0xFFD7193F.toInt())
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 8.dp)
+                .size(36.dp),
+        )
     }
 
     if (vm.selecionadosCount > 0) {

@@ -20,6 +20,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import io.loja.network.ApiClient
 import io.loja.network.SessionManager
 import io.loja.utils.Constants
 import kotlinx.coroutines.CoroutineScope
@@ -86,7 +87,8 @@ fun mostrarImagemProduto(
         textSize = 11f
         typeface = Typeface.DEFAULT_BOLD
         setTextColor(0xFFC61033.toInt())
-        gravity = Gravity.CENTER_HORIZONTAL
+        gravity = Gravity.START
+        textAlignment = View.TEXT_ALIGNMENT_TEXT_START
         setPadding(0, dp(2), 0, dp(10))
         setOnClickListener {
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE)
@@ -185,7 +187,8 @@ fun mostrarImagemProduto(
     val store = SessionManager(context).getUserStore() ?: Constants.DEFAULT_STORE
     CoroutineScope(Dispatchers.Main).launch {
         val saldo = estoque ?: withContext(Dispatchers.IO) {
-            buscarEstoqueAmericanas(ean, store)
+            buscarEstoqueApi(context, ean, sap, store)
+                ?: buscarEstoqueAmericanas(ean, store)
         }
         if (saldo != null) {
             estoqueView.text = "Estoque estimado: ${saldo.toInt()}"
@@ -233,6 +236,26 @@ fun mostrarImagemProduto(
                 Toast.LENGTH_LONG
             ).show()
         }
+    }
+}
+
+private suspend fun buscarEstoqueApi(
+    context: Context,
+    ean: String,
+    sap: String,
+    store: String,
+): Double? {
+    return try {
+        val session = SessionManager(context)
+        val api = ApiClient.getSlApiService(session)
+        val resp = api.getProductStore(
+            store,
+            ean = ean,
+            sapCode = sap.takeIf { it.isNotBlank() },
+        )
+        if (resp.isSuccessful) resp.body()?.stock else null
+    } catch (_: Exception) {
+        null
     }
 }
 

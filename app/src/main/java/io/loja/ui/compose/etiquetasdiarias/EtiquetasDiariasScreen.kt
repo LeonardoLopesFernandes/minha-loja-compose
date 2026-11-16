@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -68,10 +71,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import io.loja.network.models.PriceTagItem
 import io.loja.ui.GondolaEditavelActivity
+import io.loja.ui.LogoAnimadoView
 import io.loja.ui.mostrarImagemProduto
 import io.loja.ui.compose.MinhaLojaRed
 import io.loja.ui.compose.components.DepartamentoSelector
@@ -94,6 +99,7 @@ import java.util.Locale
 private val CINZA_LABEL = Color(0xFF8C9BA5)
 private val CINZA_TEXTO = Color(0xFF1E293B)
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun EtiquetasDiariasScreen(
     vm: EtiquetasDiariasViewModel,
@@ -142,6 +148,10 @@ fun EtiquetasDiariasScreen(
 
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val refreshState = rememberPullRefreshState(
+        refreshing = vm.carregando,
+        onRefresh = { vm.carregarEtiquetas() },
+    )
     val mostrarTopo by remember {
         derivedStateOf {
             listState.firstVisibleItemIndex > 0 ||
@@ -149,7 +159,7 @@ fun EtiquetasDiariasScreen(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().pullRefresh(refreshState)) {
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize().background(Color(0xFFEDEFF2)).padding(12.dp),
@@ -276,6 +286,20 @@ fun EtiquetasDiariasScreen(
                 )
             }
         }
+    }
+
+    if (refreshState.progress > 0f || vm.carregando) {
+        AndroidView(
+            factory = { ctx ->
+                LogoAnimadoView(ctx).apply {
+                    setLogoColor(0xFFD7193F.toInt())
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 8.dp)
+                .size(36.dp),
+        )
     }
 
     if (vm.selecionadosCount > 0) {
