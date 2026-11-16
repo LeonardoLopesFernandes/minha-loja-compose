@@ -432,7 +432,7 @@ private fun PriceGreenBadge(
         modifier = modifier
             .fillMaxHeight()
             .background(Color(0xFF4CAF50), RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp))
-            .padding(start = 12.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+            .padding(start = 10.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
         verticalArrangement = Arrangement.Center,
     ) {
         linhas.forEach { linha ->
@@ -455,6 +455,7 @@ private fun BadgeColuna(
     corFundo: Color,
     modifier: Modifier = Modifier,
     shape: RoundedCornerShape = RoundedCornerShape(0.dp),
+    corTexto: Color = Color.White,
 ) {
     Column(
         modifier = modifier
@@ -467,7 +468,7 @@ private fun BadgeColuna(
         linhas.forEach { linha ->
             Text(
                 linha.uppercase(),
-                color = Color.White,
+                color = corTexto,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 lineHeight = 12.sp,
@@ -582,10 +583,7 @@ private fun PriceTagItemCard(
         )
         tipo == "leve e ganhe" -> buildList {
             if (promoText != null) add(promoText)
-            if (precoTexto.isNotEmpty()) {
-                add("valor unitário")
-                add(precoTexto)
-            }
+            if (precoTexto.isNotEmpty()) add("valor unitário $precoTexto")
         }
         else -> listOf(if (precoNormal > 0) f.format(precoNormal) else item.price)
     }
@@ -604,6 +602,8 @@ private fun PriceTagItemCard(
         maxLinhas == 2 -> 40.dp
         else -> 28.dp
     }
+    val tipoFundo = if (tipo == "leve e ganhe") Color.White else tipoCor
+    val tipoTexto = if (tipo == "leve e ganhe") tipoCor else Color.White
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -649,16 +649,17 @@ private fun PriceTagItemCard(
             ) {
                 PriceGreenBadge(
                     linhasPreco,
-                    modifier = Modifier.weight(1f),
+                    modifier = if (tipo == "parcelado") Modifier.weight(1f) else Modifier.weight(1f, fill = false),
                 )
                 BadgeColuna(
                     linhasTipo,
-                    tipoCor,
+                    tipoFundo,
                     shape = if (linhasStatus.isEmpty()) {
                         RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp)
                     } else {
                         RoundedCornerShape(0.dp)
                     },
+                    corTexto = tipoTexto,
                 )
                 if (linhasStatus.isNotEmpty()) {
                     BadgeColuna(
