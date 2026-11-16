@@ -428,6 +428,27 @@ private fun DialogDepartamentos(vm: EtiquetasDiariasViewModel, onFechar: (Boolea
 }
 
 @Composable
+private fun GreenValueBadge(
+    texto: String,
+    cor: Color = Color(0xFF4CAF50),
+) {
+    Box(
+        modifier = Modifier
+            .background(cor, RoundedCornerShape(6.dp))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            texto,
+            color = Color.White,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
 private fun PriceTagItemCard(
     item: PriceTagItem,
     selecionado: Boolean,
@@ -539,61 +560,85 @@ private fun PriceTagItemCard(
                     clipboard.setText(AnnotatedString(item.ean))
                     Toast.makeText(context, "EAN copiado: ${item.ean}", Toast.LENGTH_SHORT).show()
                 })
+                if (tipo != "parcelado") {
+                    if (saldo != null) {
+                        Spacer(Modifier.width(6.dp))
+                        StatusBadge(
+                            "SALDO: ${saldo.toInt()}",
+                            if (saldo < 0) Color(0xFFD81B3A) else Color(0xFF2E7D32),
+                        )
+                    }
+                    if (item.status.equals("Impressa", true)) {
+                        Spacer(Modifier.width(8.dp)); StatusBadge("IMPRESSA", Color(0xFF4CAF50))
+                    } else if (item.status.equals("Não impressa", true)) {
+                        Spacer(Modifier.width(8.dp)); StatusBadge("NÃO IMPRESSA", Color(0xFFD81B3A))
+                    }
+                }
             }
-            Row(
-                modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    "De: ${if (precoNormal > 0) f.format(precoNormal) else item.price}",
-                    color = Color(0xFF555555),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                if (tipo != "normal") {
-                    Spacer(Modifier.width(6.dp))
-                    WhiteTypeBadge(
-                        tipo,
-                        tipoCor,
-                        modifier = Modifier.height(18.dp),
+            if (tipo == "parcelado") {
+                Row(
+                    modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    GreenValueBadge(
+                        "De: ${if (precoNormal > 0) f.format(precoNormal) else item.price}",
                     )
+                    Spacer(Modifier.weight(1f))
                 }
-                Spacer(Modifier.weight(1f))
-            }
-            Row(
-                modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (porValor != null && porValor > 0) {
-                    Text(
-                        "Por: ${f.format(porValor)}",
-                        color = Color(0xFF1A1A1A),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
+                Row(
+                    modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (porValor != null && porValor > 0) {
+                        GreenValueBadge(
+                            "Por: ${f.format(porValor)}",
+                        )
+                    }
+                    if (parcelasQtd > 0 && valorParcelaCalc > 0) {
+                        Spacer(Modifier.width(6.dp))
+                        GreenValueBadge(
+                            "PARCELADO ${parcelasQtd}x de ${f.format(valorParcelaCalc)}",
+                            Color(0xFF2E7D32),
+                        )
+                    } else {
+                        Spacer(Modifier.width(6.dp))
+                        GreenValueBadge(
+                            "PARCELADO",
+                            Color(0xFF2E7D32),
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    if (saldo != null) {
+                        StatusBadge(
+                            "SALDO: ${saldo.toInt()}",
+                            if (saldo < 0) Color(0xFFD81B3A) else Color(0xFF2E7D32),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                    }
+                    if (item.status.equals("Impressa", true)) {
+                        StatusBadge("IMPRESSA", Color(0xFF4CAF50))
+                    } else if (item.status.equals("Não impressa", true)) {
+                        StatusBadge("NÃO IMPRESSA", Color(0xFFD81B3A))
+                    }
+                    Spacer(Modifier.weight(1f))
                 }
-                if (parcelasQtd > 0 && valorParcelaCalc > 0) {
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        "(${parcelasQtd}x de ${f.format(valorParcelaCalc)})",
-                        color = Color(0xFF1A1A1A),
-                        fontSize = 10.sp,
-                    )
+            } else {
+                Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    GreenBadgeContainer(
+                        modifier = Modifier.height(28.dp),
+                        contentPadding = PaddingValues(start = 12.dp),
+                    ) {
+                        val badgeFont = 12.sp
+                        if (promoText != null) Text(promoText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
+                        if (separador) Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont, modifier = Modifier.padding(horizontal = 4.dp))
+                        if (precoTexto.isNotEmpty()) Text(precoTexto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
+                        WhiteTypeBadge(
+                            tipo, tipoCor,
+                            modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
+                            shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
+                        )
+                    }
                 }
-                Spacer(Modifier.width(8.dp))
-                if (saldo != null) {
-                    StatusBadge(
-                        "SALDO: ${saldo.toInt()}",
-                        if (saldo < 0) Color(0xFFD81B3A) else Color(0xFF2E7D32),
-                    )
-                    Spacer(Modifier.width(6.dp))
-                }
-                if (item.status.equals("Impressa", true)) {
-                    StatusBadge("IMPRESSA", Color(0xFF4CAF50))
-                } else if (item.status.equals("Não impressa", true)) {
-                    StatusBadge("NÃO IMPRESSA", Color(0xFFD81B3A))
-                }
-                Spacer(Modifier.weight(1f))
             }
         }
     }
