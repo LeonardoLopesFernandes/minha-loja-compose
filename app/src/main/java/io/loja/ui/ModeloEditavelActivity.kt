@@ -103,6 +103,11 @@ class ModeloEditavelActivity : AppCompatActivity() {
     private var lastPreviewKey: String? = null
     private var itemDesafioMode = false
     private var itemDesafioPdf: File? = null
+    private var itemDesafioPdfSem: File? = null
+    private val itemDesafioUsaModelo = mutableListOf<Boolean>()
+    private var overlayCheckBox: android.widget.CheckBox? = null
+    private var overlayLabelView: android.widget.TextView? = null
+    private var sincronizandoOverlayPagina = false
 
     companion object {
         @JvmStatic var dadosPendentesList: MutableList<PapeletaPrintingData>? = null
@@ -169,47 +174,63 @@ class ModeloEditavelActivity : AppCompatActivity() {
         carregarOverlayAssets(grupo.size)
     }
 
+    private suspend fun gerarPdfGrupoItemDesafio(): File? {
+        for (dpi in listOf(300, 200)) {
+            for (scale in listOf(4, 3, 2)) {
+                val pdf = gerarPdfMultiArquivo(renderScale = scale, copias = 1, dpi = dpi)
+                if (pdf != null) return pdf
+            }
+        }
+        return null
+    }
+
     private fun gerarItemDesafioPreview(grupos: List<PapeletaGrupo>) {
         LoadingLogoDialog.show(this, "Gerando preview...")
         lifecycleScope.launch {
             try {
-                val pdfs = mutableListOf<File>()
+                val comPdfs = mutableListOf<File>()
+                val semPdfs = mutableListOf<File>()
                 for (grupo in grupos) {
                     configurarGrupoItemDesafio(grupo)
-                    var pdf: File? = null
-                    for (dpi in listOf(300, 200)) {
-                        for (scale in listOf(4, 3, 2)) {
-                            pdf = gerarPdfMultiArquivo(renderScale = scale, copias = 1, dpi = dpi)
-                            if (pdf != null) break
-                        }
-                        if (pdf != null) break
-                    }
-                    if (pdf != null) pdfs.add(pdf)
+                    semOverlay = false
+                    gerarPdfGrupoItemDesafio()?.let { comPdfs.add(it) }
+                    semOverlay = true
+                    gerarPdfGrupoItemDesafio()?.let { semPdfs.add(it) }
+                    semOverlay = false
                     previewPdfCache.clear()
                 }
-                if (pdfs.isEmpty()) {
+                if (comPdfs.isEmpty()) {
                     withContext(Dispatchers.Main) {
                         LoadingLogoDialog.dismiss()
                         ToastUtils.show(this@ModeloEditavelActivity, "Erro ao gerar preview")
                     }
                     return@launch
                 }
-                val merged = mergePdfs(pdfs)
-                pdfs.forEach { it.delete() }
-                if (merged == null) {
+                val mergedCom = mergePdfs(comPdfs)
+                val mergedSem = if (semPdfs.isEmpty()) null else mergePdfs(semPdfs)
+                comPdfs.forEach { it.delete() }
+                semPdfs.forEach { it.delete() }
+                if (mergedCom == null) {
                     withContext(Dispatchers.Main) {
                         LoadingLogoDialog.dismiss()
                         ToastUtils.show(this@ModeloEditavelActivity, "Erro ao juntar os PDFs")
                     }
                     return@launch
                 }
-                val paginas = renderPdfPagesToBitmaps(merged)
+                val paginas = renderPdfPagesToBitmaps(mergedCom)
                 withContext(Dispatchers.Main) {
                     LoadingLogoDialog.dismiss()
-                    itemDesafioPdf = merged
+                    itemDesafioPdf = mergedCom
+                    itemDesafioPdfSem = mergedSem ?: mergedCom
+                    itemDesafioUsaModelo.clear()
+                    itemDesafioUsaModelo.addAll(List(paginas.size) { true })
                     statusPreviewBase = "ITEM DESAFIO"
                     limparPaginasPreview()
                     paginasPreview.addAll(paginas)
+                    sincronizandoOverlayPagina = true
+                    overlayCheckBox?.isChecked = true
+                    overlayLabelView?.text = "Com modelo"
+                    sincronizandoOverlayPagina = false
                     setPaginaPreview(0)
                     btnCompartilhar.isEnabled = true
                     btnSharePdf.isEnabled = true
@@ -304,8 +325,119 @@ class ModeloEditavelActivity : AppCompatActivity() {
         return paginas
     }
 
+    private fun renderPdfPageToBitmap(file: File, pageIndex: Int): Bitmap? {
+        return try {
+            val fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+            val renderer = PdfRenderer(fd)
+            var bmp: Bitmap? = null
+            if (pageIndex in 0 until renderer.pageCount) {
+                renderer.openPage(pageIndex).use { page ->
+                    val scale = minOf(
+                        1200f / page.width,
+                        1200f / page.height,
+                        3f
+                    )
+                    val w = (page.width * scale).toInt().coerceAtLeast(1)
+                    val h = (page.height * scale).toInt().coerceAtLeast(1)
+                    bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                    page.render(bmp!!, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
+                }
+            }
+            renderer.close()
+            fd.close()
+            bmp
+        } catch (e: Exception) {
+            LogHelper.e("ItemDesafio: render pagina", e)
+            null
+        }
+    }
+
+    private fun atualizarPaginaItemDesafio(indice: Int) {
+        if (indice !in paginasPreview.indices) return
+        val arquivo = if (itemDesafioUsaModelo.getOrNull(indice) == true) {
+            itemDesafioPdf
+        } else {
+            itemDesafioPdfSem
+        } ?: return
+        val bmp = renderPdfPageToBitmap(arquivo, indice) ?: return
+        val anterior = paginasPreview[indice]
+        paginasPreview[indice] = bmp
+        if (indice == paginaPreviewAtual) ivPreview.setImageBitmap(bmp)
+        anterior.recycle()
+    }
+
+    private fun sincronizarOverlayPagina() {
+        if (!itemDesafioMode) return
+        val comModelo = itemDesafioUsaModelo.getOrNull(paginaPreviewAtual) ?: true
+        sincronizandoOverlayPagina = true
+        overlayCheckBox?.isChecked = comModelo
+        overlayLabelView?.text = if (comModelo) "Com modelo" else "Sem modelo"
+        sincronizandoOverlayPagina = false
+    }
+
+    private fun montarPdfItemDesafio(): File? {
+        val com = itemDesafioPdf ?: return null
+        val sem = itemDesafioPdfSem ?: return null
+        val fdCom = ParcelFileDescriptor.open(com, ParcelFileDescriptor.MODE_READ_ONLY)
+        val fdSem = ParcelFileDescriptor.open(sem, ParcelFileDescriptor.MODE_READ_ONLY)
+        val rendererCom = PdfRenderer(fdCom)
+        val rendererSem = PdfRenderer(fdSem)
+        val out = PdfDocument()
+        try {
+            val total = minOf(
+                rendererCom.pageCount,
+                rendererSem.pageCount,
+                itemDesafioUsaModelo.size
+            )
+            for (i in 0 until total) {
+                val renderer = if (itemDesafioUsaModelo[i]) rendererCom else rendererSem
+                renderer.openPage(i).use { page ->
+                    if (page.width <= 0 || page.height <= 0) return@use
+                    val scale = 3
+                    val bmp = Bitmap.createBitmap(
+                        page.width * scale,
+                        page.height * scale,
+                        Bitmap.Config.ARGB_8888
+                    )
+                    page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
+                    val info = PdfDocument.PageInfo.Builder(
+                        page.width,
+                        page.height,
+                        i + 1
+                    ).create()
+                    val docPage = out.startPage(info)
+                    docPage.canvas.drawBitmap(
+                        bmp,
+                        null,
+                        android.graphics.RectF(
+                            0f, 0f,
+                            page.width.toFloat(),
+                            page.height.toFloat()
+                        ),
+                        null
+                    )
+                    out.finishPage(docPage)
+                    bmp.recycle()
+                }
+            }
+            if (total == 0) {
+                out.close()
+                return null
+            }
+            val file = File(cacheDir, "item_desafio_final_${System.currentTimeMillis()}.pdf")
+            FileOutputStream(file).use { out.writeTo(it) }
+            return file
+        } finally {
+            out.close()
+            rendererCom.close()
+            rendererSem.close()
+            fdCom.close()
+            fdSem.close()
+        }
+    }
+
     private fun enviarItemDesafioParaImpressora() {
-        val file = itemDesafioPdf ?: return
+        val file = montarPdfItemDesafio() ?: return
         btnCompartilhar.text = "GERANDO PDF..."
         btnCompartilhar.isEnabled = false
         lifecycleScope.launch(Dispatchers.IO) {
@@ -329,7 +461,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
     }
 
     private fun compartilharItemDesafio() {
-        val file = itemDesafioPdf ?: return
+        val file = montarPdfItemDesafio() ?: return
         try {
             val uri = FileProvider.getUriForFile(
                 this,
@@ -405,6 +537,8 @@ class ModeloEditavelActivity : AppCompatActivity() {
         mostrarCheckboxOverlay = intent.getBooleanExtra(EXTRA_MOSTRAR_CHECKBOX_OVERLAY, false)
         val cbOverlay = findViewById<android.widget.CheckBox>(R.id.cbOverlay)
         val tvOverlayLabel = findViewById<android.widget.TextView>(R.id.tvOverlayLabel)
+        overlayCheckBox = cbOverlay
+        overlayLabelView = tvOverlayLabel
         if (mostrarCheckboxOverlay) {
             findViewById<View>(R.id.layoutOverlay)?.visibility = View.VISIBLE
             cbOverlay.isChecked = !semOverlay
@@ -412,6 +546,15 @@ class ModeloEditavelActivity : AppCompatActivity() {
             tvOverlayLabel.setOnClickListener { cbOverlay.isChecked = !cbOverlay.isChecked }
             cbOverlay.setOnCheckedChangeListener { _, isChecked ->
                 tvOverlayLabel.text = if (isChecked) "Com modelo" else "Sem modelo"
+                if (itemDesafioMode) {
+                    if (sincronizandoOverlayPagina) return@setOnCheckedChangeListener
+                    val idx = paginaPreviewAtual
+                    if (idx in itemDesafioUsaModelo.indices) {
+                        itemDesafioUsaModelo[idx] = isChecked
+                        atualizarPaginaItemDesafio(idx)
+                    }
+                    return@setOnCheckedChangeListener
+                }
                 if (semOverlay == !isChecked) return@setOnCheckedChangeListener
                 semOverlay = !isChecked
                 if (semOverlay) {
@@ -420,13 +563,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                 } else {
                     carregarOverlayAssets()
                 }
-                if (itemDesafioMode) {
-                    btnCompartilhar.isEnabled = false
-                    btnSharePdf.isEnabled = false
-                    itemDesafioPdf = null
-                } else {
-                    gerarPreviewMulti()
-                }
+                gerarPreviewMulti()
             }
         }
 
@@ -906,6 +1043,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
         paginaPreviewAtual = novo
         ivPreview.setImageBitmap(paginasPreview[paginaPreviewAtual])
         atualizarPageIndicator()
+        sincronizarOverlayPagina()
     }
 
     private fun setPaginaPreview(indice: Int) {
@@ -913,6 +1051,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
         paginaPreviewAtual = indice.coerceIn(0, paginasPreview.size - 1)
         ivPreview.setImageBitmap(paginasPreview[paginaPreviewAtual])
         atualizarPageIndicator()
+        sincronizarOverlayPagina()
     }
 
     private fun atualizarPageIndicator() {
