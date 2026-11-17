@@ -13,6 +13,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -492,7 +493,7 @@ private fun PapeletaCard(
         valor = f.format(precoNormal)
         tipo = "leve e ganhe"; tipoCor = Color(0xFF2E7D32)
     } else if (ehDeporParcelado) {
-        valor = "Por R$${num.format(precoNormal)}|Por R$${num.format(precoPromo!!)}|${qtdParc}x de R$${num.format(valorParc)}"
+        valor = "De R$${num.format(precoNormal)}|Por R$${num.format(precoPromo!!)}|${qtdParc}x de R$${num.format(valorParc)}"
         tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
     } else if (qtdParc > 0) {
         val por = precoPromo?.takeIf { it > 0 }
@@ -504,6 +505,12 @@ private fun PapeletaCard(
     } else if (precoPromo != null && precoPromo > 0 && precoPromo < precoNormal) {
         valor = "De ${f.format(precoNormal)} | Por ${f.format(precoPromo)}"
         tipo = "de por"; tipoCor = Color(0xFFFF9800)
+    }
+
+    val bordaTipo = when (tipo) {
+        "normal" -> Color(0xFF6F777D)
+        "de por", "parcelado" -> Color(0xFFB26B00)
+        else -> Color(0xFF1B5E20)
     }
 
     val deptNum = item.department.substringBefore(" -").trim()
@@ -574,25 +581,39 @@ private fun PapeletaCard(
                     )
                     Spacer(Modifier.height(4.dp))
                     if (leve != null) {
-                        GreenBadgeContainer(
-                            modifier = Modifier.height(28.dp),
-                            contentPadding = PaddingValues(start = 10.dp),
+                        Box(
+                            modifier = Modifier
+                                .height(28.dp)
+                                .border(1.dp, Color(0xFF2E7D32), RoundedCornerShape(6.dp))
+                                .padding(1.dp),
                         ) {
+                            GreenBadgeContainer(
+                                modifier = Modifier.fillMaxHeight(),
+                                contentPadding = PaddingValues(start = 10.dp),
+                            ) {
                             Text(leve, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
                             Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 4.dp))
                             Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
                             WhiteTypeBadge(
-                                tipo, tipoCor,
+                                tipo.uppercase(), tipoCor,
                                 modifier = Modifier.fillMaxHeight().padding(start = 6.dp),
                                 shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
+                                borda = bordaTipo,
                             )
+                        }
                         }
                     } else {
                         val parcelado = tipo == "parcelado"
-                        GreenBadgeContainer(
-                            modifier = Modifier.height(28.dp),
-                            contentPadding = PaddingValues(start = 12.dp),
+                        Box(
+                            modifier = Modifier
+                                .height(28.dp)
+                                .border(1.dp, Color(0xFF2E7D32), RoundedCornerShape(6.dp))
+                                .padding(1.dp),
                         ) {
+                            GreenBadgeContainer(
+                                modifier = Modifier.fillMaxHeight(),
+                                contentPadding = PaddingValues(start = 12.dp),
+                            ) {
                             if (parcelado) {
                                 var tamFonte by remember(valor) { mutableStateOf(14f) }
                                 Text(
@@ -610,10 +631,12 @@ private fun PapeletaCard(
                                 Text(valor, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
                             }
                             WhiteTypeBadge(
-                                tipo, tipoCor,
+                                tipo.uppercase(), tipoCor,
                                 modifier = Modifier.fillMaxHeight().padding(start = if (parcelado) 10.dp else 8.dp),
                                 shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
+                                borda = bordaTipo,
                             )
+                        }
                         }
                     }
                 }

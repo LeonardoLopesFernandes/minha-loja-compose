@@ -52,11 +52,11 @@ fun GreenBadgeContainer(
 
 /** Badge branco (badge_white_container): fundo branco, raio 30, texto colorido 10sp. */
 @Composable
-fun WhiteTypeBadge(texto: String, cor: Color, modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(30.dp)) {
+fun WhiteTypeBadge(texto: String, cor: Color, modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(30.dp), borda: Color = VERDE_CONTAINER) {
     Box(
         modifier = modifier
             .background(Color.White, shape)
-            .border(1.dp, VERDE_CONTAINER, shape)
+            .border(1.dp, borda, shape)
             .padding(horizontal = 8.dp, vertical = 2.dp),
         contentAlignment = Alignment.Center,
     ) {
