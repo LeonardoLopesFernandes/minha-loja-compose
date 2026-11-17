@@ -434,14 +434,12 @@ private fun TypeBadge(
     texto: String,
     fundo: Color,
     textoCor: Color,
-    borda: Color,
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp)
     Box(
         modifier = modifier
             .background(fundo, shape)
-            .border(1.dp, borda, shape)
             .padding(horizontal = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -613,20 +611,17 @@ private fun PriceTagItemCard(
                             tipo.uppercase(),
                             Color(0xFFFF9800),
                             Color.White,
-                            Color(0xFFB26B00),
                             modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
                         )
                         "normal" -> TypeBadge(
                             "NORMAL",
                             Color(0xFFC7CDD1),
                             Color(0xFF37474F),
-                            Color(0xFF6F777D),
                             modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
                         )
                         else -> TypeBadge(
                             "LEVE E GANHE",
                             Color.White,
-                            tipoCor,
                             tipoCor,
                             modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
                         )

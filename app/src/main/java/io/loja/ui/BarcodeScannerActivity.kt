@@ -1509,7 +1509,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     putExtra(ModeloEditavelActivity.EXTRA_MODO_EDITAVEL, false)
                     putExtra(ModeloEditavelActivity.EXTRA_MODO_VENCIMENTOS, false)
                     putExtra(ModeloEditavelActivity.EXTRA_HIDE_GERAR_PREVIEW, true)
-                    putExtra(ModeloEditavelActivity.EXTRA_MOSTRAR_CHECKBOX_OVERLAY, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_MOSTRAR_CHECKBOX_OVERLAY, true)
                     putExtra(ModeloEditavelActivity.EXTRA_SIZE, lotes.first().size)
                 }
                 startActivity(i)

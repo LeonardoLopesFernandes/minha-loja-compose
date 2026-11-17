@@ -177,14 +177,15 @@ class ModeloEditavelActivity : AppCompatActivity() {
                 for (grupo in grupos) {
                     configurarGrupoItemDesafio(grupo)
                     var pdf: File? = null
-                    for (dpi in listOf(300, 600)) {
-                        for (scale in listOf(8, 4, 2)) {
+                    for (dpi in listOf(300, 200)) {
+                        for (scale in listOf(4, 3, 2)) {
                             pdf = gerarPdfMultiArquivo(renderScale = scale, copias = 1, dpi = dpi)
                             if (pdf != null) break
                         }
                         if (pdf != null) break
                     }
                     if (pdf != null) pdfs.add(pdf)
+                    previewPdfCache.clear()
                 }
                 if (pdfs.isEmpty()) {
                     withContext(Dispatchers.Main) {
@@ -194,6 +195,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                     return@launch
                 }
                 val merged = mergePdfs(pdfs)
+                pdfs.forEach { it.delete() }
                 if (merged == null) {
                     withContext(Dispatchers.Main) {
                         LoadingLogoDialog.dismiss()
@@ -233,7 +235,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                 for (i in 0 until renderer.pageCount) {
                     renderer.openPage(i).use { page ->
                         if (page.width <= 0 || page.height <= 0) return@use
-                        val scale = 4
+                        val scale = 3
                         val bmp = Bitmap.createBitmap(
                             page.width * scale,
                             page.height * scale,
@@ -284,9 +286,9 @@ class ModeloEditavelActivity : AppCompatActivity() {
             for (i in 0 until renderer.pageCount) {
                 renderer.openPage(i).use { page ->
                     val scale = minOf(
-                        1600f / page.width,
-                        1600f / page.height,
-                        4f
+                        1200f / page.width,
+                        1200f / page.height,
+                        3f
                     )
                     val w = (page.width * scale).toInt().coerceAtLeast(1)
                     val h = (page.height * scale).toInt().coerceAtLeast(1)
@@ -390,6 +392,10 @@ class ModeloEditavelActivity : AppCompatActivity() {
 
         etCopiaQuantidade = findViewById(R.id.etCopiaQuantidade)
 
+        val gruposDesafio = gruposPendentes
+        gruposPendentes = null
+        itemDesafioMode = gruposDesafio != null && gruposDesafio.isNotEmpty()
+
         semOverlay = intent.getBooleanExtra(EXTRA_SEM_OVERLAY, false)
         enviarApi = intent.getBooleanExtra(EXTRA_ENVIAR_API, false)
         apiSemOverlay = intent.getBooleanExtra(EXTRA_API_SEM_OVERLAY, false)
@@ -414,17 +420,26 @@ class ModeloEditavelActivity : AppCompatActivity() {
                 } else {
                     carregarOverlayAssets()
                 }
-                gerarPreviewMulti()
+                if (itemDesafioMode) {
+                    btnCompartilhar.isEnabled = false
+                    btnSharePdf.isEnabled = false
+                    itemDesafioPdf = null
+                } else {
+                    gerarPreviewMulti()
+                }
             }
         }
 
-        val gruposDesafio = gruposPendentes
-        gruposPendentes = null
-        if (gruposDesafio != null && gruposDesafio.isNotEmpty()) {
-            itemDesafioMode = true
+        if (itemDesafioMode && gruposDesafio != null) {
             multiMode = true
             findViewById<TextView>(R.id.tvTituloModelo).text = "ITEM DESAFIO"
-            btnGerarPreview.visibility = View.GONE
+            findViewById<View>(R.id.tvEditarItens)?.visibility = View.GONE
+            btnGerarPreview.visibility = View.VISIBLE
+            btnGerarPreview.text = "GERAR PRÉ-VISUALIZAÇÃO"
+            btnGerarPreview.isEnabled = true
+            btnGerarPreview.setOnClickListener {
+                gruposDesafio?.let { gerarItemDesafioPreview(it) }
+            }
             btnCompartilhar.text = "IMPRIMIR PAPELETA"
             btnCompartilhar.isEnabled = false
             btnCompartilhar.setOnClickListener { enviarItemDesafioParaImpressora() }

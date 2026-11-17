@@ -598,7 +598,7 @@ private fun PapeletaCard(
                                 tipo.uppercase(), tipoCor,
                                 modifier = Modifier.fillMaxHeight().padding(start = 6.dp),
                                 shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
-                                borda = bordaTipo,
+                                borda = Color.Transparent,
                             )
                         }
                         }
@@ -634,7 +634,7 @@ private fun PapeletaCard(
                                 tipo.uppercase(), tipoCor,
                                 modifier = Modifier.fillMaxHeight().padding(start = if (parcelado) 10.dp else 8.dp),
                                 shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
-                                borda = bordaTipo,
+                                borda = Color.Transparent,
                             )
                         }
                         }
