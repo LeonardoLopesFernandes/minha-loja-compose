@@ -1438,7 +1438,11 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
     private suspend fun buscarGrupoItemDesafio(lote: PreviewLote): PapeletaGrupo? {
         val data = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        val tipos = listOf(Constants.TIPO_COMUM, Constants.TIPO_PROMOCIONAL)
+        val tipos = when (lote.modalidade) {
+            "Promocional" -> listOf(Constants.TIPO_PROMOCIONAL)
+            "Normal" -> listOf(Constants.TIPO_COMUM)
+            else -> listOf(Constants.TIPO_COMUM, Constants.TIPO_PROMOCIONAL)
+        }
         val pares = mutableListOf<Triple<Int, String, ItemScanner>>()
         for ((idx, item) in lote.itens.withIndex()) {
             for (type in tipos) pares.add(Triple(idx, type, item))
@@ -1482,7 +1486,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         return if (lista.isEmpty()) null else PapeletaGrupo(lista, quantidades, lote.size)
     }
 
-    private fun abrirPreviewItemDesafio(lotes: List<PreviewLote>) {
+    private fun abrirPreviewItemDesafio(lotes: List<PreviewLote>, titulo: String) {
         LoadingLogoDialog.show(this, "Buscando papeletas...")
         lifecycleScope.launch {
             try {
@@ -1499,6 +1503,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     return@launch
                 }
                 ModeloEditavelActivity.gruposPendentes = grupos
+                ModeloEditavelActivity.tituloGruposPendentes = titulo
                 val i = Intent(
                     this@BarcodeScannerActivity,
                     ModeloEditavelActivity::class.java
@@ -1829,7 +1834,11 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
         container.addView(scroll)
 
-        val abrirItemDesafioDialog: () -> Unit = {
+        fun abrirDialogTamanhos(
+            modalidade: String,
+            tamanhosSel: List<Pair<String, String>>,
+            titulo: String,
+        ) {
             val desafioSheet = BottomSheetDialog(this)
             val desafioContainer = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -1844,13 +1853,13 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 }
             }
             desafioContainer.addView(TextView(this).apply {
-                text = "ITEM DESAFIO"
+                text = titulo
                 textSize = 15f
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 setTextColor(0xFF1E293B.toInt())
             })
             desafioContainer.addView(TextView(this).apply {
-                text = "Escolha os itens e os tamanhos (pode marcar 2x1 e 4x1 do mesmo item)"
+                text = "Escolha os itens e os tamanhos"
                 textSize = 12f
                 setTextColor(0xFF64748B.toInt())
                 setPadding(0, dp(4), 0, dp(12))
@@ -1858,18 +1867,13 @@ class BarcodeScannerActivity : AppCompatActivity() {
             val desafioLinhas = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
             }
-            val cb2List = mutableListOf<CheckBox>()
-            val cb4List = mutableListOf<CheckBox>()
+            val sizeChecks = mutableListOf<MutableList<CheckBox>>()
             for (item in itens) {
-                val row = LinearLayout(this).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
+                val itemCol = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
                     setPadding(0, dp(4), 0, dp(4))
                 }
-                val dados = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                }
-                dados.addView(TextView(this).apply {
+                itemCol.addView(TextView(this).apply {
                     text = item.description.ifEmpty { item.ean }
                     textSize = 12f
                     setTypeface(null, android.graphics.Typeface.BOLD)
@@ -1877,30 +1881,29 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     maxLines = 1
                     ellipsize = android.text.TextUtils.TruncateAt.END
                 })
-                dados.addView(TextView(this).apply {
+                itemCol.addView(TextView(this).apply {
                     text = item.ean
                     textSize = 9f
                     setTextColor(0xFF64748B.toInt())
                 })
-                row.addView(
-                    dados,
-                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                )
-                val cb2 = CheckBox(this).apply {
-                    text = "2x1"
-                    textSize = 11f
-                    setTextColor(0xFF1E293B.toInt())
+                val checksRow = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
                 }
-                val cb4 = CheckBox(this).apply {
-                    text = "4x1"
-                    textSize = 11f
-                    setTextColor(0xFF1E293B.toInt())
+                val checks = mutableListOf<CheckBox>()
+                for (tamanho in tamanhosSel) {
+                    val cb = CheckBox(this).apply {
+                        text = tamanho.first
+                        textSize = 10f
+                        setTextColor(0xFF1E293B.toInt())
+                        setPadding(0, 0, dp(4), 0)
+                    }
+                    checks.add(cb)
+                    checksRow.addView(cb)
                 }
-                cb2List.add(cb2)
-                cb4List.add(cb4)
-                row.addView(cb2)
-                row.addView(cb4)
-                desafioLinhas.addView(row)
+                sizeChecks.add(checks)
+                itemCol.addView(checksRow)
+                desafioLinhas.addView(itemCol)
             }
             val desafioScroll = ScrollView(this).apply {
                 addView(desafioLinhas)
@@ -1918,43 +1921,38 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 textSize = 14f
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 setOnClickListener {
-                    val itens2 = mutableListOf<ItemScanner>()
-                    val itens4 = mutableListOf<ItemScanner>()
-                    for (i in itens.indices) {
-                        if (cb2List[i].isChecked) itens2.add(itens[i])
-                        if (cb4List[i].isChecked) itens4.add(itens[i])
+                    val lotes = mutableListOf<PreviewLote>()
+                    for ((sizeIdx, tamanho) in tamanhosSel.withIndex()) {
+                        val indices = itens.indices.filter {
+                            sizeChecks[it][sizeIdx].isChecked
+                        }
+                        if (indices.isEmpty()) continue
+                        val qtd = when (tamanho.second) {
+                            Constants.SIGN_SIZE_1X1 -> 1
+                            Constants.SIGN_SIZE_2X1 -> 2
+                            Constants.SIGN_SIZE_4X1 -> 4
+                            Constants.SIGN_SIZE_6X1 -> 6
+                            else -> 1
+                        }
+                        lotes.add(
+                            PreviewLote(
+                                indices.map { itens[it] },
+                                List(indices.size) { qtd },
+                                tamanho.second,
+                                modalidade,
+                            )
+                        )
                     }
-                    if (itens2.isEmpty() && itens4.isEmpty()) {
+                    if (lotes.isEmpty()) {
                         ToastUtils.show(
                             this@BarcodeScannerActivity,
                             "Selecione ao menos um tamanho"
                         )
                         return@setOnClickListener
                     }
-                    val lotes = mutableListOf<PreviewLote>()
-                    if (itens2.isNotEmpty()) {
-                        lotes.add(
-                            PreviewLote(
-                                itens2,
-                                List(itens2.size) { 2 },
-                                tamanhos[1].second,
-                                "Item Desafio",
-                            )
-                        )
-                    }
-                    if (itens4.isNotEmpty()) {
-                        lotes.add(
-                            PreviewLote(
-                                itens4,
-                                List(itens4.size) { 4 },
-                                tamanhos[2].second,
-                                "Item Desafio",
-                            )
-                        )
-                    }
                     desafioSheet.dismiss()
                     sheet.dismiss()
-                    abrirPreviewItemDesafio(lotes)
+                    abrirPreviewItemDesafio(lotes, titulo)
                 }
             }
             desafioContainer.addView(
@@ -1980,6 +1978,8 @@ class BarcodeScannerActivity : AppCompatActivity() {
             setTextColor(0xFF1E293B.toInt())
             setPadding(0, dp(8), 0, 0)
         })
+        var atualizarTamanhoVisivel: (() -> Unit)? = null
+        var modalidadeInicial = true
         val spinnerModalidade = android.widget.Spinner(this).apply {
             adapter = android.widget.ArrayAdapter(
                 this@BarcodeScannerActivity,
@@ -1995,7 +1995,29 @@ class BarcodeScannerActivity : AppCompatActivity() {
                         id: Long,
                     ) {
                         modalidadeSel = modalidades[position]
-                        if (modalidadeSel == "Item Desafio") abrirItemDesafioDialog()
+                        atualizarTamanhoVisivel?.invoke()
+                        val usaSelecao = modalidadeSel == "Misto Editável" ||
+                            modalidadeSel == "Item Desafio" ||
+                            modalidadeSel == "Promocional" ||
+                            modalidadeSel == "Normal"
+                        if (!modalidadeInicial && usaSelecao) {
+                            val tamanhosSel =
+                                if (modalidadeSel == "Item Desafio") {
+                                    tamanhos.filter {
+                                        it.second == Constants.SIGN_SIZE_2X1 ||
+                                            it.second == Constants.SIGN_SIZE_4X1
+                                    }
+                                } else {
+                                    tamanhos
+                                }
+                            val titulo = if (modalidadeSel == "Item Desafio") {
+                                "ITEM DESAFIO"
+                            } else {
+                                modalidadeSel.replace(" Editável", "").uppercase()
+                            }
+                            abrirDialogTamanhos(modalidadeSel, tamanhosSel, titulo)
+                        }
+                        modalidadeInicial = false
                     }
 
                     override fun onNothingSelected(
@@ -2006,13 +2028,14 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
         container.addView(spinnerModalidade)
 
-        container.addView(TextView(this).apply {
+        val tamanhoLabel = TextView(this).apply {
             text = "Tamanho"
             textSize = 12f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(0xFF1E293B.toInt())
             setPadding(0, dp(8), 0, 0)
-        })
+        }
+        container.addView(tamanhoLabel)
         val chipGroup = ChipGroup(this).apply {
             isSingleSelection = true
             isSelectionRequired = true
@@ -2048,6 +2071,18 @@ class BarcodeScannerActivity : AppCompatActivity() {
             chipGroup.addView(chip)
         }
         container.addView(chipGroup)
+        atualizarTamanhoVisivel = {
+            val usaSelecao = modalidadeSel == "Misto Editável" ||
+                modalidadeSel == "Item Desafio" ||
+                modalidadeSel == "Promocional" ||
+                modalidadeSel == "Normal"
+            tamanhoLabel.visibility = if (usaSelecao) View.GONE else View.VISIBLE
+            chipGroup.visibility = if (usaSelecao) View.GONE else View.VISIBLE
+            for (input in inputs) {
+                input.visibility = if (usaSelecao) View.GONE else View.VISIBLE
+            }
+        }
+        atualizarTamanhoVisivel?.invoke()
 
         val btnGerar = MaterialButton(this).apply {
             text = "VISUALIZAR PAPELETA"
@@ -2058,8 +2093,26 @@ class BarcodeScannerActivity : AppCompatActivity() {
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setOnClickListener {
-                if (modalidadeSel == "Item Desafio") {
-                    abrirItemDesafioDialog()
+                val usaSelecao = modalidadeSel == "Misto Editável" ||
+                    modalidadeSel == "Item Desafio" ||
+                    modalidadeSel == "Promocional" ||
+                    modalidadeSel == "Normal"
+                if (usaSelecao) {
+                    val tamanhosSel =
+                        if (modalidadeSel == "Item Desafio") {
+                            tamanhos.filter {
+                                it.second == Constants.SIGN_SIZE_2X1 ||
+                                    it.second == Constants.SIGN_SIZE_4X1
+                            }
+                        } else {
+                            tamanhos
+                        }
+                    val titulo = if (modalidadeSel == "Item Desafio") {
+                        "ITEM DESAFIO"
+                    } else {
+                        modalidadeSel.replace(" Editável", "").uppercase()
+                    }
+                    abrirDialogTamanhos(modalidadeSel, tamanhosSel, titulo)
                     return@setOnClickListener
                 }
                 val size = tamanhos[sizeIdx].second

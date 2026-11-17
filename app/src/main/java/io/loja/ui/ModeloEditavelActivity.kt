@@ -102,6 +102,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
     private val previewBitmapCache: HashMap<String, List<Bitmap>> = HashMap()
     private var lastPreviewKey: String? = null
     private var itemDesafioMode = false
+    private var tituloGrupos = "ITEM DESAFIO"
     private var itemDesafioPdf: File? = null
     private var itemDesafioPdfSem: File? = null
     private val itemDesafioUsaModelo = mutableListOf<Boolean>()
@@ -112,6 +113,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
     companion object {
         @JvmStatic var dadosPendentesList: MutableList<PapeletaPrintingData>? = null
         @JvmStatic var gruposPendentes: List<PapeletaGrupo>? = null
+        @JvmStatic var tituloGruposPendentes: String? = null
         const val EXTRA_SIZE = "size"
         const val EXTRA_SEM_OVERLAY = "sem_overlay"
         const val EXTRA_ENVIAR_API = "enviar_api"
@@ -224,7 +226,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
                     itemDesafioPdfSem = mergedSem ?: mergedCom
                     itemDesafioUsaModelo.clear()
                     itemDesafioUsaModelo.addAll(List(paginas.size) { true })
-                    statusPreviewBase = "ITEM DESAFIO"
+                    statusPreviewBase = tituloGrupos
                     limparPaginasPreview()
                     paginasPreview.addAll(paginas)
                     sincronizandoOverlayPagina = true
@@ -527,6 +529,8 @@ class ModeloEditavelActivity : AppCompatActivity() {
         val gruposDesafio = gruposPendentes
         gruposPendentes = null
         itemDesafioMode = gruposDesafio != null && gruposDesafio.isNotEmpty()
+        tituloGrupos = tituloGruposPendentes ?: "ITEM DESAFIO"
+        tituloGruposPendentes = null
 
         semOverlay = intent.getBooleanExtra(EXTRA_SEM_OVERLAY, false)
         enviarApi = intent.getBooleanExtra(EXTRA_ENVIAR_API, false)
@@ -569,7 +573,7 @@ class ModeloEditavelActivity : AppCompatActivity() {
 
         if (itemDesafioMode && gruposDesafio != null) {
             multiMode = true
-            findViewById<TextView>(R.id.tvTituloModelo).text = "ITEM DESAFIO"
+            findViewById<TextView>(R.id.tvTituloModelo).text = tituloGrupos
             findViewById<View>(R.id.tvEditarItens)?.visibility = View.GONE
             btnGerarPreview.visibility = View.VISIBLE
             btnGerarPreview.text = "GERAR PRÉ-VISUALIZAÇÃO"
