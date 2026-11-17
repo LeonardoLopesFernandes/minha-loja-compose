@@ -67,7 +67,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -470,6 +473,7 @@ private fun PriceTagItemCard(
     var promoText: String? = null
     var separador = false
     var precoTexto = if (precoNormal > 0) f.format(precoNormal) else item.price
+    var precoAnotado: AnnotatedString? = null
 
     val parcelasQtd = pd?.installments?.installmentQuantity ?: 0
     val valorParcelaCalc = pd?.installments?.installmentValue?.takeIf { it > 0 }
@@ -493,9 +497,23 @@ private fun PriceTagItemCard(
         }
         ehDeporParcelado -> {
             tipo = "parcelado"; tipoCor = Color(0xFFFF9800)
-            promoText = "Por R$${num.format(precoNormal)}|Por R$${num.format(precoPromo!!)}|${parcelasQtd}x de R$${num.format(valorParcelaCalc)}"
+            promoText = null
             separador = false
             precoTexto = ""
+            val deTexto = if (precoNormal > 0) f.format(precoNormal) else item.price
+            precoAnotado = buildAnnotatedString {
+                withStyle(SpanStyle(fontSize = 9.sp, fontWeight = FontWeight.Bold)) {
+                    append("De $deTexto")
+                }
+                withStyle(SpanStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold)) {
+                    append("|Por ${f.format(precoPromo!!)}")
+                }
+                if (parcelasQtd > 0 && valorParcelaCalc > 0) {
+                    withStyle(SpanStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold)) {
+                        append("|${parcelasQtd}x de ${f.format(valorParcelaCalc)}")
+                    }
+                }
+            }
         }
         movement.contains("DE") || movement.contains("POR") || movement.contains("PROMOCIONAL") -> {
             tipo = "de por"; tipoCor = Color(0xFFFF9800)
@@ -575,11 +593,12 @@ private fun PriceTagItemCard(
                     contentPadding = PaddingValues(start = 12.dp),
                 ) {
                     Text(
-                        promoCompleto,
+                        precoAnotado ?: AnnotatedString(promoCompleto),
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
                         maxLines = 1,
+                        softWrap = false,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false),
                     )
