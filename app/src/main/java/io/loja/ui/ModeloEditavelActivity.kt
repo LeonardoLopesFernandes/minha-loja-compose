@@ -1584,9 +1584,6 @@ class ModeloEditavelActivity : AppCompatActivity() {
             val pdfDoc = PdfDocument()
             var algumItem = false
             for (p in 0 until pages) {
-                val items = allItems.subList(p * gridCap, minOf((p + 1) * gridCap, allItems.size))
-                val baseIdx = p * gridCap
-
                 val compositedBmp = Bitmap.createBitmap(canvasW, canvasH, Bitmap.Config.ARGB_8888)
                 val compCanvas = Canvas(compositedBmp)
                 compCanvas.drawColor(Color.WHITE)
@@ -1642,9 +1639,11 @@ class ModeloEditavelActivity : AppCompatActivity() {
                     }
                     bmpPorItem.values.forEach { it.recycle() }
                 } else {
-                    for (i in items.indices) {
-                        val idx = baseIdx + i
-                        val data = items[i]
+                    val inicio = p * gridCap
+                    val fim = minOf(inicio + gridCap, expandedCells.size)
+                    for (cellPos in inicio until fim) {
+                        val idx = expandedCells[cellPos]
+                        val data = multiDataList[idx]
                         val pdfBytes = previewPdfCache[idx]
                         if (pdfBytes == null || pdfBytes.isEmpty()) continue
 
@@ -1672,7 +1671,8 @@ class ModeloEditavelActivity : AppCompatActivity() {
                         renderer.close(); fd.close(); pdfFile.delete()
                         if (itemBmp != null) {
                             val bmp = itemBmp!!
-                            val col = i % colsQuadrantes; val row = i / colsQuadrantes
+                            val local = cellPos % gridCap
+                            val col = local % colsQuadrantes; val row = local / colsQuadrantes
                             val fitComumSeisX1 = colsQuadrantes == 6 && rowsQuadrantes == 1
                             val scaled = if (fitComumSeisX1) bmp else Bitmap.createScaledBitmap(bmp, cellW, cellH, true)
                             if (ehComum && overlay != null) {

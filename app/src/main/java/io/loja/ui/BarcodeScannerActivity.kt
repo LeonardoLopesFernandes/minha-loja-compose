@@ -72,6 +72,13 @@ private data class ItemScanner(
     val valor: String,
 )
 
+private data class PreviewLote(
+    val itens: List<ItemScanner>,
+    val qtds: List<Int>,
+    val size: String,
+    val modalidade: String,
+)
+
 class BarcodeScannerActivity : AppCompatActivity() {
 
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
@@ -96,6 +103,8 @@ class BarcodeScannerActivity : AppCompatActivity() {
     private var continuoPronto = false
     private var camera: androidx.camera.core.Camera? = null
     private var lanternaOn = false
+    private val previewLotes = ArrayDeque<PreviewLote>()
+    private var previewLoteEmAndamento = false
 
     companion object {
         const val EXTRA_EAN = "EAN"
@@ -105,6 +114,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         const val TIPO_LISTA_PAPELETAS = "PAPELETAS"
         private const val TAG = "BarcodeScanner"
         private const val DEBOUNCE_MS = 3000L
+        private const val REQUEST_PREVIEW = 9101
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -1398,6 +1408,34 @@ class BarcodeScannerActivity : AppCompatActivity() {
             .show()
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_PREVIEW) {
+            previewLoteEmAndamento = false
+            abrirProximoPreviewLote()
+        }
+    }
+
+    private fun abrirPreviewEmLotes(lotes: List<PreviewLote>) {
+        previewLotes.clear()
+        previewLotes.addAll(lotes)
+        previewLoteEmAndamento = false
+        abrirProximoPreviewLote()
+    }
+
+    private fun abrirProximoPreviewLote() {
+        if (previewLoteEmAndamento || previewLotes.isEmpty()) return
+        val lote = previewLotes.removeFirst()
+        previewLoteEmAndamento = true
+        buscarPapeletasEAbrirPreview(
+            lote.itens,
+            lote.qtds,
+            lote.size,
+            lote.modalidade,
+            startForResult = true,
+        )
+    }
+
     private fun abrirPreviewPapeleta() {
         if (!modoContinuo) {
             ToastUtils.show(this, "Disponível no modo contínuo")
@@ -1446,7 +1484,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         )
         var sizeIdx = 0
         val modalidades = listOf(
-            "Misto Editável", "Promocional", "Normal",
+            "Misto Editável", "Item Desafio", "Promocional", "Normal",
             "Vencimentos", "Eletro da Semana"
         )
         var modalidadeSel = modalidades[0]
@@ -1704,6 +1742,150 @@ class BarcodeScannerActivity : AppCompatActivity() {
         }
         container.addView(scroll)
 
+        val abrirItemDesafioDialog: () -> Unit = {
+            val desafioSheet = BottomSheetDialog(this)
+            val desafioContainer = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(16), dp(16), dp(16), dp(16))
+                background = GradientDrawable().apply {
+                    setColor(Color.WHITE)
+                    cornerRadii = floatArrayOf(
+                        dp(16).toFloat(), dp(16).toFloat(),
+                        dp(16).toFloat(), dp(16).toFloat(),
+                        0f, 0f, 0f, 0f
+                    )
+                }
+            }
+            desafioContainer.addView(TextView(this).apply {
+                text = "ITEM DESAFIO"
+                textSize = 15f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(0xFF1E293B.toInt())
+            })
+            desafioContainer.addView(TextView(this).apply {
+                text = "Escolha os itens e os tamanhos (pode marcar 2x1 e 4x1 do mesmo item)"
+                textSize = 12f
+                setTextColor(0xFF64748B.toInt())
+                setPadding(0, dp(4), 0, dp(12))
+            })
+            val desafioLinhas = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+            }
+            val cb2List = mutableListOf<CheckBox>()
+            val cb4List = mutableListOf<CheckBox>()
+            for (item in itens) {
+                val row = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(0, dp(4), 0, dp(4))
+                }
+                val dados = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                }
+                dados.addView(TextView(this).apply {
+                    text = item.description.ifEmpty { item.ean }
+                    textSize = 12f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(0xFF1E293B.toInt())
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                })
+                dados.addView(TextView(this).apply {
+                    text = item.ean
+                    textSize = 9f
+                    setTextColor(0xFF64748B.toInt())
+                })
+                row.addView(
+                    dados,
+                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                )
+                val cb2 = CheckBox(this).apply {
+                    text = "2x1"
+                    textSize = 11f
+                    setTextColor(0xFF1E293B.toInt())
+                }
+                val cb4 = CheckBox(this).apply {
+                    text = "4x1"
+                    textSize = 11f
+                    setTextColor(0xFF1E293B.toInt())
+                }
+                cb2List.add(cb2)
+                cb4List.add(cb4)
+                row.addView(cb2)
+                row.addView(cb4)
+                desafioLinhas.addView(row)
+            }
+            val desafioScroll = ScrollView(this).apply {
+                addView(desafioLinhas)
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, dp(320)
+                )
+            }
+            desafioContainer.addView(desafioScroll)
+            val btnDesafio = MaterialButton(this).apply {
+                text = "VISUALIZAR PAPELETA"
+                setTextColor(Color.WHITE)
+                backgroundTintList =
+                    android.content.res.ColorStateList.valueOf(0xFFD7193F.toInt())
+                cornerRadius = dp(8)
+                textSize = 14f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setOnClickListener {
+                    val itens2 = mutableListOf<ItemScanner>()
+                    val itens4 = mutableListOf<ItemScanner>()
+                    for (i in itens.indices) {
+                        if (cb2List[i].isChecked) itens2.add(itens[i])
+                        if (cb4List[i].isChecked) itens4.add(itens[i])
+                    }
+                    if (itens2.isEmpty() && itens4.isEmpty()) {
+                        ToastUtils.show(
+                            this@BarcodeScannerActivity,
+                            "Selecione ao menos um tamanho"
+                        )
+                        return@setOnClickListener
+                    }
+                    val lotes = mutableListOf<PreviewLote>()
+                    if (itens2.isNotEmpty()) {
+                        lotes.add(
+                            PreviewLote(
+                                itens2,
+                                List(itens2.size) { 2 },
+                                tamanhos[1].second,
+                                "Item Desafio",
+                            )
+                        )
+                    }
+                    if (itens4.isNotEmpty()) {
+                        lotes.add(
+                            PreviewLote(
+                                itens4,
+                                List(itens4.size) { 4 },
+                                tamanhos[2].second,
+                                "Item Desafio",
+                            )
+                        )
+                    }
+                    desafioSheet.dismiss()
+                    sheet.dismiss()
+                    abrirPreviewEmLotes(lotes)
+                }
+            }
+            desafioContainer.addView(
+                btnDesafio,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, dp(48)
+                ).apply { topMargin = dp(16) }
+            )
+            desafioSheet.setContentView(desafioContainer)
+            desafioSheet.window?.setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            )
+            desafioSheet.show()
+            desafioSheet.behavior.isDraggable = false
+            desafioSheet.behavior.state =
+                com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+        }
+
         container.addView(TextView(this).apply {
             text = "Modalidade"
             textSize = 12f
@@ -1726,6 +1908,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                         id: Long,
                     ) {
                         modalidadeSel = modalidades[position]
+                        if (modalidadeSel == "Item Desafio") abrirItemDesafioDialog()
                     }
 
                     override fun onNothingSelected(
@@ -1788,6 +1971,10 @@ class BarcodeScannerActivity : AppCompatActivity() {
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setOnClickListener {
+                if (modalidadeSel == "Item Desafio") {
+                    abrirItemDesafioDialog()
+                    return@setOnClickListener
+                }
                 val size = tamanhos[sizeIdx].second
                 val selItens = itens.filterIndexed { i, _ -> selecionados[i] }
                 val selQtds = qtds
@@ -1826,6 +2013,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         qtds: List<Int>,
         size: String,
         modalidade: String,
+        startForResult: Boolean = false,
     ) {
         LoadingLogoDialog.show(this, "Buscando papeletas...")
         lifecycleScope.launch {
@@ -1904,6 +2092,10 @@ class BarcodeScannerActivity : AppCompatActivity() {
                         this@BarcodeScannerActivity,
                         "Dados de papeleta não disponíveis"
                     )
+                    if (startForResult) {
+                        previewLoteEmAndamento = false
+                        abrirProximoPreviewLote()
+                    }
                     return@launch
                 }
                 if (modalidade == "Eletro da Semana") {
@@ -1961,7 +2153,11 @@ class BarcodeScannerActivity : AppCompatActivity() {
                             quantidades.joinToString(",")
                         )
                     }
-                    startActivity(i)
+                    if (startForResult) {
+                        startActivityForResult(i, REQUEST_PREVIEW)
+                    } else {
+                        startActivity(i)
+                    }
                 }
             } catch (e: Exception) {
                 LoadingLogoDialog.dismiss()
@@ -1969,6 +2165,10 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     this@BarcodeScannerActivity,
                     "Erro: ${e.message}"
                 )
+                if (startForResult) {
+                    previewLoteEmAndamento = false
+                    abrirProximoPreviewLote()
+                }
             }
         }
     }
