@@ -1436,6 +1436,93 @@ class BarcodeScannerActivity : AppCompatActivity() {
         )
     }
 
+    private suspend fun buscarGrupoItemDesafio(lote: PreviewLote): PapeletaGrupo? {
+        val data = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val tipos = listOf(Constants.TIPO_COMUM, Constants.TIPO_PROMOCIONAL)
+        val pares = mutableListOf<Triple<Int, String, ItemScanner>>()
+        for ((idx, item) in lote.itens.withIndex()) {
+            for (type in tipos) pares.add(Triple(idx, type, item))
+        }
+        val respostas = withContext(Dispatchers.IO) {
+            pares.map { (_, type, item) ->
+                async {
+                    try {
+                        apiService.getPriceSignStandalone(
+                            storeId = sessionManager.getUserStore()
+                                ?: Constants.DEFAULT_STORE,
+                            type = type,
+                            ean = item.ean,
+                            startDate = data,
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+            }.awaitAll()
+        }
+        val vistos = mutableSetOf<String>()
+        val lista = mutableListOf<io.loja.network.PapeletaPrintingData>()
+        val quantidades = mutableListOf<Int>()
+        respostas.forEachIndexed { idx, response ->
+            val (itemIdx, tipo, _) = pares.getOrNull(idx)
+                ?: Triple(0, Constants.TIPO_COMUM, lote.itens.first())
+            if (response != null && response.isSuccessful) {
+                response.body()?.items?.forEach { item ->
+                    val pd = item.printingData ?: return@forEach
+                    if (!vistos.add("${item.ean}_$tipo")) return@forEach
+                    val dados = Constants.ajustarDadosLeveGanhe(pd)
+                        .copy(quantity = 1, size = lote.size)
+                    lista.add(dados)
+                    quantidades.add(
+                        lote.qtds.getOrElse(itemIdx) { 1 }.coerceIn(1, 999)
+                    )
+                }
+            }
+        }
+        return if (lista.isEmpty()) null else PapeletaGrupo(lista, quantidades, lote.size)
+    }
+
+    private fun abrirPreviewItemDesafio(lotes: List<PreviewLote>) {
+        LoadingLogoDialog.show(this, "Buscando papeletas...")
+        lifecycleScope.launch {
+            try {
+                val grupos = mutableListOf<PapeletaGrupo>()
+                for (lote in lotes) {
+                    buscarGrupoItemDesafio(lote)?.let { grupos.add(it) }
+                }
+                LoadingLogoDialog.dismiss()
+                if (grupos.isEmpty()) {
+                    ToastUtils.show(
+                        this@BarcodeScannerActivity,
+                        "Dados de papeleta não disponíveis"
+                    )
+                    return@launch
+                }
+                ModeloEditavelActivity.gruposPendentes = grupos
+                val i = Intent(
+                    this@BarcodeScannerActivity,
+                    ModeloEditavelActivity::class.java
+                ).apply {
+                    putExtra(ModeloEditavelActivity.EXTRA_SEM_OVERLAY, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_ENVIAR_API, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_API_SEM_OVERLAY, true)
+                    putExtra(ModeloEditavelActivity.EXTRA_MODO_EDITAVEL, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_MODO_VENCIMENTOS, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_HIDE_GERAR_PREVIEW, true)
+                    putExtra(ModeloEditavelActivity.EXTRA_MOSTRAR_CHECKBOX_OVERLAY, false)
+                    putExtra(ModeloEditavelActivity.EXTRA_SIZE, lotes.first().size)
+                }
+                startActivity(i)
+            } catch (e: Exception) {
+                LoadingLogoDialog.dismiss()
+                ToastUtils.show(
+                    this@BarcodeScannerActivity,
+                    "Erro: ${e.message}"
+                )
+            }
+        }
+    }
+
     private fun abrirPreviewPapeleta() {
         if (!modoContinuo) {
             ToastUtils.show(this, "Disponível no modo contínuo")
@@ -1867,7 +1954,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     }
                     desafioSheet.dismiss()
                     sheet.dismiss()
-                    abrirPreviewEmLotes(lotes)
+                    abrirPreviewItemDesafio(lotes)
                 }
             }
             desafioContainer.addView(

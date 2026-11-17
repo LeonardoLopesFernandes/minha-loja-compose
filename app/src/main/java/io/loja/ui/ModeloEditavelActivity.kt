@@ -42,6 +42,12 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
 
+data class PapeletaGrupo(
+    val dados: List<PapeletaPrintingData>,
+    val quantidades: List<Int>,
+    val size: String,
+)
+
 class ModeloEditavelActivity : AppCompatActivity() {
 
     private val helveticaBold by lazy {
@@ -95,9 +101,12 @@ class ModeloEditavelActivity : AppCompatActivity() {
     private val previewCardCache: HashMap<String, Bitmap> = HashMap()
     private val previewBitmapCache: HashMap<String, List<Bitmap>> = HashMap()
     private var lastPreviewKey: String? = null
+    private var itemDesafioMode = false
+    private var itemDesafioPdf: File? = null
 
     companion object {
         @JvmStatic var dadosPendentesList: MutableList<PapeletaPrintingData>? = null
+        @JvmStatic var gruposPendentes: List<PapeletaGrupo>? = null
         const val EXTRA_SIZE = "size"
         const val EXTRA_SEM_OVERLAY = "sem_overlay"
         const val EXTRA_ENVIAR_API = "enviar_api"
@@ -138,6 +147,206 @@ class ModeloEditavelActivity : AppCompatActivity() {
         } catch (e: Exception) {
             LogHelper.e("ModeloEditavel: erro impressora", e)
             withContext(Dispatchers.Main) { ToastUtils.show(this@ModeloEditavelActivity, "Erro ao enviar para impressora: ${e.message}") }
+        }
+    }
+
+    private fun configurarGrupoItemDesafio(grupo: PapeletaGrupo) {
+        multiDataList = grupo.dados.toMutableList()
+        multiQuantidades.clear()
+        multiQuantidades.addAll(grupo.quantidades.map { it.coerceAtLeast(1) })
+        multiValidades.clear()
+        multiValidades.addAll(List(grupo.dados.size) { "" })
+        previewPdfCache.clear()
+        val sizeUpper = grupo.size.replace('×', 'X').trim().uppercase()
+        when (sizeUpper) {
+            "1X1" -> { colsQuadrantes = 1; rowsQuadrantes = 1 }
+            "2X1" -> { colsQuadrantes = 2; rowsQuadrantes = 1 }
+            "4X1" -> { colsQuadrantes = 2; rowsQuadrantes = 2 }
+            "6X1" -> { colsQuadrantes = 3; rowsQuadrantes = 2 }
+            else -> { colsQuadrantes = 2; rowsQuadrantes = 2 }
+        }
+        sizeLabel = sizeUpper.lowercase()
+        carregarOverlayAssets(grupo.size)
+    }
+
+    private fun gerarItemDesafioPreview(grupos: List<PapeletaGrupo>) {
+        LoadingLogoDialog.show(this, "Gerando preview...")
+        lifecycleScope.launch {
+            try {
+                val pdfs = mutableListOf<File>()
+                for (grupo in grupos) {
+                    configurarGrupoItemDesafio(grupo)
+                    var pdf: File? = null
+                    for (dpi in listOf(300, 600)) {
+                        for (scale in listOf(8, 4, 2)) {
+                            pdf = gerarPdfMultiArquivo(renderScale = scale, copias = 1, dpi = dpi)
+                            if (pdf != null) break
+                        }
+                        if (pdf != null) break
+                    }
+                    if (pdf != null) pdfs.add(pdf)
+                }
+                if (pdfs.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        LoadingLogoDialog.dismiss()
+                        ToastUtils.show(this@ModeloEditavelActivity, "Erro ao gerar preview")
+                    }
+                    return@launch
+                }
+                val merged = mergePdfs(pdfs)
+                if (merged == null) {
+                    withContext(Dispatchers.Main) {
+                        LoadingLogoDialog.dismiss()
+                        ToastUtils.show(this@ModeloEditavelActivity, "Erro ao juntar os PDFs")
+                    }
+                    return@launch
+                }
+                val paginas = renderPdfPagesToBitmaps(merged)
+                withContext(Dispatchers.Main) {
+                    LoadingLogoDialog.dismiss()
+                    itemDesafioPdf = merged
+                    statusPreviewBase = "ITEM DESAFIO"
+                    limparPaginasPreview()
+                    paginasPreview.addAll(paginas)
+                    setPaginaPreview(0)
+                    btnCompartilhar.isEnabled = true
+                    btnSharePdf.isEnabled = true
+                }
+            } catch (e: Throwable) {
+                withContext(Dispatchers.Main) {
+                    LoadingLogoDialog.dismiss()
+                    LogHelper.e("ItemDesafio: preview", e)
+                    ToastUtils.show(this@ModeloEditavelActivity, "Erro: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun mergePdfs(files: List<File>): File? {
+        val out = PdfDocument()
+        var pageNumber = 1
+        var algum = false
+        for (file in files) {
+            val fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+            val renderer = PdfRenderer(fd)
+            try {
+                for (i in 0 until renderer.pageCount) {
+                    renderer.openPage(i).use { page ->
+                        if (page.width <= 0 || page.height <= 0) return@use
+                        val scale = 4
+                        val bmp = Bitmap.createBitmap(
+                            page.width * scale,
+                            page.height * scale,
+                            Bitmap.Config.ARGB_8888
+                        )
+                        page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
+                        val info = PdfDocument.PageInfo.Builder(
+                            page.width,
+                            page.height,
+                            pageNumber++
+                        ).create()
+                        val docPage = out.startPage(info)
+                        docPage.canvas.drawBitmap(
+                            bmp,
+                            null,
+                            android.graphics.RectF(
+                                0f, 0f,
+                                page.width.toFloat(),
+                                page.height.toFloat()
+                            ),
+                            null
+                        )
+                        out.finishPage(docPage)
+                        bmp.recycle()
+                        algum = true
+                    }
+                }
+            } finally {
+                renderer.close()
+                fd.close()
+            }
+        }
+        if (!algum) {
+            out.close()
+            return null
+        }
+        val result = File(cacheDir, "item_desafio_${System.currentTimeMillis()}.pdf")
+        FileOutputStream(result).use { out.writeTo(it) }
+        out.close()
+        return result
+    }
+
+    private fun renderPdfPagesToBitmaps(file: File): List<Bitmap> {
+        val paginas = mutableListOf<Bitmap>()
+        val fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+        val renderer = PdfRenderer(fd)
+        try {
+            for (i in 0 until renderer.pageCount) {
+                renderer.openPage(i).use { page ->
+                    val scale = minOf(
+                        1600f / page.width,
+                        1600f / page.height,
+                        4f
+                    )
+                    val w = (page.width * scale).toInt().coerceAtLeast(1)
+                    val h = (page.height * scale).toInt().coerceAtLeast(1)
+                    val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                    page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
+                    paginas.add(bmp)
+                }
+            }
+        } finally {
+            renderer.close()
+            fd.close()
+        }
+        return paginas
+    }
+
+    private fun enviarItemDesafioParaImpressora() {
+        val file = itemDesafioPdf ?: return
+        btnCompartilhar.text = "GERANDO PDF..."
+        btnCompartilhar.isEnabled = false
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                enviarParaImpressora(file.readBytes())
+                withContext(Dispatchers.Main) {
+                    btnCompartilhar.text = "IMPRIMIR PAPELETA"
+                    btnCompartilhar.isEnabled = true
+                    btnSharePdf.isEnabled = true
+                    setResult(Activity.RESULT_OK)
+                    finish()
+                }
+            } catch (e: Throwable) {
+                withContext(Dispatchers.Main) {
+                    btnCompartilhar.text = "IMPRIMIR PAPELETA"
+                    btnCompartilhar.isEnabled = true
+                    ToastUtils.show(this@ModeloEditavelActivity, "Erro: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun compartilharItemDesafio() {
+        val file = itemDesafioPdf ?: return
+        try {
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider",
+                file
+            )
+            startActivity(
+                Intent.createChooser(
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    },
+                    "Compartilhar PDF com"
+                )
+            )
+        } catch (e: Exception) {
+            LogHelper.e("ItemDesafio: share", e)
+            ToastUtils.show(this, "Erro ao compartilhar: ${e.message}")
         }
     }
 
@@ -207,6 +416,27 @@ class ModeloEditavelActivity : AppCompatActivity() {
                 }
                 gerarPreviewMulti()
             }
+        }
+
+        val gruposDesafio = gruposPendentes
+        gruposPendentes = null
+        if (gruposDesafio != null && gruposDesafio.isNotEmpty()) {
+            itemDesafioMode = true
+            multiMode = true
+            findViewById<TextView>(R.id.tvTituloModelo).text = "ITEM DESAFIO"
+            btnGerarPreview.visibility = View.GONE
+            btnCompartilhar.text = "IMPRIMIR PAPELETA"
+            btnCompartilhar.isEnabled = false
+            btnCompartilhar.setOnClickListener { enviarItemDesafioParaImpressora() }
+            btnSharePdf.visibility = View.VISIBLE
+            btnSharePdf.text = "COMPARTILHAR PDF"
+            btnSharePdf.isEnabled = false
+            btnSharePdf.setOnClickListener { compartilharItemDesafio() }
+            btnVoltar.setOnClickListener { finish() }
+            previewHeight = (resources.displayMetrics.heightPixels * 0.55).toInt()
+            ivPreview.layoutParams.height = previewHeight
+            gerarItemDesafioPreview(gruposDesafio)
+            return
         }
 
         val list = dadosPendentesList
@@ -291,9 +521,11 @@ class ModeloEditavelActivity : AppCompatActivity() {
     }
 
 
-    private fun carregarOverlayAssets() {
+    private fun carregarOverlayAssets(sizeOverride: String? = null) {
         if (semOverlay && !modoVencimentos) return
-        val size = (intent.getStringExtra(EXTRA_SIZE) ?: "4X1")
+        overlayBitmap?.recycle()
+        overlayBitmap = null
+        val size = (sizeOverride ?: intent.getStringExtra(EXTRA_SIZE) ?: "4X1")
             .replace('×', 'X')
             .trim()
             .uppercase()
