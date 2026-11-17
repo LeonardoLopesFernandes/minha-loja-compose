@@ -87,7 +87,6 @@ import io.loja.ui.compose.components.FiltroDivisorVertical
 import io.loja.ui.compose.components.GreenBadgeContainer
 import io.loja.ui.compose.components.QtyBoxDiaria
 import io.loja.ui.compose.components.StatusBadge
-import io.loja.ui.compose.components.WhiteTypeBadge
 import io.loja.utils.Constants
 import io.loja.utils.SessionExpiredHandler
 import java.io.File
@@ -443,7 +442,7 @@ private fun TypeBadge(
             .padding(horizontal = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(texto, color = textoCor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        Text(texto, color = textoCor, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
     }
 }
 
@@ -520,6 +519,11 @@ private fun PriceTagItemCard(
             }
         }
     }
+    val promoCompleto = buildString {
+        if (promoText != null) append(promoText)
+        if (separador && promoText != null && precoTexto.isNotEmpty()) append(" | ")
+        if (precoTexto.isNotEmpty()) append(precoTexto)
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -570,10 +574,15 @@ private fun PriceTagItemCard(
                     modifier = Modifier.height(28.dp),
                     contentPadding = PaddingValues(start = 12.dp),
                 ) {
-                    val badgeFont = 12.sp
-                    if (promoText != null) Text(promoText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
-                    if (separador) Text("|", color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont, modifier = Modifier.padding(horizontal = 4.dp))
-                    if (precoTexto.isNotEmpty()) Text(precoTexto, color = Color.White, fontWeight = FontWeight.Bold, fontSize = badgeFont)
+                    Text(
+                        promoCompleto,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
                     when (tipo) {
                         "parcelado", "de por" -> TypeBadge(
                             tipo.uppercase(),
@@ -585,14 +594,16 @@ private fun PriceTagItemCard(
                         "normal" -> TypeBadge(
                             "NORMAL",
                             Color(0xFFC7CDD1),
-                            Color.White,
+                            Color(0xFF37474F),
                             Color(0xFF6F777D),
                             modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
                         )
-                        else -> WhiteTypeBadge(
-                            tipo.uppercase(), tipoCor,
+                        else -> TypeBadge(
+                            "LEVE E GANHE",
+                            Color.White,
+                            tipoCor,
+                            tipoCor,
                             modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
-                            shape = RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
                         )
                     }
                 }
