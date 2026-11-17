@@ -588,10 +588,16 @@ private fun PriceTagItemCard(
                 }
             }
             Row(modifier = Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                GreenBadgeContainer(
-                    modifier = Modifier.height(28.dp),
-                    contentPadding = PaddingValues(start = 12.dp),
+                Box(
+                    modifier = Modifier
+                        .height(28.dp)
+                        .border(1.dp, Color(0xFF2E7D32), RoundedCornerShape(6.dp))
+                        .padding(1.dp),
                 ) {
+                    GreenBadgeContainer(
+                        modifier = Modifier.fillMaxHeight(),
+                        contentPadding = PaddingValues(start = 12.dp),
+                    ) {
                     Text(
                         precoAnotado ?: AnnotatedString(promoCompleto),
                         color = Color.White,
@@ -624,6 +630,7 @@ private fun PriceTagItemCard(
                             tipoCor,
                             modifier = Modifier.fillMaxHeight().padding(start = 10.dp),
                         )
+                    }
                     }
                 }
             }
